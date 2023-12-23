@@ -27,3 +27,4 @@ WHERE a.receiptdate BETWEEN DATE'2022-10-01' AND DATE'2023-04-20'
 SELECT  COUNT(*)  FROM d_yb_first_cus
 
 
+

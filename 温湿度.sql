@@ -66,4 +66,3 @@ DELETE from d_bus_wsdsb_3*/
 --SELECT * from d_bus_wsdsb_2 WHERE busno =81154
 
 --SELECT busno FROM d_bus_wsdsb_2 group by busno
- 
