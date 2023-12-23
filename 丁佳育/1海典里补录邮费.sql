@@ -1,4 +1,4 @@
-call proc_insert_o2o_sale('Z022',date'2023-12-07')
+call proc_insert_o2o_sale('Z022',date'2023-12-07');
 
 select * from d_saleno_temp
 
