@@ -16,6 +16,6 @@ addp=alter table 表名 add constraint 约束名 primary key(字段名); --加主键
 
 
 
-
+dsadadad
 
 
