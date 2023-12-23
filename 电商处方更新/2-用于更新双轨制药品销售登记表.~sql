@@ -1,0 +1,50 @@
+select * from t_sale_mes_customer where busno in(83235,85059,84022,83636) and CUSTOMERNAME is null
+select * from d_oms_sgcf_h where busno in(83235,85059,84022,83636) and USERNAME is null
+select * from t_remote_prescription_h  where busno in(83235,85059,84022,83636) and USERNAME is null
+select * from  t_sale_mes_customer_temp  for update
+
+delete from t_sale_mes_customer_temp
+SALENO, userNAME, SEX, AGE, NOTES,busno
+delete from t_sale_mes_customer_temp2
+select busno,saleno,username,age,sex,address,notes from  t_sale_mes_customer_temp2 for update
+
+DELETE FROM t_sale_mes_customer_temp2
+WHERE ROWID NOT IN (
+  SELECT MAX(ROWID)
+  FROM t_sale_mes_customer_temp2
+  GROUP BY saleno
+);
+
+insert into t_sale_mes_customer_temp select * from  t_sale_mes_customer_temp2
+
+
+
+
+
+
+alter table t_sale_mes_customer_temp2 add address varchar2(400)
+
+MERGE INTO t_sale_mes_customer dst
+USING t_sale_mes_customer_temp src
+ON (dst.SALENO = src.SALENO)
+WHEN MATCHED THEN
+  UPDATE SET dst.CUSTOMERNAME = nvl(dst.CUSTOMERNAME,trim(replace(src.USERNAME,',',''))),
+             dst.SEX = nvl(dst.SEX, trim(replace(src.SEX, ',', ''))),
+    dst.AGE = nvl(dst.AGE, trim(replace(src.AGE, ',', ''))),
+    dst.NOTES = nvl(dst.NOTES, trim(replace(src.NOTES, ',', ''))),
+    dst.busno = nvl(dst.busno,  trim(replace(src.busno, ',', ''))),
+    dst.addr = nvl(dst.addr, trim(replace(src.address, ',', '')))
+WHEN NOT MATCHED THEN
+  INSERT (SALENO, CUSTOMERNAME, SEX, AGE, NOTES,busno,addr)
+  VALUES (src.SALENO, src.USERNAME, src.SEX, src.AGE, src.NOTES,src.busno,src.address);
+  
+  
+   update set a.username=nvl(a.username,trim(replace(b.username,',',''))) ,
+  a.SEX=nvl(a.SEX,trim(replace(b.SEX,',',''))),
+  a.cage=nvl(a.cage,trim(replace(b.age,',',''))),
+ a.address=nvl(a.address,trim(replace(b.address,',',''))),
+  a.DOCTORNAME=nvl(a.DOCTORNAME,trim(replace(b.CFYY,',',''))),
+ a.ZDCONT=nvl(a.ZDCONT,trim(replace(b.ZD,',',''))),
+ a.doctor  = nvl(a.doctor,trim(replace(b.cfys,',','')))
+
+

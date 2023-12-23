@@ -1,0 +1,5 @@
+SELECT COUNT(*)  FROM tmp_wlybjs_cyb a
+JOIN d_ll_zxcy b ON a.ERP销售号=b.saleno
+WHERE  nvl(基本医疗统筹支付,0)+nvl(公务员补助统筹支付,0)+nvl(当年账户支付,0)<>0
+and 医疗总费用 - nvl(gtjeed,0)<>0 
+

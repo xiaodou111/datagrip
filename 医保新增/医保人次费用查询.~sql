@@ -1,0 +1,13 @@
+DECLARE
+ v_busno s_busi.busno%type;
+ v_iszy int;
+ v_ndhzrcrtb number(30);
+ v_ndjcfy number(30);
+
+v_busno:=85065;
+v_iszy:=0;
+BEGIN
+  
+
+
+END 

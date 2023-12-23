@@ -1,0 +1,25 @@
+select * from d_nh_kc_py for UPDATE
+DELETE from d_nh_kc_py
+
+alter table d_nh_ps_py add ph varchar2(40); 
+delete from d_nh_kc_py
+
+INSERT into D_NH_PS_PY SELECT  * FROM D_NH_PS_PY@hydee_zy 
+
+select * from d_nh_cg_py  for update
+delete from d_nh_cg_py where zdate>=date'2023-03-01'
+select * from  d_nh_ps_py for update
+select * from v_sale_nh_p001 where cjsj=date'2023-07-23'
+
+create table D_NH_CG_fp
+(
+  zdate  DATE,
+  name1  VARCHAR2(40),
+  djlx   VARCHAR2(20),
+  wareid NUMBER(8),
+  scqy   VARCHAR2(100),
+  gys    VARCHAR2(100),
+  sl     NUMBER(10,2),
+  ph     VARCHAR2(40)
+)
+select * from D_NH_CG_fp for update

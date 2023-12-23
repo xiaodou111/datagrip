@@ -1,0 +1,6 @@
+--店间调拨单未审核单数
+select d.wareid,count(h.srcbusno) from t_dist_h h
+join t_dist_d d on h.distno=d.distno
+ where h.billcode = 'DSSM' and h.status=0
+ and h.createtime>=date'2023-01-01'
+  group by d.wareid

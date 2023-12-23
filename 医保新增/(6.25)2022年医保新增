@@ -1,0 +1,53 @@
+INSERT into values d_zjys_wl2022_xs SELECT * FROM v_zjys_wl2022_xs;
+INSERT INTO  d_zjys_wl2022_xs
+select ERP销售号 AS erpsaleno,TRUNC(创建时间) AS receiptdate ,机构编码,d.saler,su.username,a.姓名,a.身份证号,
+case when nvl(人员类别,' ') in ('2511','40','41','2811','52') then '1' else '0' END AS nb_flag,
+医保所在地编号 AS cbd ,
+CASE WHEN replace(所在地名称,'玉环县','玉环市') IN ('市本级','椒江区') THEN '市本级' ELSE replace(所在地名称,'玉环县','玉环市') END as cbdname,总金额 AS netsum,2 AS status, 
+case when info.COMPANYNAME like '%瑞人堂%' or info.COMPANYNAME like '%康康%' or info.COMPANYNAME like '%方同仁%'
+ or info.COMPANYNAME like '%康盛堂%' then 1 else 0 end yg_flag,
+case when nvl(就诊类型,' ')='1' then '1' when nvl(就诊类型,' ') in('33','34','39') then '2' else '0' END
+ AS jslx,a.用户端就诊序号 AS orderno ,cy.参保人员类别 AS cbrylb
+from tmp_wlybjs_cyb a
+INNER join (SELECT saleno,MAX(saler) saler FROM t_sale_d GROUP BY saleno ) d ON
+a.ERP销售号=d.saleno
+left join s_user_base su on d.saler=su.userid
+join hydee_taizhou.taizhou_personal_info info on info.IDNUMBER=a.身份证号
+LEFT join D_ZHYB_HZ_CYB cy ON a.erp销售号=cy.erp销售单号 AND a.身份证号=cy.身份证号
+WHERE 创建时间>=date'2022-01-01' AND 创建时间<date'2022-03-01';
+
+ UPDATE d_zjys_wl2022_xs SET CBDNAME ='台州市市本级'  WHERE CBDNAME='台州市本级';
+UPDATE d_zjys_wl2022_xs SET CBDNAME ='台州市玉环市' WHERE CBDNAME='台州市玉环县'
+ 
+ DELETE from D_YB_NEW_CUS_2023 WHERE RECEIPTDATE<date'2023-01-01';
+INSERT INTO D_YB_NEW_CUS_2023 
+(erpsaleno, receiptdate, busno, saler, username, customername, identityno, nb_flag, cbd, cbdname, netsum, status, yg_flag,jslx,orderno)
+SELECT erpsaleno, receiptdate, busno, saler, username, customername, identityno, nb_flag, cbd, cbdname, netsum, status, yg_flag,
+jslx,orderno
+FROM (    
+
+SELECT erpsaleno, receiptdate, a.busno, saler, username, customername, identityno, nb_flag, a.cbd, cbdname, netsum, status, yg_flag,jslx,
+a.orderno,cbrylb,
+ROW_NUMBER() OVER (PARTITION BY 
+  CASE
+    WHEN tb2.classcode IN (324331001,324331002) THEN '324331001'
+    ELSE tb2.classcode
+  END ,
+  jslx,tb22.classcode, 
+IDENTITYNO,nb_flag ORDER BY receiptdate ASC) rn
+ FROM d_zjys_wl2022_xs a
+ 
+ join t_busno_class_set ts on a.busno=ts.busno and ts.classgroupno ='303'
+join t_busno_class_base tb on ts.classgroupno=ts.classgroupno and ts.classcode=tb.classcode 
+AND tb.classcode IN(303100,303101,303102)
+ join t_busno_class_set ts2 on a.busno=ts2.busno and ts2.classgroupno ='324'
+    join t_busno_class_base tb2 on ts2.classgroupno=ts2.classgroupno and ts2.classcode=tb2.classcode
+    join t_busno_class_set ts22 on a.busno=ts22.busno and ts22.classgroupno ='305'
+    join t_busno_class_base tb22 on ts22.classgroupno=ts22.classgroupno and ts22.classcode=tb22.classcode
+  WHERE a.RECEIPTDATE < DATE'2023-01-01'
+  AND a.CBD IN(331082,331004,331083,331024,331081,331023,331022,331003,331002,331099))
+  WHERE rn=1;
+  
+  --SELECT * from D_YB_NEW_CUS_2023 WHERE receiptdate<DATE'2022-03-01'
+ 
+  

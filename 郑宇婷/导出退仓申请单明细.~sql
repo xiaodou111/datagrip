@@ -1,0 +1,77 @@
+SELECT (t_distapply_d.applyno) AS applyno,
+       (t_distapply_d.wareid) AS wareid,
+       (t_distapply_d.safeqty) AS safeqty,
+       (t_distapply_d.overqty) AS overqty,
+       (t_distapply_d.wareqty) AS wareqty, 
+       (t_distapply_d.applyqty) AS applyqty,
+       (t_distapply_d.salemonqty) AS salemonqty,
+       (t_distapply_d.purprice) AS purprice,
+       (t_distapply_d.saleprice) AS saleprice,
+       (t_distapply_d.checkqty) AS checkqty,
+       (t_distapply_d.distqty) AS distqty,
+       (t_distapply_d.batqty) AS batqty,
+       (t_distapply_d.storeqty) AS storeqty,
+       (t_distapply_d.actualqty) AS actualqty,
+       (t_distapply_d.parityflag) AS parityflag,
+       (t_distapply_d.parityware) AS parityware,
+       nvl(t_distapply_d.bandcode, f_get_classcode('03', t_distapply_d.wareid, t_distapply_h.compid)) AS bandcode,
+       (v_ware_base.warecode) AS warecode,
+       (v_ware_base.warename) AS warename,
+       (v_ware_base.warespec) AS warespec,
+       (case when sti.factoryid =0 then v_ware_base.factoryid else sti.factoryid end) AS factoryid,
+       (case when sti.areacode='00' then v_ware_base.areacode else sti.areacode end) AS areacode,
+       (v_ware_base.wareunit) AS wareunit,
+       (v_ware_base.waremark) AS waremark,
+       (v_ware_base.purstatus) AS purstatus,
+       (t_distapply_d.rowno) AS rowno,
+       (t_distapply_d.batid) AS batid,
+       (t_distapply_d.stallno) AS stallno,
+       (t_distapply_d.srcstallno) AS srcstallno,
+       (t_distapply_d.batid || '--' || t_distapply_d.srcstallno) AS list,
+       (t_distapply_d.makeno) AS makeno,
+      (t_distapply_d.makedate) AS makedate,   
+       (t_distapply_d.invalidate) AS invalidate,
+       (t_distapply_d.notes) AS notes,
+       (t_distapply_d.progress) AS progress,
+       (t_distapply_d.groupid) AS groupid,
+       f_get_classname(f_get_sys_inicode(t_distapply_h.compid, '2572', ''),
+                       t_distapply_d.wareid,t_distapply_h.compid) AS bandcode1,
+       f_get_classname(f_get_sys_inicode(t_distapply_h.compid, '2573', ''),
+                       t_distapply_d.wareid,t_distapply_h.compid) AS bandcode2,
+       f_get_classcode('42', t_distapply_d.wareid, t_distapply_h.compid) AS buyer,
+       v_ware_base.midqty AS midqty,
+       CASE
+         WHEN v_ware_base.midqty > 0 THEN
+          round(t_distapply_d.applyqty / v_ware_base.midqty, 2)
+         ELSE
+          0
+       END AS midtimes,
+       (t_distapply_d.bak3) AS bak3,
+       (t_distapply_d.bak6) AS bak6,
+     t_distapply_d.retdistno as retdistno,
+      t_distapply_d.retdistno_rowno as retdistno_rowno,
+      t_distapply_d.rebatsaleno as rebatsaleno,
+      t_distapply_d.rebatsaleno_rowno as rebatsaleno_rowno,
+      t_distapply_d.rebatapplyno as rebatapplyno,
+      t_distapply_d.rebatapplyno_rowno as rebatapplyno_rowno,
+       t_distapply_d.recallno as recallno,
+      t_distapply_d.recallno_rowno as recallno_rowno,
+     t_distapply_d.saletax,
+     t_distapply_d.check_nook_qty,
+     t_distapply_d.retdist_qty,
+     t_distapply_d.BAK1,
+     v_ware_base.listing_holder as listing_holder,
+     t_distapply_d.distno_rap as distno_rap,
+     t_distapply_d.distno as distno,
+     t_distapply_d.distrowno as distrowno,
+    v_ware_base.waregeneralname as waregeneralname,
+    t_distapply_d.liabler as liabler
+ FROM t_distapply_d
+  JOIN t_distapply_h
+    ON t_distapply_d.applyno = t_distapply_h.applyno
+  LEFT JOIN t_ware v_ware_base
+    ON t_distapply_d.wareid = v_ware_base.wareid
+   AND t_distapply_h.compid = v_ware_base.compid
+  LEFT JOIN t_store_i sti
+    ON t_distapply_d.wareid = sti.wareid
+   AND t_distapply_d.batid = sti.batid WHERE t_distapply_d.applyno='231111138042'
