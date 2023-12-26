@@ -11,7 +11,7 @@ a.createuser,a.createtime,a.lastmodify,a.lasttime,a.status,a.mem_limit,a.pst_war
      
      /*select * from d_ware_coupon_rsv
      1010,1020,1030,1050,1040,1070*/
- insert into d_ware_coupon_rsv select 1070, 
+ insert into d_ware_coupon_rsv select 1070,
 wareid, 
 begindate, 
 enddate, 
@@ -51,4 +51,4 @@ pst_ware,
 pst_begindate, 
 pst_enddate
 from d_ware_coupon_rsv a  where a.compid=1000 
-and (  a.notes like '%11月活动%' or  a.notes like '%双十一%'  )
+and (  a.notes like '%春节%' );
