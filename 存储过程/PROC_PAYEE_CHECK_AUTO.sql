@@ -6,6 +6,7 @@ v_checkno varchar2(200);
 v_netsum number(14,4);
 v_netsumloss number(14,4);
 v_loss  number(14,4);
+v_cnt number;
 begin
   --生成单号
 select ''||f_get_serial('PAYC',p_busno)
@@ -57,9 +58,46 @@ SUM(advance_payment_amt) AS advance_deposit_amt, MAX(is_pay_interface) is_pay_in
 from V_PAYEE_CHECK where busno =p_busno   and( accdate = p_accdate
 or accdate  = to_date('99990101','yyyy-mm-dd') ) group by paytype,busno  ) ;
 --插入list表,状态为1解锁
-insert into t_payee_check_list(compid,busno,createdate,status,checkno,lastsaleno,lasttime)
-values(p_compid,p_busno,p_accdate,1,v_checkno,null,null);
+--
+-- insert into t_payee_check_list(compid,busno,createdate,status,checkno,lastsaleno,lasttime)
+-- values(p_compid,p_busno,p_accdate,1,v_checkno,null,null);
+-- merge into t_payee_check_list(compid,busno,createdate,status,checkno,lastsaleno,lasttime)
 
+    select count(*)
+    into v_cnt
+    from t_payee_check_list where
+    COMPID =p_compid and BUSNO=p_busno and createdate=p_accdate;
+
+    if v_cnt>0 then
+        update t_payee_check_list set STATUS=1,checkno=v_checkno
+        where COMPID =p_compid and BUSNO=p_busno and createdate=p_accdate ;
+    end if;
+    if v_cnt=0 then
+        insert into t_payee_check_list(compid,busno,createdate,status,checkno,lastsaleno,lasttime)
+        values(p_compid,p_busno,p_accdate,1,v_checkno,null,null);
+    end if;
+
+
+--   MERGE INTO t_payee_check_list T1
+-- USING (
+--     SELECT
+--         p_compid as compid,
+--         p_busno as busno,
+--         p_accdate as createdate,
+--         1 AS STATUS,
+--         v_checkno AS checkno,
+--         null,
+--         null
+--     FROM dual
+-- ) T2
+-- ON (T1.compid = T2.compid and T1.busno = T2.busno and T1.CREATEDATE = T2.createdate)
+-- WHEN MATCHED THEN
+--     UPDATE SET T1.STATUS = T2.STATUS, T1.CHECKNO = T2.checkno
+-- WHEN NOT MATCHED THEN
+--     INSERT (compid, busno, createdate, status, checkno, lastsaleno, lasttime)
+--     VALUES (T2.compid, T2.busno, T2.createdate, T2.STATUS, T2.checkno, NULL, NULL);
+--     INSERT (compid, busno, createdate, status, checkno, lastsaleno, lasttime)
+--     VALUES (T2.compid, T2.busno, T2.createdate, T2.STATUS, T2.checkno, NULL, NULL);
 /*select checkno,rownum,paytype,netsum,paymentsum,divesum,notes,subjectid,subjectname,vencusno,rechargeamt,amt_confirm,advance_payment_amt,
 advance_deposit_amt,is_pay_interface,rechargesum from (
 select v_checkno as checkno,null as rowno,paytype,SUM(netsum) netsum, SUM(paymentsum) paymentsum, SUM(divesum) divesum,
