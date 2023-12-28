@@ -162,6 +162,56 @@ from a1;
 
 
 
+1111
+
+
+adsad
+
+select *
+from s_busi;
+
+
+
+
+SELECT trunc(a.CREATETIME),
+       MAX(CASE WHEN PAYTYPE = '91' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END)   AS HYT补充医疗,
+                   sum(CASE WHEN PAYTYPE = '43' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END)   AS PICC医卡通,
+                   sum(CASE WHEN PAYTYPE = 'Z010' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END) AS 储值卡消费,
+                   sum(CASE WHEN PAYTYPE = 'Z034' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END) AS 饿了么,
+                   sum(CASE WHEN PAYTYPE = '48' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END)   AS 工行刷卡,
+                   sum(CASE WHEN PAYTYPE = 'Z087' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END) AS 工行移动刷卡,
+                   sum(CASE WHEN PAYTYPE = 'Z043' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END) AS 公司汇入,
+                   sum(CASE WHEN PAYTYPE = 'Z037' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END) AS 健E卡,
+                   sum(CASE WHEN PAYTYPE = 'Z025' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END) AS 京东到家,
+                   sum(CASE WHEN PAYTYPE = 'Z065' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END) AS 老白智慧药房,
+                   sum(CASE WHEN PAYTYPE = 'Z022' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END) AS 美团,
+                   sum(CASE WHEN PAYTYPE = '45' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END)   AS 平安卡,
+                   sum(CASE WHEN PAYTYPE = 'Z082' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END) AS 平安药诊卡组合,
+                   sum(CASE WHEN PAYTYPE = 'Z075' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END) AS 普康宝,
+                   sum(CASE WHEN PAYTYPE = 'Z021' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END) AS 企健付,
+                   sum(CASE WHEN PAYTYPE = 'Z996' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END) AS 收银兑换损失,
+                   sum(CASE WHEN PAYTYPE = 'Z060' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END) AS 台州医保,
+                   sum(CASE WHEN PAYTYPE = 'Z027' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END) AS 微信小程序,
+                   sum(CASE WHEN PAYTYPE = '1' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END)    AS 现金,
+                   sum(CASE WHEN PAYTYPE = 'Z012' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END) AS 预约金消费,
+                   sum(CASE WHEN PAYTYPE = 'Z018' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END) AS 招行固定二维码,
+                   sum(CASE WHEN PAYTYPE = 'Z017' THEN  b.amt_confirm-b.advance_payment_amt-b.rechargeamt-b.netsum END) AS 招行聚合支付,
+       sum(nvl(b.amt_confirm,0)-(nvl(b.advance_payment_amt,0)+nvl(b.rechargeamt,0)+nvl(b.netsum,0)))  as cyje
+        --总部确认金额
+ FROM t_payee_check_h a
+      join t_payee_check_d b on a.checkno=b.checkno
+      left join s_busi bs on a.busno=bs.busno
+      left join s_dddw_list sd on b.paytype=sd.dddwlistdata and sd.dddwname='222'
+ WHERE  (a.busno in (81001,81002,81003,81004,81005) )-- and  b.paytype = '1'
+   and  a.createdate >= to_date('2023-11-01', 'yyyy-MM-dd')
+   and a.createdate < to_date('2023-11-02', 'yyyy-MM-dd')
+group by trunc(a.CREATETIME);
+
+
+
+
+
+
 
 
 

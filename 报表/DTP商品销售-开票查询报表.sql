@@ -28,5 +28,7 @@ and h.accdate>=date'2023-11-01'
 
 select * from t_remote_prescription_h 
 select trunc(BIRTHDAY,'yyyy') from t_remote_prescription_h
-select age from t_remote_prescription_h
-select FLOOR(MONTHS_BETWEEN(TRUNC(SYSDATE), TRUNC(BIRTHDAY)) / 12),BIRTHDAY from t_remote_prescription_h 
+
+select FLOOR(MONTHS_BETWEEN(TRUNC(SYSDATE), TRUNC(BIRTHDAY)) / 12),BIRTHDAY from t_remote_prescription_h
+select *
+from t_remote_prescription_h;
