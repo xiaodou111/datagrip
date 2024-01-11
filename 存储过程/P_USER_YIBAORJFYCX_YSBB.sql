@@ -291,604 +291,551 @@ begin
     OPEN p_sql FOR
     
     --insert into d_hz_ndrtrc(depotid,busno,orgname,mdndrcs,mdndrts,mdzdsjrcs,mdzdsjrts,mdndlzfy,mdzdsjlzfy,mdndrcrtb,mdndkdj,mdzdsjkdj,ndhzrcrtb,ndhzjcfy)
-      WITH A AS (
-      select
-              
-               a.depotid,
-               b.busno,
-               b.orgname,
-               sum(a.mdndrts) as mdndrts,
-               
-               --年度人次数
-               sum(a.mdndrcs) as mdndrcs,
-               
-               -- 年度人次人头比指标--2
-               case
-                 when sum(a.mdndrts) <> 0 then
-                  sum(a.mdndrcs) / sum(a.mdndrts)
-                 else
-                  0
-               end as mdndrcrtb,
-               --年度均次消费 ---3
-               case
-                 when sum(a.mdndrcs) <> 0 then
-                  sum(a.mdndlzfy) / sum(a.mdndrcs)
-                 else
-                  0
-               end as mdndkdj,
-               -- 指定时间人头数 --4
-               sum(a.mdzdsjrts) as mdzdsjrts,
-               --指定时间人次数
-               sum(a.mdzdsjrcs) as mdzdsjrcs,
-               
-               --  指定时间人头人次比 --5
-               case
-                 when sum(a.mdzdsjrts) <> 0 then
-                  sum(a.mdzdsjrcs) / sum(a.mdzdsjrts)
-                 else
-                  0
-               end as mdzdsjrtrcb,
-               -- 指定时间列支费用 /指定时间人次 --6
-               case
-                 when sum(a.mdzdsjrcs) <> 0 then
-                  sum(a.mdzdsjlzfy) / sum(a.mdzdsjrcs)
-                 else
-                  0
-               end mdzdsjlzfy,
-               sum(a.mdzdsjlzfy) as mdzdsjlzfyze
-                from D_HZ_YWSJ_zeys a
-                join s_busi b
-                  on a.depotid = b.busno
-               group by b.busno, a.depotid, b.orgname              
-      )
-      SELECT       
-      --depotid,
-       classname,
-       qs,
-       A.busno,
-       orgname,
-       --年度人次数
-       year_rtzb * year_rcb as yearmdndrcs,
-       mdndrcs,
-       
-       -- 年度人头数--1
-       year_rtzb,
-       mdndrts,
-       
-       mdndrts / year_rtzb AS wczb1,
-       -- 年度人次人头比指标--2
-       year_rcb,
-       mdndrcrtb,
-       
-       mdndrcrtb / year_rcb AS wczb2,
-       --年度均次消费 ---3
-       year_ndcjfy,
-       mdndkdj,
-       
-       mdndkdj / year_ndcjfy AS wczb3,
-       
-       -- 指定时间人次数
-       three_rtzb * three_rczb as three_rcs,
-       mdzdsjrcs,
-       
-       -- 指定时间人头数 --4
-       three_rtzb,
-       mdzdsjrts,
-       
-       mdzdsjrts / three_rtzb AS wczb4,
-       
-       --  指定时间人头人次比 --5
-       three_rczb,
-       mdzdsjrtrcb,
-       
-       mdzdsjrtrcb / three_rczb AS wczb5,
-       
-       -- 指定时间列支费用 /指定时间人次 --6
-       three_cjfy,
-       mdzdsjlzfy,
-       
-       mdzdsjlzfy / three_cjfy AS wczb6,
-       mdzdsjlzfyze
-      
+        WITH A AS (select a.depotid,b.busno,b.orgname,sum(a.mdndrts) as mdndrts,
+                          --年度人次数
+                          sum(a.mdndrcs) as mdndrcs,
+                          -- 年度人次人头比指标--2
+                          case
+                              when sum(a.mdndrts) <> 0 then
+                                  sum(a.mdndrcs) / sum(a.mdndrts)
+                              else
+                                  0
+                              end as mdndrcrtb,
+                          --年度均次消费 ---3
+                          case
+                              when sum(a.mdndrcs) <> 0 then
+                                  sum(a.mdndlzfy) / sum(a.mdndrcs)
+                              else
+                                  0
+                              end as mdndkdj,
+                          -- 指定时间人头数 --4
+                          sum(a.mdzdsjrts) as mdzdsjrts,
+                          --指定时间人次数
+                          sum(a.mdzdsjrcs) as mdzdsjrcs,
+
+                          --  指定时间人头人次比 --5
+                          case
+                              when sum(a.mdzdsjrts) <> 0 then
+                                  sum(a.mdzdsjrcs) / sum(a.mdzdsjrts)
+                              else
+                                  0
+                              end as mdzdsjrtrcb,
+                          -- 指定时间列支费用 /指定时间人次 --6
+                          case
+                              when sum(a.mdzdsjrcs) <> 0 then
+                                  sum(a.mdzdsjlzfy) / sum(a.mdzdsjrcs)
+                              else
+                                  0
+                              end mdzdsjlzfy,
+                          sum(a.mdzdsjlzfy) as mdzdsjlzfyze
+                   from D_HZ_YWSJ_zeys a
+                            join s_busi b
+                                 on a.depotid = b.busno
+                   group by b.busno, a.depotid, b.orgname)
+        SELECT
+            --depotid,
+            classname,
+            qs,
+            A.busno,
+            orgname,
+            --年度人次数
+            year_rtzb * year_rcb as yearmdndrcs,
+            mdndrcs,
+
+            -- 年度人头数--1
+            year_rtzb,
+            mdndrts,
+            mdndrts / year_rtzb AS wczb1,
+            -- 年度人次人头比指标--2
+            year_rcb,
+            mdndrcrtb,
+            mdndrcrtb / year_rcb AS wczb2,
+            --年度均次消费 ---3
+            year_ndcjfy,
+            mdndkdj,
+            mdndkdj / year_ndcjfy AS wczb3,
+
+            -- 指定时间人次数
+            three_rtzb * three_rczb as three_rcs,
+            mdzdsjrcs,
+
+            -- 指定时间人头数 --4
+            three_rtzb,
+            mdzdsjrts,
+            mdzdsjrts / three_rtzb AS wczb4,
+
+            --  指定时间人头人次比 --5
+            three_rczb,
+            mdzdsjrtrcb,
+            mdzdsjrtrcb / three_rczb AS wczb5,
+
+            -- 指定时间列支费用 /指定时间人次 --6
+            three_cjfy,
+            mdzdsjlzfy,
+            mdzdsjlzfy / three_cjfy AS wczb6,
+            mdzdsjlzfyze
         FROM A
-         join t_zeys_zb B
-          on B.busno = A.busno
-         and YEAR_YEAR = 2023
-       UNION ALL
-       --区属小计
-       SELECT 
-       NULL,
-       qs||'小计',
-       NULL,
-       NULL,
-       --年度人次数
-       SUM(year_rtzb * year_rcb) as yearmdndrcs,
-       SUM(mdndrcs),
-       
-       -- 年度人头数--1
-       SUM(year_rtzb),
-       SUM(mdndrts),
-       
-       SUM(mdndrts) /SUM( year_rtzb) AS wczb1,
-       -- 年度人次人头比指标--2
-       SUM(year_rcb),
-       SUM(mdndrcrtb),
-       
-       SUM(mdndrcrtb) / SUM(year_rcb) AS wczb2,
-       --年度均次消费 ---3
-       SUM(year_ndcjfy),
-       SUM(mdndkdj),
-       
-       SUM(mdndkdj) / SUM(year_ndcjfy) AS wczb3,
-       
-       -- 指定时间人次数
-       SUM(three_rtzb) * SUM(three_rczb) as three_rcs,
-       SUM(mdzdsjrcs),
-       
-       -- 指定时间人头数 --4
-       SUM(three_rtzb),
-       SUM(mdzdsjrts),
-       
-       SUM(mdzdsjrts) / SUM(three_rtzb) AS wczb4,
-       
-       --  指定时间人头人次比 --5
-       sum(three_rczb),
-       sum(mdzdsjrtrcb),
-       
-       sum(mdzdsjrtrcb) / SUM(three_rczb) AS wczb5,
-       
-       -- 指定时间列支费用 /指定时间人次 --6
-       sum(three_cjfy),
-       sum(mdzdsjlzfy),
-       
-       sum(mdzdsjlzfy) / SUM(three_cjfy) AS wczb6,
-       sum(mdzdsjlzfyze)
-       FROM A
-        join t_zeys_zb B
-          on B.busno = A.busno
-         and YEAR_YEAR = 2023
+                 join t_zeys_zb B
+                      on B.busno = A.busno
+                          and YEAR_YEAR = 2023
+        UNION ALL
+        --区属小计
+        SELECT NULL,
+               qs || '小计',
+               NULL,
+               NULL,
+               --年度人次数
+               SUM(year_rtzb * year_rcb) as yearmdndrcs,
+               SUM(mdndrcs),
+
+               -- 年度人头数--1
+               SUM(year_rtzb),
+               SUM(mdndrts),
+               SUM(mdndrts) / SUM(year_rtzb) AS wczb1,
+               -- 年度人次人头比指标--2
+               SUM(year_rcb),
+               SUM(mdndrcrtb),
+               SUM(mdndrcrtb) / SUM(year_rcb) AS wczb2,
+               --年度均次消费 ---3
+               SUM(year_ndcjfy),
+               SUM(mdndkdj),
+               SUM(mdndkdj) / SUM(year_ndcjfy) AS wczb3,
+
+               -- 指定时间人次数
+               SUM(three_rtzb) * SUM(three_rczb) as three_rcs,
+               SUM(mdzdsjrcs),
+
+               -- 指定时间人头数 --4
+               SUM(three_rtzb),
+               SUM(mdzdsjrts),
+               SUM(mdzdsjrts) / SUM(three_rtzb) AS wczb4,
+
+               --  指定时间人头人次比 --5
+               sum(three_rczb),
+               sum(mdzdsjrtrcb),
+               sum(mdzdsjrtrcb) / SUM(three_rczb) AS wczb5,
+
+               -- 指定时间列支费用 /指定时间人次 --6
+               sum(three_cjfy),
+               sum(mdzdsjlzfy),
+               sum(mdzdsjlzfy) / SUM(three_cjfy) AS wczb6,
+               sum(mdzdsjlzfyze)
+        FROM A
+                 join t_zeys_zb B
+                      on B.busno = A.busno
+                          and YEAR_YEAR = 2023
         GROUP BY qs
-       UNION ALL
-       --片区小计
-       SELECT 
-       classname||'小计',
-       NULL,
-       NULL,
-       NULL,
-       --年度人次数
-       SUM(year_rtzb * year_rcb) as yearmdndrcs,
-       SUM(mdndrcs),
-       
-       -- 年度人头数--1
-       SUM(year_rtzb),
-       SUM(mdndrts),
-       
-       SUM(mdndrts) /SUM( year_rtzb) AS wczb1,
-       -- 年度人次人头比指标--2
-       SUM(year_rcb),
-       SUM(mdndrcrtb),
-       
-       SUM(mdndrcrtb) / SUM(year_rcb) AS wczb2,
-       --年度均次消费 ---3
-       SUM(year_ndcjfy),
-       SUM(mdndkdj),
-       
-       SUM(mdndkdj) / SUM(year_ndcjfy) AS wczb3,
-       
-       -- 指定时间人次数
-       SUM(three_rtzb) * SUM(three_rczb) as three_rcs,
-       SUM(mdzdsjrcs),
-       
-       -- 指定时间人头数 --4
-       SUM(three_rtzb),
-       SUM(mdzdsjrts),
-       
-       SUM(mdzdsjrts) / SUM(three_rtzb) AS wczb4,
-       
-       --  指定时间人头人次比 --5
-       sum(three_rczb),
-       sum(mdzdsjrtrcb),
-       
-       sum(mdzdsjrtrcb) / SUM(three_rczb) AS wczb5,
-       
-       -- 指定时间列支费用 /指定时间人次 --6
-       sum(three_cjfy),
-       sum(mdzdsjlzfy),
-       
-       sum(mdzdsjlzfy) / SUM(three_cjfy) AS wczb6,
-       sum(mdzdsjlzfyze)
-       FROM A
-       join t_zeys_zb B
-          on B.busno = A.busno
-         and YEAR_YEAR = 2023
-        GROUP BY classname 
-        ;
-       
+        UNION ALL
+        --片区小计
+        SELECT classname || '小计',
+               NULL,
+               NULL,
+               NULL,
+               --年度人次数
+               SUM(year_rtzb * year_rcb) as yearmdndrcs,
+               SUM(mdndrcs),
+
+               -- 年度人头数--1
+               SUM(year_rtzb),
+               SUM(mdndrts),
+               SUM(mdndrts) / SUM(year_rtzb) AS wczb1,
+               -- 年度人次人头比指标--2
+               SUM(year_rcb),
+               SUM(mdndrcrtb),
+               SUM(mdndrcrtb) / SUM(year_rcb) AS wczb2,
+               --年度均次消费 ---3
+               SUM(year_ndcjfy),
+               SUM(mdndkdj),
+               SUM(mdndkdj) / SUM(year_ndcjfy) AS wczb3,
+
+               -- 指定时间人次数
+               SUM(three_rtzb) * SUM(three_rczb) as three_rcs,
+               SUM(mdzdsjrcs),
+
+               -- 指定时间人头数 --4
+               SUM(three_rtzb),
+               SUM(mdzdsjrts),
+               SUM(mdzdsjrts) / SUM(three_rtzb) AS wczb4,
+
+               --  指定时间人头人次比 --5
+               sum(three_rczb),
+               sum(mdzdsjrtrcb),
+               sum(mdzdsjrtrcb) / SUM(three_rczb) AS wczb5,
+
+               -- 指定时间列支费用 /指定时间人次 --6
+               sum(three_cjfy),
+               sum(mdzdsjlzfy),
+               sum(mdzdsjlzfy) / SUM(three_cjfy) AS wczb6,
+               sum(mdzdsjlzfyze)
+        FROM A
+                 join t_zeys_zb B
+                      on B.busno = A.busno
+                          and YEAR_YEAR = 2023
+        GROUP BY classname;
+
   end if;
 
   if p_qs = 1 then
-    OPEN p_sql FOR
-    --insert into d_hz_ndrtrc(depotid,busno,orgname,mdndrcs,mdndrts,mdzdsjrcs,mdzdsjrts,mdndlzfy,mdzdsjlzfy,mdndrcrtb,mdndkdj,mdzdsjkdj,ndhzrcrtb,ndhzjcfy)
-      select --depotid,
-       qss as classname,
-       qss as qs,
-       qss as busno,
-       qss as orgname,
-       
-       year_rcs as yearmdndrcs,
-       --年度人次数
-       mdndrcs,
-       
-       year_rtzb,
-       mdndrts,
-       
-       mdndrts / year_rtzb AS wczb1,
-       
-       -- 年度人次人头比指标--2
-       year_rcs / year_rtzb as year_rcb,
-       mdndrcrtb,
-       mdndrcrtb / (year_rcs / year_rtzb) AS wczb2,
-       
-       --年度均次消费 ---3
-       year_ndcjfyze / year_rcs as year_ndcjfy,
-       mdndkdj,
-       mdndkdj / (year_ndcjfyze / year_rcs) AS wczb3,
-       -- 指定时间人次数
-       three_rcs as three_rcs,
-       mdzdsjrcs,
-       
-       -- 指定时间人头数 --4
-       three_rtzb,
-       mdzdsjrts,
-       mdzdsjrts / three_rtzb AS wczb4,
-       
-       --  指定时间人头人次比 --5
-       three_rcs / three_rtzb as three_rczb,
-       mdzdsjrtrcb,
-       mdzdsjrtrcb / (three_rcs / three_rtzb) AS wczb5,
-       
-       -- 指定时间列支费用 /指定时间人次 --6
-       three_ndcjfyze / three_rcs as three_cjfy,
-       mdzdsjlzfy,
-       mdzdsjlzfy / (three_ndcjfyze / three_rcs) AS wczb6,
-       mdzdsjlzfyze
-      
-      --year_rtzb/year_rcs as year_rcb,
-      
-      -- 年度人头数--1
-      --year_rtzb,
-      
-      --
-      
-        from (select
-              
-               a.depotid,
-               '' as busno,
-               '' as orgname,
-               sum(a.mdndrts) as mdndrts,
-               
-               --年度人次数
-               sum(a.mdndrcs) as mdndrcs,
-               
-               -- 年度人次人头比指标--2
-               case
-                 when sum(a.mdndrts) <> 0 then
-                  sum(a.mdndrcs) / sum(a.mdndrts)
-                 else
-                  0
-               end as mdndrcrtb,
-               --年度均次消费 ---3
-               case
-                 when sum(a.mdndrcs) <> 0 then
-                  sum(a.mdndlzfy) / sum(a.mdndrcs)
-                 else
-                  0
-               end as mdndkdj,
-               -- 指定时间人头数 --4
-               sum(a.mdzdsjrts) as mdzdsjrts,
-               --指定时间人次数
-               sum(a.mdzdsjrcs) as mdzdsjrcs,
-               
-               --  指定时间人头人次比 --5
-               case
-                 when sum(a.mdzdsjrts) <> 0 then
-                  sum(a.mdzdsjrcs) / sum(a.mdzdsjrts)
-                 else
-                  0
-               end as mdzdsjrtrcb,
-               -- 指定时间列支费用 /指定时间人次 --6
-               case
-                 when sum(a.mdzdsjrcs) <> 0 then
-                  sum(a.mdzdsjlzfy) / sum(a.mdzdsjrcs)
-                 else
-                  0
-               end mdzdsjlzfy,
-               sum(a.mdzdsjlzfy) as mdzdsjlzfyze
+      OPEN p_sql FOR
+          --insert into d_hz_ndrtrc(depotid,busno,orgname,mdndrcs,mdndrts,mdzdsjrcs,mdzdsjrts,mdndlzfy,mdzdsjlzfy,mdndrcrtb,mdndkdj,mdzdsjkdj,ndhzrcrtb,ndhzjcfy)
+          select --depotid,
+                 qss as classname,
+                 qss as qs,
+                 qss as busno,
+                 qss as orgname,
+                 year_rcs as yearmdndrcs,
+                 --年度人次数
+                 mdndrcs,
+                 year_rtzb,
+                 mdndrts,
+                 mdndrts / year_rtzb AS wczb1,
+
+                 -- 年度人次人头比指标--2
+                 year_rcs / year_rtzb as year_rcb,
+                 mdndrcrtb,
+                 mdndrcrtb / (year_rcs / year_rtzb) AS wczb2,
+
+                 --年度均次消费 ---3
+                 year_ndcjfyze / year_rcs as year_ndcjfy,
+                 mdndkdj,
+                 mdndkdj / (year_ndcjfyze / year_rcs) AS wczb3,
+                 -- 指定时间人次数
+                 three_rcs as three_rcs,
+                 mdzdsjrcs,
+
+                 -- 指定时间人头数 --4
+                 three_rtzb,
+                 mdzdsjrts,
+                 mdzdsjrts / three_rtzb AS wczb4,
+
+                 --  指定时间人头人次比 --5
+                 three_rcs / three_rtzb as three_rczb,
+                 mdzdsjrtrcb,
+                 mdzdsjrtrcb / (three_rcs / three_rtzb) AS wczb5,
+
+                 -- 指定时间列支费用 /指定时间人次 --6
+                 three_ndcjfyze / three_rcs as three_cjfy,
+                 mdzdsjlzfy,
+                 mdzdsjlzfy / (three_ndcjfyze / three_rcs) AS wczb6,
+                 mdzdsjlzfyze
+
+          --year_rtzb/year_rcs as year_rcb,
+
+          -- 年度人头数--1
+          --year_rtzb,
+
+          --
+
+          from (select a.depotid,
+                       '' as busno,
+                       '' as orgname,
+                       sum(a.mdndrts) as mdndrts,
+
+                       --年度人次数
+                       sum(a.mdndrcs) as mdndrcs,
+
+                       -- 年度人次人头比指标--2
+                       case
+                           when sum(a.mdndrts) <> 0 then
+                               sum(a.mdndrcs) / sum(a.mdndrts)
+                           else
+                               0
+                           end as mdndrcrtb,
+                       --年度均次消费 ---3
+                       case
+                           when sum(a.mdndrcs) <> 0 then
+                               sum(a.mdndlzfy) / sum(a.mdndrcs)
+                           else
+                               0
+                           end as mdndkdj,
+                       -- 指定时间人头数 --4
+                       sum(a.mdzdsjrts) as mdzdsjrts,
+                       --指定时间人次数
+                       sum(a.mdzdsjrcs) as mdzdsjrcs,
+
+                       --  指定时间人头人次比 --5
+                       case
+                           when sum(a.mdzdsjrts) <> 0 then
+                               sum(a.mdzdsjrcs) / sum(a.mdzdsjrts)
+                           else
+                               0
+                           end as mdzdsjrtrcb,
+                       -- 指定时间列支费用 /指定时间人次 --6
+                       case
+                           when sum(a.mdzdsjrcs) <> 0 then
+                               sum(a.mdzdsjlzfy) / sum(a.mdzdsjrcs)
+                           else
+                               0
+                           end mdzdsjlzfy,
+                       sum(a.mdzdsjlzfy) as mdzdsjlzfyze
                 from D_HZ_YWSJ_zeys a
-               group by a.depotid
-              
-              ) A
-       inner join (select (qs ) as qss,
-                          year_year,
-                          sum(year_rtzb) as year_rtzb,
-                          sum(year_rcs) as year_rcs,
-                          sum(year_ndcjfyze) as year_ndcjfyze,
-                          sum(three_rtzb) as three_rtzb,
-                          sum(three_rcs) as three_rcs,
-                          sum(three_ndcjfyze) as three_ndcjfyze
-                     from (select qs,
-                                  classname,
-                                  year_year,
-                                  year_rtzb,
-                                  year_rtzb * year_rcb as year_rcs,
-                                  year_rcb,
-                                  year_ndcjfy,
-                                  year_ndcjfy * year_rtzb * year_rcb as year_ndcjfyze,
-                                  three_rtzb,
-                                  three_rtzb * three_rczb as three_rcs,
-                                  three_rczb,
-                                  three_cjfy,
-                                  three_cjfy * three_rtzb * three_rczb as three_ndcjfyze
-                             from t_zeys_zb)
-                    group by qs, year_year) b
-          on qss = A.depotid
-         and YEAR_YEAR = 2023
-      
-      union all
-      
-      select --depotid,
-       qss as classname,
-       qss as qs,
-       qss as busno,
-       qss as orgname,
-       
-       year_rcs as yearmdndrcs,
-       --年度人次数
-       mdndrcs,
-       
-       year_rtzb,
-       mdndrts,
-       
-       mdndrts / year_rtzb AS wczb1,
-       
-       -- 年度人次人头比指标--2
-       year_rcs / year_rtzb as year_rcb,
-       mdndrcrtb,
-       mdndrcrtb / (year_rcs / year_rtzb) AS wczb2,
-       
-       --年度均次消费 ---3
-       year_ndcjfyze / year_rcs as year_ndcjfy,
-       mdndkdj,
-       mdndkdj / (year_ndcjfyze / year_rcs) AS wczb3,
-       -- 指定时间人次数
-       three_rcs as three_rcs,
-       mdzdsjrcs,
-       
-       -- 指定时间人头数 --4
-       three_rtzb,
-       mdzdsjrts,
-       mdzdsjrts / three_rtzb AS wczb4,
-       
-       --  指定时间人头人次比 --5
-       three_rcs / three_rtzb as three_rczb,
-       mdzdsjrtrcb,
-       mdzdsjrtrcb / (three_rcs / three_rtzb) AS wczb5,
-       
-       -- 指定时间列支费用 /指定时间人次 --6
-       three_ndcjfyze / three_rcs as three_cjfy,
-       mdzdsjlzfy,
-       mdzdsjlzfy / (three_ndcjfyze / three_rcs) AS wczb6,
-       mdzdsjlzfyze
-      
-      --year_rtzb/year_rcs as year_rcb,
-      
-      -- 年度人头数--1
-      --year_rtzb,
-      
-      --
-      
-        from (select
-              
-               ord2 as depotid,
-               '' as busno,
-               '' as orgname,
-               sum(a.mdndrts) as mdndrts,
-               
-               --年度人次数
-               sum(a.mdndrcs) as mdndrcs,
-               
-               -- 年度人次人头比指标--2
-               case
-                 when sum(a.mdndrts) <> 0 then
-                  sum(a.mdndrcs) / sum(a.mdndrts)
-                 else
-                  0
-               end as mdndrcrtb,
-               --年度均次消费 ---3
-               case
-                 when sum(a.mdndrcs) <> 0 then
-                  sum(a.mdndlzfy) / sum(a.mdndrcs)
-                 else
-                  0
-               end as mdndkdj,
-               -- 指定时间人头数 --4
-               sum(a.mdzdsjrts) as mdzdsjrts,
-               --指定时间人次数
-               sum(a.mdzdsjrcs) as mdzdsjrcs,
-               
-               --  指定时间人头人次比 --5
-               case
-                 when sum(a.mdzdsjrts) <> 0 then
-                  sum(a.mdzdsjrcs) / sum(a.mdzdsjrts)
-                 else
-                  0
-               end as mdzdsjrtrcb,
-               -- 指定时间列支费用 /指定时间人次 --6
-               case
-                 when sum(a.mdzdsjrcs) <> 0 then
-                  sum(a.mdzdsjlzfy) / sum(a.mdzdsjrcs)
-                 else
-                  0
-               end mdzdsjlzfy,
-               sum(a.mdzdsjlzfy) as mdzdsjlzfyze
+                group by a.depotid) A
+                   inner join (select (qs) as qss,
+                                      year_year,
+                                      sum(year_rtzb) as year_rtzb,
+                                      sum(year_rcs) as year_rcs,
+                                      sum(year_ndcjfyze) as year_ndcjfyze,
+                                      sum(three_rtzb) as three_rtzb,
+                                      sum(three_rcs) as three_rcs,
+                                      sum(three_ndcjfyze) as three_ndcjfyze
+                               from (select qs,
+                                            classname,
+                                            year_year,
+                                            year_rtzb,
+                                            year_rtzb * year_rcb as year_rcs,
+                                            year_rcb,
+                                            year_ndcjfy,
+                                            year_ndcjfy * year_rtzb * year_rcb as year_ndcjfyze,
+                                            three_rtzb,
+                                            three_rtzb * three_rczb as three_rcs,
+                                            three_rczb,
+                                            three_cjfy,
+                                            three_cjfy * three_rtzb * three_rczb as three_ndcjfyze
+                                     from t_zeys_zb)
+                               group by qs, year_year) b
+                              on qss = A.depotid
+                                  and YEAR_YEAR = 2023
+
+          union all
+
+          select --depotid,
+                 qss as classname,
+                 qss as qs,
+                 qss as busno,
+                 qss as orgname,
+                 year_rcs as yearmdndrcs,
+                 --年度人次数
+                 mdndrcs,
+                 year_rtzb,
+                 mdndrts,
+                 mdndrts / year_rtzb AS wczb1,
+
+                 -- 年度人次人头比指标--2
+                 year_rcs / year_rtzb as year_rcb,
+                 mdndrcrtb,
+                 mdndrcrtb / (year_rcs / year_rtzb) AS wczb2,
+
+                 --年度均次消费 ---3
+                 year_ndcjfyze / year_rcs as year_ndcjfy,
+                 mdndkdj,
+                 mdndkdj / (year_ndcjfyze / year_rcs) AS wczb3,
+                 -- 指定时间人次数
+                 three_rcs as three_rcs,
+                 mdzdsjrcs,
+
+                 -- 指定时间人头数 --4
+                 three_rtzb,
+                 mdzdsjrts,
+                 mdzdsjrts / three_rtzb AS wczb4,
+
+                 --  指定时间人头人次比 --5
+                 three_rcs / three_rtzb as three_rczb,
+                 mdzdsjrtrcb,
+                 mdzdsjrtrcb / (three_rcs / three_rtzb) AS wczb5,
+
+                 -- 指定时间列支费用 /指定时间人次 --6
+                 three_ndcjfyze / three_rcs as three_cjfy,
+                 mdzdsjlzfy,
+                 mdzdsjlzfy / (three_ndcjfyze / three_rcs) AS wczb6,
+                 mdzdsjlzfyze
+
+          --year_rtzb/year_rcs as year_rcb,
+
+          -- 年度人头数--1
+          --year_rtzb,
+
+          --
+
+          from (select ord2 as depotid,
+                       '' as busno,
+                       '' as orgname,
+                       sum(a.mdndrts) as mdndrts,
+
+                       --年度人次数
+                       sum(a.mdndrcs) as mdndrcs,
+
+                       -- 年度人次人头比指标--2
+                       case
+                           when sum(a.mdndrts) <> 0 then
+                               sum(a.mdndrcs) / sum(a.mdndrts)
+                           else
+                               0
+                           end as mdndrcrtb,
+                       --年度均次消费 ---3
+                       case
+                           when sum(a.mdndrcs) <> 0 then
+                               sum(a.mdndlzfy) / sum(a.mdndrcs)
+                           else
+                               0
+                           end as mdndkdj,
+                       -- 指定时间人头数 --4
+                       sum(a.mdzdsjrts) as mdzdsjrts,
+                       --指定时间人次数
+                       sum(a.mdzdsjrcs) as mdzdsjrcs,
+
+                       --  指定时间人头人次比 --5
+                       case
+                           when sum(a.mdzdsjrts) <> 0 then
+                               sum(a.mdzdsjrcs) / sum(a.mdzdsjrts)
+                           else
+                               0
+                           end as mdzdsjrtrcb,
+                       -- 指定时间列支费用 /指定时间人次 --6
+                       case
+                           when sum(a.mdzdsjrcs) <> 0 then
+                               sum(a.mdzdsjlzfy) / sum(a.mdzdsjrcs)
+                           else
+                               0
+                           end mdzdsjlzfy,
+                       sum(a.mdzdsjlzfy) as mdzdsjlzfyze
                 from D_HZ_YWSJ_zeys a
-               group by ord2
-              
-              ) A
-       inner join (select (MAX(classname)) as qss,
-                          year_year,
-                          sum(year_rtzb) as year_rtzb,
-                          sum(year_rcs) as year_rcs,
-                          sum(year_ndcjfyze) as year_ndcjfyze,
-                          sum(three_rtzb) as three_rtzb,
-                          sum(three_rcs) as three_rcs,
-                          sum(three_ndcjfyze) as three_ndcjfyze
-                     from (select qs,
-                                  classname,
-                                  year_year,
-                                  year_rtzb,
-                                  year_rtzb * year_rcb as year_rcs,
-                                  year_rcb,
-                                  year_ndcjfy,
-                                  year_ndcjfy * year_rtzb * year_rcb as year_ndcjfyze,
-                                  three_rtzb,
-                                  three_rtzb * three_rczb as three_rcs,
-                                  three_rczb,
-                                  three_cjfy,
-                                  three_cjfy * three_rtzb * three_rczb as three_ndcjfyze
-                             from t_zeys_zb)
-                    group BY  year_year) b
-          on qss = A.depotid
-         and YEAR_YEAR = 2023
-      
-      union all
-      
-      select --depotid,
-       '杭州总计' as classname,
-       '杭州总计' as qs,
-       '杭州总计' as busno,
-       '杭州总计' as orgname,
-       
-       year_rcs as yearmdndrcs,
-       --年度人次数
-       mdndrcs,
-       
-       year_rtzb,
-       mdndrts,
-       
-       mdndrts / year_rtzb AS wczb1,
-       
-       -- 年度人次人头比指标--2
-       year_rcs / year_rtzb as year_rcb,
-       mdndrcrtb,
-       mdndrcrtb / (year_rcs / year_rtzb) AS wczb2,
-       
-       --年度均次消费 ---3
-       year_ndcjfyze / year_rcs as year_ndcjfy,
-       mdndkdj,
-       mdndkdj / (year_ndcjfyze / year_rcs) AS wczb3,
-       -- 指定时间人次数
-       three_rcs as three_rcs,
-       mdzdsjrcs,
-       
-       -- 指定时间人头数 --4
-       three_rtzb,
-       mdzdsjrts,
-       mdzdsjrts / three_rtzb AS wczb4,
-       
-       --  指定时间人头人次比 --5
-       three_rcs / three_rtzb as three_rczb,
-       mdzdsjrtrcb,
-       mdzdsjrtrcb / (three_rcs / three_rtzb) AS wczb5,
-       
-       -- 指定时间列支费用 /指定时间人次 --6
-       three_ndcjfyze / three_rcs as three_cjfy,
-       mdzdsjlzfy,
-       mdzdsjlzfy / (three_ndcjfyze / three_rcs) AS wczb6,
-       mdzdsjlzfyze
-      
-      --year_rtzb/year_rcs as year_rcb,
-      
-      -- 年度人头数--1
-      --year_rtzb,
-      
-      --
-      
-        from (select
-              
-               ord as depotid,
-               '' as busno,
-               '' as orgname,
-               sum(a.mdndrts) as mdndrts,
-               
-               --年度人次数
-               sum(a.mdndrcs) as mdndrcs,
-               
-               -- 年度人次人头比指标--2
-               case
-                 when sum(a.mdndrts) <> 0 then
-                  sum(a.mdndrcs) / sum(a.mdndrts)
-                 else
-                  0
-               end as mdndrcrtb,
-               --年度均次消费 ---3
-               case
-                 when sum(a.mdndrcs) <> 0 then
-                  sum(a.mdndlzfy) / sum(a.mdndrcs)
-                 else
-                  0
-               end as mdndkdj,
-               -- 指定时间人头数 --4
-               sum(a.mdzdsjrts) as mdzdsjrts,
-               --指定时间人次数
-               sum(a.mdzdsjrcs) as mdzdsjrcs,
-               
-               --  指定时间人头人次比 --5
-               case
-                 when sum(a.mdzdsjrts) <> 0 then
-                  sum(a.mdzdsjrcs) / sum(a.mdzdsjrts)
-                 else
-                  0
-               end as mdzdsjrtrcb,
-               -- 指定时间列支费用 /指定时间人次 --6
-               case
-                 when sum(a.mdzdsjrcs) <> 0 then
-                  sum(a.mdzdsjlzfy) / sum(a.mdzdsjrcs)
-                 else
-                  0
-               end mdzdsjlzfy,
-               sum(a.mdzdsjlzfy) as mdzdsjlzfyze
+                group by ord2) A
+                   inner join (select (MAX(classname)) as qss,
+                                      year_year,
+                                      sum(year_rtzb) as year_rtzb,
+                                      sum(year_rcs) as year_rcs,
+                                      sum(year_ndcjfyze) as year_ndcjfyze,
+                                      sum(three_rtzb) as three_rtzb,
+                                      sum(three_rcs) as three_rcs,
+                                      sum(three_ndcjfyze) as three_ndcjfyze
+                               from (select qs,
+                                            classname,
+                                            year_year,
+                                            year_rtzb,
+                                            year_rtzb * year_rcb as year_rcs,
+                                            year_rcb,
+                                            year_ndcjfy,
+                                            year_ndcjfy * year_rtzb * year_rcb as year_ndcjfyze,
+                                            three_rtzb,
+                                            three_rtzb * three_rczb as three_rcs,
+                                            three_rczb,
+                                            three_cjfy,
+                                            three_cjfy * three_rtzb * three_rczb as three_ndcjfyze
+                                     from t_zeys_zb)
+                               group BY year_year) b
+                              on qss = A.depotid
+                                  and YEAR_YEAR = 2023
+
+          union all
+
+          select --depotid,
+                 '杭州总计' as classname,
+                 '杭州总计' as qs,
+                 '杭州总计' as busno,
+                 '杭州总计' as orgname,
+                 year_rcs as yearmdndrcs,
+                 --年度人次数
+                 mdndrcs,
+                 year_rtzb,
+                 mdndrts,
+                 mdndrts / year_rtzb AS wczb1,
+
+                 -- 年度人次人头比指标--2
+                 year_rcs / year_rtzb as year_rcb,
+                 mdndrcrtb,
+                 mdndrcrtb / (year_rcs / year_rtzb) AS wczb2,
+
+                 --年度均次消费 ---3
+                 year_ndcjfyze / year_rcs as year_ndcjfy,
+                 mdndkdj,
+                 mdndkdj / (year_ndcjfyze / year_rcs) AS wczb3,
+                 -- 指定时间人次数
+                 three_rcs as three_rcs,
+                 mdzdsjrcs,
+
+                 -- 指定时间人头数 --4
+                 three_rtzb,
+                 mdzdsjrts,
+                 mdzdsjrts / three_rtzb AS wczb4,
+
+                 --  指定时间人头人次比 --5
+                 three_rcs / three_rtzb as three_rczb,
+                 mdzdsjrtrcb,
+                 mdzdsjrtrcb / (three_rcs / three_rtzb) AS wczb5,
+
+                 -- 指定时间列支费用 /指定时间人次 --6
+                 three_ndcjfyze / three_rcs as three_cjfy,
+                 mdzdsjlzfy,
+                 mdzdsjlzfy / (three_ndcjfyze / three_rcs) AS wczb6,
+                 mdzdsjlzfyze
+
+          --year_rtzb/year_rcs as year_rcb,
+
+          -- 年度人头数--1
+          --year_rtzb,
+
+          --
+
+          from (select ord as depotid,
+                       '' as busno,
+                       '' as orgname,
+                       sum(a.mdndrts) as mdndrts,
+
+                       --年度人次数
+                       sum(a.mdndrcs) as mdndrcs,
+
+                       -- 年度人次人头比指标--2
+                       case
+                           when sum(a.mdndrts) <> 0 then
+                               sum(a.mdndrcs) / sum(a.mdndrts)
+                           else
+                               0
+                           end as mdndrcrtb,
+                       --年度均次消费 ---3
+                       case
+                           when sum(a.mdndrcs) <> 0 then
+                               sum(a.mdndlzfy) / sum(a.mdndrcs)
+                           else
+                               0
+                           end as mdndkdj,
+                       -- 指定时间人头数 --4
+                       sum(a.mdzdsjrts) as mdzdsjrts,
+                       --指定时间人次数
+                       sum(a.mdzdsjrcs) as mdzdsjrcs,
+
+                       --  指定时间人头人次比 --5
+                       case
+                           when sum(a.mdzdsjrts) <> 0 then
+                               sum(a.mdzdsjrcs) / sum(a.mdzdsjrts)
+                           else
+                               0
+                           end as mdzdsjrtrcb,
+                       -- 指定时间列支费用 /指定时间人次 --6
+                       case
+                           when sum(a.mdzdsjrcs) <> 0 then
+                               sum(a.mdzdsjlzfy) / sum(a.mdzdsjrcs)
+                           else
+                               0
+                           end mdzdsjlzfy,
+                       sum(a.mdzdsjlzfy) as mdzdsjlzfyze
                 from D_HZ_YWSJ_zeys a
-               group by ord
-              
-              ) A
-       inner join (select ('1060') as qss,
-                          year_year,
-                          sum(year_rtzb) as year_rtzb,
-                          sum(year_rcs) as year_rcs,
-                          sum(year_ndcjfyze) as year_ndcjfyze,
-                          sum(three_rtzb) as three_rtzb,
-                          sum(three_rcs) as three_rcs,
-                          sum(three_ndcjfyze) as three_ndcjfyze
-                     from (select qs,
-                                  classname,
-                                  year_year,
-                                  year_rtzb,
-                                  year_rtzb * year_rcb as year_rcs,
-                                  year_rcb,
-                                  year_ndcjfy,
-                                  year_ndcjfy * year_rtzb * year_rcb as year_ndcjfyze,
-                                  three_rtzb,
-                                  three_rtzb * three_rczb as three_rcs,
-                                  three_rczb,
-                                  three_cjfy,
-                                  three_cjfy * three_rtzb * three_rczb as three_ndcjfyze
-                             from t_zeys_zb)
-                    group by year_year) b
-          on qss = A.depotid
-          -- 这里和导入的 杭州预算数据 匹配 后期不需要可以删掉字段 和当前条件
-         and YEAR_YEAR = 2023
-         ;
+                group by ord) A
+                   inner join (select ('1060') as qss,
+                                      year_year,
+                                      sum(year_rtzb) as year_rtzb,
+                                      sum(year_rcs) as year_rcs,
+                                      sum(year_ndcjfyze) as year_ndcjfyze,
+                                      sum(three_rtzb) as three_rtzb,
+                                      sum(three_rcs) as three_rcs,
+                                      sum(three_ndcjfyze) as three_ndcjfyze
+                               from (select qs,
+                                            classname,
+                                            year_year,
+                                            year_rtzb,
+                                            year_rtzb * year_rcb as year_rcs,
+                                            year_rcb,
+                                            year_ndcjfy,
+                                            year_ndcjfy * year_rtzb * year_rcb as year_ndcjfyze,
+                                            three_rtzb,
+                                            three_rtzb * three_rczb as three_rcs,
+                                            three_rczb,
+                                            three_cjfy,
+                                            three_cjfy * three_rtzb * three_rczb as three_ndcjfyze
+                                     from t_zeys_zb)
+                               group by year_year) b
+                              on qss = A.depotid
+                                  -- 这里和导入的 杭州预算数据 匹配 后期不需要可以删掉字段 和当前条件
+                                  and YEAR_YEAR = 2023;
   end if;
   --commit;
 end;

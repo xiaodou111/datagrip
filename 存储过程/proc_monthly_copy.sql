@@ -1,4 +1,3 @@
---todo Ñ­»·¿â´æ
 create or replace procedure proc_monthly_copy
 as
 
