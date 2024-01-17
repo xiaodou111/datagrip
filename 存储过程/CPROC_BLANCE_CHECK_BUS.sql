@@ -1,4 +1,4 @@
-create PROCEDURE cproc_blance_check_bus( p_check_month IN d_check_computation.check_month%TYPE,
+create or replace PROCEDURE cproc_blance_check_bus( p_check_month IN d_check_computation.check_month%TYPE,
                                                     p_userid in s_user.userid%type,
                                                     p_busno in s_busi.busno%type)
 IS
@@ -39,8 +39,8 @@ if v_cnt > 0 then*/
   (accdate,busno,classgroupno,wareqtyb,wareqtya,abnqty,abnprice,jsprice,pdpfbl,gscdje,jsje,ckje,check_status,createtime,createuser)
   select check_month,busno,b.classgroupno,0,0,0,0,0,0,0,0,0,0,sysdate,p_userid
   from d_check_computation a ,
-  ( SELECT REGEXP_SUBSTR('02,03,04,05,06,07,08,09,11', '[^,]+', 1, rownum) as classgroupno  FROM DUAL
-   CONNECT BY ROWNUM <=LENGTH('02,03,04,05,06,07,08,09,11') - LENGTH(REPLACE('02,03,04,05,06,07,08,09,11', ',', NULL)) + 1) b
+  ( SELECT REGEXP_SUBSTR('02,03,04,05,06,07,08,09,11,16', '[^,]+', 1, rownum) as classgroupno  FROM DUAL
+   CONNECT BY ROWNUM <=LENGTH('02,03,04,05,06,07,08,09,11,16') - LENGTH(REPLACE('02,03,04,05,06,07,08,09,11,16', ',', NULL)) + 1) b
   where a.check_month =p_check_month and a.busno=p_busno
   union all
   select check_month,busno,b.classgroupno||c.classcode as classgroupno,0,0,0,0,0,0,0,0,0,0,sysdate,168
@@ -243,6 +243,13 @@ GROUP  BY a.busno;
 --结算金额
 
   update d_balance_check set jsje=ckje+jsprice+gscdje   where accdate=p_check_month and busno=p_busno;
+
+ --固定资产盘点结算结算金额
+ MERGE INTO d_balance_check T1
+  USING (select MONTH, BUSNO,'16' as classgroupno, JE from d_gdzc_pd) T2
+  ON ( T1.busno=T2.busno and T1.classgroupno=T2.classgroupno and T1.ACCDATE=p_check_month )
+  WHEN MATCHED THEN
+      UPDATE SET T1.JSJE   = T2.JE;
 
 end ;
 /
