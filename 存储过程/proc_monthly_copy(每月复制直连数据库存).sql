@@ -37,7 +37,7 @@ WHERE REGEXP_LIKE(ZLKDM, 'kc.*p001|p001.*kc', 'i')
      EXCEPTION
       WHEN OTHERS THEN
     v_sql := 'INSERT INTO d_kcView_his(viewname,copyday,GSMC, CPDM, CPMC, CPGG, DW, PH, SL, DJ, JE, CJSJ, YXQ, CKMC, FILENO, ZSCQYMS) ' ||
-             'SELECT''' || res.zlkdm ||''',trunc(sysdate),GSMC, CPDM, CPMC, CPGG, DW, PH, SL, DJ, JE, null, YXQ, CKMC,null,null ' ||
+             'SELECT''' || res.zlkdm ||''',trunc(sysdate),GSMC, CPDM, CPMC, CPGG, DW, PH, SL, DJ, JE, null, YXQ, null,null,null ' ||
              'FROM ' || res.zlkdm;
     begin
     EXECUTE IMMEDIATE v_sql;
@@ -51,7 +51,21 @@ WHERE REGEXP_LIKE(ZLKDM, 'kc.*p001|p001.*kc', 'i')
     EXECUTE IMMEDIATE v_sql;
      EXCEPTION
       WHEN OTHERS THEN
-        DBMS_OUTPUT.PUT_LINE('´íÎóµÄv_kcview'||'---'||res.zlkdm);
+    v_sql := 'INSERT INTO d_kcView_his(viewname,copyday,GSMC, CPDM, CPMC, CPGG, DW, PH, SL, DJ, JE, CJSJ, YXQ, CKMC, FILENO, ZSCQYMS) ' ||
+             'SELECT''' || res.zlkdm ||''',trunc(sysdate),null, CPDM, CPMC, CPGG, DW, PH, SL, null, null, null, null, null,null,null ' ||
+             'FROM ' || res.zlkdm;
+
+    begin
+    EXECUTE IMMEDIATE v_sql;
+     EXCEPTION
+      WHEN OTHERS THEN
+        v_sql := 'INSERT INTO d_kcView_his(viewname,copyday,GSMC) ' ||
+             'SELECT''' || res.zlkdm ||''',trunc(sysdate),''wrong'' ' ||
+             'FROM ' || res.zlkdm;
+        --DBMS_OUTPUT.PUT_LINE('´íÎóµÄv_kcview'||'---'||res.zlkdm);
+
+        EXECUTE IMMEDIATE v_sql;
+     end;
      end;
      end;
      end;
@@ -59,6 +73,6 @@ WHERE REGEXP_LIKE(ZLKDM, 'kc.*p001|p001.*kc', 'i')
      end;
      --select NAME1, WAREID, SCQY, SL, CPMC, CPGG, DW, FILENO, PH from V_KC_NH_P001_ZJ
  end loop;
-
+   commit ;
 end;
 
