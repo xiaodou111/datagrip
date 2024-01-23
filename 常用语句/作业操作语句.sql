@@ -1,0 +1,8 @@
+--关停作业
+BEGIN
+  DBMS_SCHEDULER.DISABLE('ZJCSPRD.默沙东平均分配');
+END;
+--恢复作业运行
+BEGIN
+  DBMS_SCHEDULER.ENABLE('ZJCSPRD.默沙东平均分配');
+END;
