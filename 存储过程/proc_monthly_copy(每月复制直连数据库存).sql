@@ -1,4 +1,4 @@
-create or replace procedure proc_monthly_copy
+create procedure proc_monthly_copy
 as
 
 
@@ -12,7 +12,7 @@ WHERE REGEXP_LIKE(ZLKDM, 'kc.*p001|p001.*kc', 'i')
  loop
 
     v_sql := 'INSERT INTO d_kcView_his(viewname,copyday,GSMC, CPDM, CPMC, CPGG, DW, PH, SL, DJ, JE, CJSJ, YXQ, CKMC, FILENO, ZSCQYMS) ' ||
-             'SELECT''' || res.zlkdm ||''',trunc(sysdate),GSMC, CPDM, CPMC, CPGG, DW, PH, SL, DJ, JE, null, YXQ, CKMC, FILENO, ZSCQYMS ' ||
+             'SELECT''' || res.zlkdm ||''',trunc(sysdate)-1,GSMC, CPDM, CPMC, CPGG, DW, PH, SL, DJ, JE, null, YXQ, CKMC, FILENO, ZSCQYMS ' ||
              'FROM ' || res.zlkdm;
     --DBMS_OUTPUT.PUT_LINE('v_sql'||'---'||v_sql||'---'||res.zlkdm);
      BEGIN
@@ -22,7 +22,7 @@ WHERE REGEXP_LIKE(ZLKDM, 'kc.*p001|p001.*kc', 'i')
      EXCEPTION
       WHEN OTHERS THEN
      v_sql := 'INSERT INTO d_kcView_his(viewname,copyday,GSMC, CPDM, CPMC, CPGG, DW, PH, SL, DJ, JE, CJSJ, YXQ, CKMC, FILENO, ZSCQYMS) ' ||
-             'SELECT''' || res.zlkdm ||''',trunc(sysdate), NAME1, WAREID,CPMC, CPGG, DW, PH, SL,null,null,null,null,null, FILENO, SCQY ' ||
+             'SELECT''' || res.zlkdm ||''',trunc(sysdate)-1, NAME1, WAREID,CPMC, CPGG, DW, PH, SL,null,null,null,null,null, FILENO, SCQY ' ||
              'FROM ' || res.zlkdm;
      --DBMS_OUTPUT.PUT_LINE('´íÎóµÄv_kcview'||'---'||res.zlkdm);
      begin
@@ -30,21 +30,21 @@ WHERE REGEXP_LIKE(ZLKDM, 'kc.*p001|p001.*kc', 'i')
      EXCEPTION
       WHEN OTHERS THEN
      v_sql := 'INSERT INTO d_kcView_his(viewname,copyday,GSMC, CPDM, CPMC, CPGG, DW, PH, SL, DJ, JE, CJSJ, YXQ, CKMC, FILENO, ZSCQYMS) ' ||
-             'SELECT''' || res.zlkdm ||''',trunc(sysdate),GSMC, CPDM, CPMC, CPGG, DW, PH, SL, DJ, JE, null, YXQ, CKMC, FILENO, ZSCQYMC ' ||
+             'SELECT''' || res.zlkdm ||''',trunc(sysdate)-1,GSMC, CPDM, CPMC, CPGG, DW, PH, SL, DJ, JE, null, YXQ, CKMC, FILENO, ZSCQYMC ' ||
              'FROM ' || res.zlkdm;
      begin
      EXECUTE IMMEDIATE v_sql;
      EXCEPTION
       WHEN OTHERS THEN
     v_sql := 'INSERT INTO d_kcView_his(viewname,copyday,GSMC, CPDM, CPMC, CPGG, DW, PH, SL, DJ, JE, CJSJ, YXQ, CKMC, FILENO, ZSCQYMS) ' ||
-             'SELECT''' || res.zlkdm ||''',trunc(sysdate),GSMC, CPDM, CPMC, CPGG, DW, PH, SL, DJ, JE, null, YXQ, null,null,null ' ||
+             'SELECT''' || res.zlkdm ||''',trunc(sysdate)-1,GSMC, CPDM, CPMC, CPGG, DW, PH, SL, DJ, JE, null, YXQ, null,null,null ' ||
              'FROM ' || res.zlkdm;
     begin
     EXECUTE IMMEDIATE v_sql;
      EXCEPTION
       WHEN OTHERS THEN
     v_sql := 'INSERT INTO d_kcView_his(viewname,copyday,GSMC, CPDM, CPMC, CPGG, DW, PH, SL, DJ, JE, CJSJ, YXQ, CKMC, FILENO, ZSCQYMS) ' ||
-             'SELECT''' || res.zlkdm ||''',trunc(sysdate),null, CPDM, CPMC, CPGG, DW, PH, SL, null, null, null, null, null,null,null ' ||
+             'SELECT''' || res.zlkdm ||''',trunc(sysdate)-1,null, CPDM, CPMC, CPGG, DW, PH, SL, null, null, null, null, null,null,null ' ||
              'FROM ' || res.zlkdm;
 
     begin
@@ -52,7 +52,7 @@ WHERE REGEXP_LIKE(ZLKDM, 'kc.*p001|p001.*kc', 'i')
      EXCEPTION
       WHEN OTHERS THEN
     v_sql := 'INSERT INTO d_kcView_his(viewname,copyday,GSMC, CPDM, CPMC, CPGG, DW, PH, SL, DJ, JE, CJSJ, YXQ, CKMC, FILENO, ZSCQYMS) ' ||
-             'SELECT''' || res.zlkdm ||''',trunc(sysdate),null, CPDM, CPMC, CPGG, DW, PH, SL, null, null, null, null, null,null,null ' ||
+             'SELECT''' || res.zlkdm ||''',trunc(sysdate)-1,null, CPDM, CPMC, CPGG, DW, PH, SL, null, null, null, null, null,null,null ' ||
              'FROM ' || res.zlkdm;
 
     begin
@@ -60,7 +60,7 @@ WHERE REGEXP_LIKE(ZLKDM, 'kc.*p001|p001.*kc', 'i')
      EXCEPTION
       WHEN OTHERS THEN
         v_sql := 'INSERT INTO d_kcView_his(viewname,copyday,GSMC) ' ||
-             'SELECT''' || res.zlkdm ||''',trunc(sysdate),''wrong'' ' ||
+             'SELECT''' || res.zlkdm ||''',trunc(sysdate)-1,''wrong'' ' ||
              'FROM ' || res.zlkdm;
         --DBMS_OUTPUT.PUT_LINE('´íÎóµÄv_kcview'||'---'||res.zlkdm);
 
@@ -75,4 +75,5 @@ WHERE REGEXP_LIKE(ZLKDM, 'kc.*p001|p001.*kc', 'i')
  end loop;
    commit ;
 end;
+/
 
