@@ -1,4 +1,4 @@
-create or replace view V_SALE_OJL_P001 as
+create view V_SALE_OJL_P001 as
 select o.zodertype||o.zorder as billno,'' as xsfdm,
 DECODE(werks,'D001','台州瑞人堂药业有限公司','D006','金华瑞人堂保济堂医药连锁有限公司','D007','宁波瑞人堂弘德医药连锁有限公司','D010','浙江瑞人堂医药连锁有限公司') as xsfmc,
 case when o.zodertype in ('4','5') then o.zodertype
@@ -13,6 +13,7 @@ from stock_out o
 WHERE   o.zodertype IN ('2','4','5') and werks in ('D001','D006','D007','D010') and lgort not in ('P888','P006')
 and o.matnr in  (select wareid from d_ojl_ware)
 and   zdate>=date'2024-01-01' and o.NAME1 not like '%诊所%'
+and o.LIFNR in ('110093','110673','110190','110388')
 
 UNION ALL
 SELECT i.zodertype||i.zorder as billno,'' as xsfdm,
@@ -29,6 +30,7 @@ i.VFDAT AS yxq,i.lgobe AS CKMC,t.fileno AS fileno,ZSCQYMC as scqy,i.lgort
 WHERE i.zodertype IN ('2','4','5') AND  i.werks in ('D001','D006','D007','D010') and lgort not in ('P888','P006')
 AND i.matnr IN (select wareid from d_ojl_ware)
 and   zdate>=date'2024-01-01' and i.NAME1 not like '%诊所%'
+and i.LIFNR in ('110093','110673','110190','110388')
 --P888,P006采购退货即入库
 union all
 select o.zodertype||o.zorder as billno,'' as xsfdm,
@@ -44,6 +46,7 @@ from stock_out o
 WHERE   o.zodertype IN ('1') and werks in ('D001','D006','D007','D010') and lgort in ('P888','P006')
 and o.matnr in  (select wareid from d_ojl_ware)
 and   zdate>=date'2024-01-01'
+and o.LIFNR in ('110093','110673','110190','110388')
 --P888,P006采购入库即出库
 union all
 SELECT i.zodertype||i.zorder as billno,'' as xsfdm,
@@ -59,6 +62,8 @@ i.VFDAT AS yxq,i.lgobe AS CKMC,t.fileno AS fileno,ZSCQYMC as scqy,'P001'
 WHERE i.zodertype IN ('1') AND  i.werks in ('D001','D006','D007','D010')  and lgort in ('P888','P006')
 AND i.matnr IN (select wareid from d_ojl_ware)
 and   zdate>=date'2024-01-01'
+and i.LIFNR in ('110093','110673','110190','110388')
+
 --P888,P006移到P001,显示负数
 union all
 select o.zodertype||o.zorder as billno,'' as xsfdm,
@@ -73,6 +78,7 @@ join stock_in i  ON o.zorder=i.zorder AND o.matnr=i.matnr AND o.zgysph=i.zgysph 
 WHERE  o.lgort in('P888','P006') AND i.lgort='P001' and o.zodertype IN ('3') and o.werks in ('D001','D006','D007','D010')
 and o.matnr in  (select wareid from d_ojl_ware)
 and   o.zdate>=date'2024-01-01'
+and o.LIFNR in ('110093','110673','110190','110388')
 union all
 --P001移到P888,P006,显示正数出库
 select o.zodertype||o.zorder as billno,'' as xsfdm,
@@ -87,6 +93,8 @@ join stock_in o  ON o.zorder=i.zorder AND o.matnr=i.matnr AND o.zgysph=i.zgysph 
 WHERE  o.lgort in('P888','P006') AND i.lgort='P001' and o.zodertype IN ('3') and o.werks in ('D001','D006','D007','D010')
 and o.matnr in  (select wareid from d_ojl_ware)
 and   o.zdate>=date'2024-01-01'
+and i.LIFNR in ('110093','110673','110190','110388')
+union all
 --批发出库和批发退货相关单位为诊所的 75%的数量 改为对应的门店,门店匹配不到就改为：瑞人堂医药集团股份有限公司龙泉店(西药D),25%的数量真实体现
 select o.zodertype||o.zorder as billno,'' as xsfdm,
 DECODE(werks,'D001','台州瑞人堂药业有限公司','D006','金华瑞人堂保济堂医药连锁有限公司','D007','宁波瑞人堂弘德医药连锁有限公司','D010','浙江瑞人堂医药连锁有限公司') as xsfmc,
@@ -104,6 +112,7 @@ LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=o.matnr
 WHERE   o.zodertype IN ('2','4','5') and werks in ('D001','D006','D007','D010') and lgort not in ('P888','P006')
 and o.matnr in  (select wareid from d_ojl_ware)
 and   zdate>=date'2024-01-01' and o.NAME1 like '%诊所%'
+and o.LIFNR in ('110093','110673','110190','110388')
 union all
 select o.zodertype||o.zorder as billno,'' as xsfdm,
 DECODE(werks,'D001','台州瑞人堂药业有限公司','D006','金华瑞人堂保济堂医药连锁有限公司','D007','宁波瑞人堂弘德医药连锁有限公司','D010','浙江瑞人堂医药连锁有限公司') as xsfmc,
@@ -121,6 +130,7 @@ LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=o.matnr
 WHERE   o.zodertype IN ('2','4','5') and werks in ('D001','D006','D007','D010') and lgort not in ('P888','P006')
 and o.matnr in  (select wareid from d_ojl_ware)
 and   zdate>=date'2024-01-01' and o.NAME1 like '%诊所%' and floor(o.menge*0.25)>0
+and o.LIFNR in ('110093','110673','110190','110388')
 --诊所退货
 union all
 SELECT i.zodertype||i.zorder as billno,'' as xsfdm,
@@ -138,6 +148,7 @@ left join s_busi@hydee_zy c on b.busno=c.busno
 WHERE i.zodertype IN ('2','4','5') AND  i.werks in ('D001','D006','D007','D010') and lgort not in ('P888','P006')
 AND i.matnr IN (select wareid from d_ojl_ware)
 and   zdate>=date'2024-01-01' and i.NAME1  like '%诊所%'
+and i.LIFNR in ('110093','110673','110190','110388')
 union all
 SELECT i.zodertype||i.zorder as billno,'' as xsfdm,
 DECODE(werks,'D001','台州瑞人堂药业有限公司','D006','金华瑞人堂保济堂医药连锁有限公司','D007','宁波瑞人堂弘德医药连锁有限公司','D010','浙江瑞人堂医药连锁有限公司') as xsfmc,
@@ -154,9 +165,6 @@ left join s_busi@hydee_zy c on b.busno=c.busno
 WHERE i.zodertype IN ('2','4','5') AND  i.werks in ('D001','D006','D007','D010') and lgort not in ('P888','P006')
 AND i.matnr IN (select wareid from d_ojl_ware)
 and   zdate>=date'2024-01-01' and i.NAME1  like '%诊所%' and floor(i.menge*0.25)>0
-
-
+and i.LIFNR in ('110093','110673','110190','110388')
 /
-
-
 

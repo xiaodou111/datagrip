@@ -1,6 +1,7 @@
 create procedure proc_sjzl_createzbview_ty (p_name in varchar2,
                                               p_waretable in VARCHAR2,
-                                             p_werks  in VARCHAR2
+                                             p_werks  in VARCHAR2,
+                                             p_ifty  in varchar2
                                               --p_lifnr IN VARCHAR2
 
 
@@ -19,10 +20,18 @@ create procedure proc_sjzl_createzbview_ty (p_name in varchar2,
         v_kk2   varchar2(6000);
 
      begin
+
+         if p_ifty=0 then
+       v_accept := 'V_ACCEPT_' || p_name || '_P001';
+       v_kc := 'V_KC_' || p_name || '_P001';
+       v_sale := 'V_SALE_' || p_name || '_P001';
+         end if;
+
+         if p_ifty=1 then
        v_accept := 'V_ACCEPT_' || p_name || '_P001_TY';
        v_kc := 'V_KC_' || p_name || '_P001_TY';
        v_sale := 'V_SALE_' || p_name || '_P001_TY';
-
+         end if;
 
        /*SELECT f_get_sjzl_rename(p_wareids)
       into v_wareids
