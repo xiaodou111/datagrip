@@ -24,4 +24,18 @@ select id, REGEXP_SUBSTR( name,'[^,]+', 1, level) as value
 from tmp
 connect by level <= regexp_count(name, '[^,]+')
 and prior id=id
-and prior dbms_random.value() is not null
+and prior dbms_random.value() is not null;
+
+--递归生成日期
+SELECT TRUNC(SYSDATE - LEVEL),LEVEL OC_DATE FROM DUAL CONNECT BY LEVEL <= 100;
+
+
+select saleno,SYS_CONNECT_BY_PATH(WAREID,' ')
+from (select saleno, WAREID, ROWNUM AS RN
+      from T_SALE_D d
+      where SALENO in('2103010128700005')
+--       where SALENO='2103010128700005'
+      )
+WHERE LEVEL>1
+connect by RN > PRIOR RN
+ORDER BY WAREID;
