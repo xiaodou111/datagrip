@@ -1,4 +1,4 @@
-create PROCEDURE CPROC_COUPON_INFO_JYBYHQ(p_card_no in t_cash_coupon_info.card_no%type,
+create or replace PROCEDURE CPROC_COUPON_INFO_JYBYHQ(p_card_no in t_cash_coupon_info.card_no%type,
                                                      p_coupon_no in t_cash_coupon_info.coupon_no%type,
                                                      p_coupon_desc in t_cash_coupon_info.coupon_desc%type,
                                                      p_bak4 in t_cash_coupon_info.bak4%type,
@@ -76,7 +76,8 @@ BEGIN
                  SYSDATE,
                  nvl(v_compid,1000),
                  BUSNOS,
-                 p_coupon_values,
+                 --20230304健易宝活动由p_coupon_values改为COUPON_VALUES
+                 COUPON_VALUES,
                  least_sales,
                  COUPON_TYPE,
                  p_coupon_desc,
