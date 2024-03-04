@@ -1,4 +1,4 @@
-create PROCEDURE cproc_coupon_618_rsv(p_compid IN t_ware.compid%TYPE,
+create or replace PROCEDURE cproc_coupon_618_rsv(p_compid IN t_ware.compid%TYPE,
                                                     p_busno in s_busi.busno%type,
                                                     p_wareid in t_ware.wareid%type,
                                                     p_memcardno t_memcard_reg.memcardno%type,
@@ -1886,6 +1886,367 @@ BEGIN
  
                 
                         
+          EXCEPTION
+            WHEN OTHERS THEN
+              RAISE_APPLICATION_ERROR(-20001, '赠送代金券失败!', TRUE);
+              RETURN;
+          END;
+
+       end if ;
+
+
+        if p_reserve_type = 37  then
+
+          BEGIN
+                       --插入券信息 AB类非药满减 医疗耗材不参与
+--            v_x := 1;
+--            v_y :=15;
+
+--            while v_x <= 10 loop
+           --满29-8
+            V_COUPONNO := F_GET_SERIAL(IN_BILLCODE => 'COUPON',
+                                       IN_ORG_CODE => p_busno);
+
+           --插入券信息 原价满减券
+                INSERT INTO T_CASH_COUPON_INFO
+                  (COUPON_NO,
+                   ISSUING_DATE,
+                   COMPID,
+                   BUSNOS,
+                   COUPON_VALUES,
+                   LEAST_SALES,
+                   COUPON_TYPE,
+                   COUPON_DESC,
+                   CARD_NO,
+                   MOBILE,
+                   START_DATE,
+                   END_DATE,
+                   USE_STATUS,
+                   STATUS,
+                   NOTES,
+                   CREATEUSER,
+                   CREATETIME,
+                   GIVE_SALENO,
+                   COUPON_KIND,    --1现金券 2折扣券 4特价券(指定价格使用)
+                   ADVANCE_PAYAMT, --预约金
+                   CREATE_BUSNO,
+                   CREATE_TPYE, --发放方式；0促销发券，1手工发券，2线上发券
+                   BAK4,
+                   BAK6,
+                   BAK7,
+                   BAK9, --券类型1折扣、2满减、4特价券(指定价格使用)
+                   ADV_TYPE)
+
+                  SELECT V_COUPONNO,
+                         SYSDATE,
+                         p_compid,
+                         p_busnos,
+                         COUPON_VALUES,
+                         LEAST_SALES,
+                         '现金券YJA',
+                         '全场原价满减',
+                         p_memcardno,
+                         V_TEL,
+                         USER_BEGINDATE,
+                         USER_ENDDATE,
+                         0,
+                         1,
+                         notes,
+                         p_user,
+                         SYSDATE,
+                         p_saleno,
+                         1 as COUPON_KIND,--1现金券，2折扣券，4定价券
+                         0,
+                         p_busno,
+                         1 ,
+                         wareid,
+                         V_COUPONNO,
+                         null,
+                         2,
+                         p_reserve_type
+                    from d_ware_coupon_rsv where compid=p_compid and wareid=p_wareid and reserve_type=p_reserve_type;
+
+                    out_coupon_no := '''' || V_COUPONNO || '''' ;
+--                     v_x := v_x + 1;
+
+--               end loop;
+
+          --满ABC类满99-15
+
+            for i in 1..2 loop
+            V_COUPONNO := F_GET_SERIAL(IN_BILLCODE => 'COUPON',
+                                       IN_ORG_CODE => p_busno);
+
+           --插入券信息 原价满减券
+                INSERT INTO T_CASH_COUPON_INFO
+                  (COUPON_NO,
+                   ISSUING_DATE,
+                   COMPID,
+                   BUSNOS,
+                   COUPON_VALUES,
+                   LEAST_SALES,
+                   COUPON_TYPE,
+                   COUPON_DESC,
+                   CARD_NO,
+                   MOBILE,
+                   START_DATE,
+                   END_DATE,
+                   USE_STATUS,
+                   STATUS,
+                   NOTES,
+                   CREATEUSER,
+                   CREATETIME,
+                   GIVE_SALENO,
+                   COUPON_KIND,    --1现金券 2折扣券 4特价券(指定价格使用)
+                   ADVANCE_PAYAMT, --预约金
+                   CREATE_BUSNO,
+                   CREATE_TPYE, --发放方式；0促销发券，1手工发券，2线上发券
+                   BAK4,
+                   BAK6,
+                   BAK7,
+                   BAK9, --券类型1折扣、2满减、4特价券(指定价格使用)
+                   ADV_TYPE)
+
+                  SELECT V_COUPONNO,
+                         SYSDATE,
+                         p_compid,
+                         p_busnos,
+                         15 as COUPON_VALUES,
+                         99 as LEAST_SALES,
+                         '商品代金券C',
+                         'ABC类满99-15',
+                         p_memcardno,
+                         V_TEL,
+                         USER_BEGINDATE,
+                         USER_ENDDATE,
+                         0,
+                         1,
+                         notes,
+                         p_user,
+                         SYSDATE,
+                         p_saleno,
+                         1 as COUPON_KIND,--1现金券，2折扣券，4定价券
+                         0,
+                         p_busno,
+                         1 ,
+                         wareid,
+                         V_COUPONNO,
+                         null,
+                         2,
+                         p_reserve_type
+                    from d_ware_coupon_rsv where compid=p_compid and wareid=p_wareid and reserve_type=p_reserve_type;
+
+                    out_coupon_no := out_coupon_no || ',' ||'''' || V_COUPONNO || '''' ;
+            end loop;
+
+
+
+           --满150-60
+             for i in 1..2 loop
+            V_COUPONNO := F_GET_SERIAL(IN_BILLCODE => 'COUPON',
+                                       IN_ORG_CODE => p_busno);
+
+           --插入券信息 原价满减券
+                INSERT INTO T_CASH_COUPON_INFO
+                  (COUPON_NO,
+                   ISSUING_DATE,
+                   COMPID,
+                   BUSNOS,
+                   COUPON_VALUES,
+                   LEAST_SALES,
+                   COUPON_TYPE,
+                   COUPON_DESC,
+                   CARD_NO,
+                   MOBILE,
+                   START_DATE,
+                   END_DATE,
+                   USE_STATUS,
+                   STATUS,
+                   NOTES,
+                   CREATEUSER,
+                   CREATETIME,
+                   GIVE_SALENO,
+                   COUPON_KIND,    --1现金券 2折扣券 4特价券(指定价格使用)
+                   ADVANCE_PAYAMT, --预约金
+                   CREATE_BUSNO,
+                   CREATE_TPYE, --发放方式；0促销发券，1手工发券，2线上发券
+                   BAK4,
+                   BAK6,
+                   BAK7,
+                   BAK9, --券类型1折扣、2满减、4特价券(指定价格使用)
+                   ADV_TYPE)
+
+                  SELECT V_COUPONNO,
+                         SYSDATE,
+                         p_compid,
+                         p_busnos,
+                         60 as COUPON_VALUES,
+                         150 as LEAST_SALES,
+                         '商品代金券F',
+                         '全场ab非药满150-60',
+                         p_memcardno,
+                         V_TEL,
+                         USER_BEGINDATE,
+                         USER_ENDDATE,
+                         0,
+                         1,
+                         notes,
+                         p_user,
+                         SYSDATE,
+                         p_saleno,
+                         1 as COUPON_KIND,--1现金券，2折扣券，4定价券
+                         0,
+                         p_busno,
+                         1 ,
+                         wareid,
+                         V_COUPONNO,
+                         null,
+                         2,
+                         p_reserve_type
+                    from d_ware_coupon_rsv where compid=p_compid and wareid=p_wareid and reserve_type=p_reserve_type;
+
+                    out_coupon_no := out_coupon_no || ',' ||'''' || V_COUPONNO || '''' ;
+            end loop;
+
+             V_COUPONNO := F_GET_SERIAL(IN_BILLCODE => 'COUPON',
+                                       IN_ORG_CODE => p_busno);
+
+           --插入券信息 原价满减券
+                INSERT INTO T_CASH_COUPON_INFO
+                  (COUPON_NO,
+                   ISSUING_DATE,
+                   COMPID,
+                   BUSNOS,
+                   COUPON_VALUES,
+                   LEAST_SALES,
+                   COUPON_TYPE,
+                   COUPON_DESC,
+                   CARD_NO,
+                   MOBILE,
+                   START_DATE,
+                   END_DATE,
+                   USE_STATUS,
+                   STATUS,
+                   NOTES,
+                   CREATEUSER,
+                   CREATETIME,
+                   GIVE_SALENO,
+                   COUPON_KIND,    --1现金券 2折扣券 4特价券(指定价格使用)
+                   ADVANCE_PAYAMT, --预约金
+                   CREATE_BUSNO,
+                   CREATE_TPYE, --发放方式；0促销发券，1手工发券，2线上发券
+                   BAK4,
+                   BAK6,
+                   BAK7,
+                   BAK9, --券类型1折扣、2满减、4特价券(指定价格使用)
+                   ADV_TYPE)
+
+                  SELECT V_COUPONNO,
+                         SYSDATE,
+                         p_compid,
+                         p_busnos,
+                         0 as COUPON_VALUES,
+                         0 as LEAST_SALES,
+                         '邀约券30701294',
+                         '邀约券30701294',
+                         p_memcardno,
+                         V_TEL,
+                         USER_BEGINDATE,
+                         USER_ENDDATE,
+                         0,
+                         1,
+                         notes,
+                         p_user,
+                         SYSDATE,
+                         p_saleno,
+                         2 as COUPON_KIND,--1现金券，2折扣券，4定价券
+                         0,
+                         p_busno,
+                         1 ,
+                         wareid,
+                         V_COUPONNO,
+                         null,
+                         2,
+                         p_reserve_type
+                    from d_ware_coupon_rsv where compid=p_compid and wareid=p_wareid and reserve_type=p_reserve_type;
+
+                    out_coupon_no := out_coupon_no || ',' ||'''' || V_COUPONNO || '''' ;
+
+             /* 如果有设置 预约后再赠送商品*/
+
+             if  nvl(p_pst_ware,'空')<>'空' then
+
+               --取券号
+                V_COUPONNO := F_GET_SERIAL(IN_BILLCODE => 'COUPON',
+                                           IN_ORG_CODE => p_busno);
+
+               --插入券信息
+                INSERT INTO T_CASH_COUPON_INFO
+                  (COUPON_NO,
+                   ISSUING_DATE,
+                   COMPID,
+                   BUSNOS,
+                   COUPON_VALUES,
+                   LEAST_SALES,
+                   COUPON_TYPE,
+                   COUPON_DESC,
+                   CARD_NO,
+                   MOBILE,
+                   START_DATE,
+                   END_DATE,
+                   USE_STATUS,
+                   STATUS,
+                   NOTES,
+                   CREATEUSER,
+                   CREATETIME,
+                   GIVE_SALENO,
+                   COUPON_KIND,    --1现金券 2折扣券 4特价券(指定价格使用)
+                   ADVANCE_PAYAMT, --预约金
+                   CREATE_BUSNO,
+                   CREATE_TPYE, --发放方式；0促销发券，1手工发券，2线上发券
+                   BAK4,
+                   BAK6,
+                   BAK7,
+                   BAK9, --券类型1折扣、2满减、4特价券(指定价格使用)
+                   ADV_TYPE )
+
+                  SELECT V_COUPONNO,
+                         SYSDATE,
+                         p_compid,
+                         p_busnos,
+                         0 as COUPON_VALUES,
+                         0 as LEAST_SALES,
+                         '礼品券'||p_pst_ware,
+                         '礼品券'||p_pst_ware,
+                         p_memcardno,
+                         V_TEL,
+                         --nvl(pst_begindate,user_begindate),
+                         --nvl(pst_enddate,user_enddate),
+                         nvl(pst_begindate,user_begindate),
+                         nvl(pst_enddate,user_enddate),
+                         0,
+                         1,
+                         notes,
+                         p_user,
+                         SYSDATE,
+                         p_saleno,
+                         2,
+                         reserve_amt,
+                         p_busno,
+                         1 ,
+                         wareid,
+                         V_COUPONNO,
+                         '礼品券'||p_pst_ware            AS BAK7,
+                         3,
+                         p_reserve_type
+                    from d_ware_coupon_rsv where compid=p_compid and wareid=p_wareid and reserve_type=p_reserve_type;
+
+                    out_coupon_no := out_coupon_no || ',' || '''' || V_COUPONNO || '''';
+
+              end if;
+
+
+
           EXCEPTION
             WHEN OTHERS THEN
               RAISE_APPLICATION_ERROR(-20001, '赠送代金券失败!', TRUE);
