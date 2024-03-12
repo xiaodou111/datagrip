@@ -1,4 +1,4 @@
-create PROCEDURE proc_day_inout_hmk(p_busno IN VARCHAR2,
+create or replace PROCEDURE proc_day_inout_hmk(p_busno IN VARCHAR2,
                                                  p_begindate IN DATE,
                                                  p_enddate IN DATE,
                                                  p_wareid IN VARCHAR2,
@@ -147,7 +147,7 @@ BEGIN
      AND a.execdate < p_enddate + 1
     --AND (b.warecode = p_wareid OR p_wareid IS NULL)
      GROUP BY a.busno, a.wareid, a.batchno, a.idno, a.stallno;
-
+  if p_busno<>'8240539'  then
   v_sql := 'select a.busno as 业务机构,''' || v_orgname ||
            ''' as 机构名称,b.warecode as 商品编码,max(b.warename) as 商品名称,
           max(b.warespec) as 规格,max(d.factoryname) as 生产企业,max(b.wareunit) as 单位,
@@ -177,9 +177,37 @@ BEGIN
           group by a.busno,b.warecode';
   /*,sum(beginqty + accqty - rejqty + disqty - dirqty - saleqty +macinqty - macoutqty + cheqty - whlqty
   + whrqty + addqty - adrqty - adpoutqty + adpinqty - abninqty - failureqty - endqty)*/
-  
+  else
+  v_sql := 'select a.busno as 业务机构,''' || v_orgname ||
+           ''' as 机构名称,b.warecode as 商品编码,max(b.warename) as 商品名称,
+          max(b.warespec) as 规格,max(d.factoryname) as 生产企业,max(b.wareunit) as 单位,
+          sum(beginqty) as 期初数量,sum(round(beginqty*a.purprice,2)) as 期初金额,
+          sum(accqty) as 入库数量,sum(round(accqty*a.purprice,2)) as 入库金额,
+          sum(rejqty) as 退货数量,sum(round(rejqty*a.purprice,2)) as 退货金额,
+          sum(disqty) as 配送数量,sum(round(disqty*a.purprice,2)) as 配送金额,
+          sum(dirqty) as 退仓数量,sum(round(dirqty*a.purprice,2)) as 退仓金额,
+          sum(saleqty) as 零售数量,sum(round(saleqty*a.purprice,2)) as 零售金额,
+          sum(macinqty) as 加工入库数量,sum(round(macinqty*a.purprice,2)) as 加工入库金额,
+          sum(macoutqty) as 加工出库数量,sum(round(macoutqty*a.purprice,2)) as 加工出库金额,
+          sum(cheqty) as 盘点数量,sum(round(cheqty*a.purprice,2)) as 盘点金额,
+          sum(whlqty) as 批发销售数量,sum(round(whlqty*a.purprice,2)) as 批发销售金额,
+          sum(whrqty) as 批发退货数量,sum(round(whrqty*a.purprice,2)) as 批发退货金额,
+          sum(addqty) as 加价调拨数量,sum(round(addqty*a.purprice,2)) as 加价调拨金额,
+          sum(adrqty) as 加价调拨退回数量,sum(round(adrqty*a.purprice,2)) as 加价调拨退回金额,
+          sum(round(adpoutqty*a.purprice,2)) as 调进价出金额,
+          sum(round(adpinqty*a.purprice,2)) as 调进价入金额,
+          sum(abninqty) as 损溢数量,sum(round(abninqty*a.purprice,2)) as 损溢金额,
+          sum(failureqty) as 销毁数量,sum(round(failureqty*a.purprice,2)) as 销毁金额,
+          sum(endqty) as 期末数量,sum(round(endqty*a.purprice,2)) as 期末金额
+          from temp_item_day_inout a
+          join t_ware b on a.wareid = b.wareid and b.compid = ' ||
+           to_char(v_compid) || --'left join s_busi c on a.busno = c.busno
+           '
+          left join t_factory d on b.factoryid = d.factoryid' ||
+           ' where a.wareid not in (select wareid from d_wz_ycml where busno = 8240144)
+          group by a.busno,b.warecode';
+  end if;
   OPEN p_outcur FOR v_sql;
   DBMS_OUTPUT.PUT_LINE('v_sql: ' || v_sql);
 END proc_day_inout_hmk;
-/
 
