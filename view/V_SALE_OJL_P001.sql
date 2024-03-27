@@ -1,4 +1,4 @@
-create view V_SALE_OJL_P001 as
+create or replace view V_SALE_OJL_P001 as
 select o.zodertype||o.zorder as billno,'' as xsfdm,
 DECODE(werks,'D001','Ì¨ÖÝÈðÈËÌÃÒ©ÒµÓÐÏÞ¹«Ë¾','D006','½ð»ªÈðÈËÌÃ±£¼ÃÌÃÒ½Ò©Á¬ËøÓÐÏÞ¹«Ë¾','D007','Äþ²¨ÈðÈËÌÃºëµÂÒ½Ò©Á¬ËøÓÐÏÞ¹«Ë¾','D010','Õã½­ÈðÈËÌÃÒ½Ò©Á¬ËøÓÐÏÞ¹«Ë¾') as xsfmc,
 case when o.zodertype in ('4','5') then o.zodertype
@@ -10,10 +10,10 @@ else o.NAME1 end end as cgfmc,
       o.dmbtr*o.menge as je,o.zdate as cjsj,o.VFDAT AS yxq,o.lgobe as  CKMC,t.fileno AS fileno,ZSCQYMC as scqy,o.lgort
 from stock_out o
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=o.matnr
-WHERE   o.zodertype IN ('2','4','5') and werks in ('D001','D006','D007','D010') and lgort not in ('P888','P006')
+WHERE   o.zodertype IN ('2','4','5') and werks in ('D001','D010') and lgort not in ('P888','P006')
 and o.matnr in  (select wareid from d_ojl_ware)
 and   zdate>=date'2024-01-01' and o.NAME1 not like '%ÕïËù%'
-and o.LIFNR in ('110093','110673','110190','110388')
+and o.LIFNR in ('110093','110673','110190','110388') and o.BUPA<>'D010'
 
 UNION ALL
 SELECT i.zodertype||i.zorder as billno,'' as xsfdm,
@@ -27,10 +27,10 @@ i.matnr AS CPDM,i.maktx AS CPMC,i.zguig AS CPGG,i.mseh6 AS DW,i.zgysph as ph,-i.
 i.VFDAT AS yxq,i.lgobe AS CKMC,t.fileno AS fileno,ZSCQYMC as scqy,i.lgort
  FROM stock_in i
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=i.matnr
-WHERE i.zodertype IN ('2','4','5') AND  i.werks in ('D001','D006','D007','D010') and lgort not in ('P888','P006')
+WHERE i.zodertype IN ('2','4','5') AND  i.werks in ('D001','D010') and lgort not in ('P888','P006')
 AND i.matnr IN (select wareid from d_ojl_ware)
 and   zdate>=date'2024-01-01' and i.NAME1 not like '%ÕïËù%'
-and i.LIFNR in ('110093','110673','110190','110388')
+and i.LIFNR in ('110093','110673','110190','110388') and i.BUPA<>'D010'
 --P888,P006²É¹ºÍË»õ¼´Èë¿â
 union all
 select o.zodertype||o.zorder as billno,'' as xsfdm,
@@ -43,10 +43,10 @@ else 'ÈðÈËÌÃÒ½Ò©¼¯ÍÅ¹É·ÝÓÐÏÞ¹«Ë¾ÎÂÁëÁúÈªÒ©µê£¨Î÷Ò©D£©'  end as cgfmc,
       -o.dmbtr*o.menge as je,o.zdate as cjsj,o.VFDAT AS yxq,'Õý³£²Ö' as  CKMC,t.fileno AS fileno,ZSCQYMC as scqy,'P001'
 from stock_out o
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=o.matnr
-WHERE   o.zodertype IN ('1') and werks in ('D001','D006','D007','D010') and lgort in ('P888','P006')
+WHERE   o.zodertype IN ('1') and werks in ('D001','D010') and lgort in ('P888','P006')
 and o.matnr in  (select wareid from d_ojl_ware)
 and   zdate>=date'2024-01-01'
-and o.LIFNR in ('110093','110673','110190','110388')
+and o.LIFNR in ('110093','110673','110190','110388') and o.BUPA<>'D010'
 --P888,P006²É¹ºÈë¿â¼´³ö¿â
 union all
 SELECT i.zodertype||i.zorder as billno,'' as xsfdm,
@@ -59,10 +59,10 @@ i.matnr AS CPDM,i.maktx AS CPMC,i.zguig AS CPGG,i.mseh6 AS DW,i.zgysph as ph,i.m
 i.VFDAT AS yxq,i.lgobe AS CKMC,t.fileno AS fileno,ZSCQYMC as scqy,'P001'
  FROM stock_in i
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=i.matnr
-WHERE i.zodertype IN ('1') AND  i.werks in ('D001','D006','D007','D010')  and lgort in ('P888','P006')
+WHERE i.zodertype IN ('1') AND  i.werks in ('D001','D010')  and lgort in ('P888','P006')
 AND i.matnr IN (select wareid from d_ojl_ware)
 and   zdate>=date'2024-01-01'
-and i.LIFNR in ('110093','110673','110190','110388')
+and i.LIFNR in ('110093','110673','110190','110388') and i.BUPA<>'D010'
 
 --P888,P006ÒÆµ½P001,ÏÔÊ¾¸ºÊý
 union all
@@ -75,10 +75,10 @@ DECODE(o.werks,'D001','Ì¨ÖÝÈðÈËÌÃÒ©ÒµÓÐÏÞ¹«Ë¾','D006','½ð»ªÈðÈËÌÃ±£¼ÃÌÃÒ½Ò©Á¬ËøÓ
 from stock_out o left join customer_list l on l.kunnr = o.bupa
 join stock_in i  ON o.zorder=i.zorder AND o.matnr=i.matnr AND o.zgysph=i.zgysph and o.CHARG=i.CHARG
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=o.matnr
-WHERE  o.lgort in('P888','P006') AND i.lgort='P001' and o.zodertype IN ('3') and o.werks in ('D001','D006','D007','D010')
+WHERE  o.lgort in('P888','P006') AND i.lgort='P001' and o.zodertype IN ('3') and o.werks in ('D001','D010')
 and o.matnr in  (select wareid from d_ojl_ware)
 and   o.zdate>=date'2024-01-01'
-and o.LIFNR in ('110093','110673','110190','110388')
+and o.LIFNR in ('110093','110673','110190','110388')  and o.BUPA<>'D010'
 union all
 --P001ÒÆµ½P888,P006,ÏÔÊ¾ÕýÊý³ö¿â
 select o.zodertype||o.zorder as billno,'' as xsfdm,
@@ -90,10 +90,10 @@ DECODE(o.werks,'D001','Ì¨ÖÝÈðÈËÌÃÒ©ÒµÓÐÏÞ¹«Ë¾','D006','½ð»ªÈðÈËÌÃ±£¼ÃÌÃÒ½Ò©Á¬ËøÓ
 from stock_out i
 join stock_in o  ON o.zorder=i.zorder AND o.matnr=i.matnr AND o.zgysph=i.zgysph and o.CHARG=i.CHARG
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=o.matnr
-WHERE  o.lgort in('P888','P006') AND i.lgort='P001' and o.zodertype IN ('3') and o.werks in ('D001','D006','D007','D010')
+WHERE  o.lgort in('P888','P006') AND i.lgort='P001' and o.zodertype IN ('3') and o.werks in ('D001','D010')
 and o.matnr in  (select wareid from d_ojl_ware)
 and   o.zdate>=date'2024-01-01'
-and i.LIFNR in ('110093','110673','110190','110388')
+and i.LIFNR in ('110093','110673','110190','110388')  and i.BUPA<>'D010'
 union all
 --Åú·¢³ö¿âºÍÅú·¢ÍË»õÏà¹Øµ¥Î»ÎªÕïËùµÄ 75%µÄÊýÁ¿ ¸ÄÎª¶ÔÓ¦µÄÃÅµê,ÃÅµêÆ¥Åä²»µ½¾Í¸ÄÎª£ºÈðÈËÌÃÒ½Ò©¼¯ÍÅ¹É·ÝÓÐÏÞ¹«Ë¾ÁúÈªµê(Î÷Ò©D),25%µÄÊýÁ¿ÕæÊµÌåÏÖ
 select o.zodertype||o.zorder as billno,'' as xsfdm,
@@ -109,10 +109,10 @@ from stock_out o
 left join d_msd_busno_zs b on trim(o.bupa)=b.zsbm
 left join s_busi@hydee_zy c on b.busno=c.busno
 LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=o.matnr
-WHERE   o.zodertype IN ('2','4','5') and werks in ('D001','D006','D007','D010') and lgort not in ('P888','P006')
+WHERE   o.zodertype IN ('2','4','5') and werks in ('D001','D010') and lgort not in ('P888','P006')
 and o.matnr in  (select wareid from d_ojl_ware)
 and   zdate>=date'2024-01-01' and o.NAME1 like '%ÕïËù%'
-and o.LIFNR in ('110093','110673','110190','110388')
+and o.LIFNR in ('110093','110673','110190','110388') and o.BUPA<>'D010'
 union all
 select o.zodertype||o.zorder as billno,'' as xsfdm,
 DECODE(werks,'D001','Ì¨ÖÝÈðÈËÌÃÒ©ÒµÓÐÏÞ¹«Ë¾','D006','½ð»ªÈðÈËÌÃ±£¼ÃÌÃÒ½Ò©Á¬ËøÓÐÏÞ¹«Ë¾','D007','Äþ²¨ÈðÈËÌÃºëµÂÒ½Ò©Á¬ËøÓÐÏÞ¹«Ë¾','D010','Õã½­ÈðÈËÌÃÒ½Ò©Á¬ËøÓÐÏÞ¹«Ë¾') as xsfmc,
@@ -127,10 +127,10 @@ from stock_out o
 left join d_msd_busno_zs b on trim(o.bupa)=b.zsbm
 left join s_busi@hydee_zy c on b.busno=c.busno
 LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=o.matnr
-WHERE   o.zodertype IN ('2','4','5') and werks in ('D001','D006','D007','D010') and lgort not in ('P888','P006')
+WHERE   o.zodertype IN ('2','4','5') and werks in ('D001','D010') and lgort not in ('P888','P006')
 and o.matnr in  (select wareid from d_ojl_ware)
 and   zdate>=date'2024-01-01' and o.NAME1 like '%ÕïËù%' and floor(o.menge*0.25)>0
-and o.LIFNR in ('110093','110673','110190','110388')
+and o.LIFNR in ('110093','110673','110190','110388') and o.BUPA<>'D010'
 --ÕïËùÍË»õ
 union all
 SELECT i.zodertype||i.zorder as billno,'' as xsfdm,
@@ -145,10 +145,10 @@ i.VFDAT AS yxq,i.lgobe AS CKMC,t.fileno AS fileno,ZSCQYMC as scqy,i.lgort
 left join d_msd_busno_zs b on trim(i.bupa)=b.zsbm
 left join s_busi@hydee_zy c on b.busno=c.busno
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=i.matnr
-WHERE i.zodertype IN ('2','4','5') AND  i.werks in ('D001','D006','D007','D010') and lgort not in ('P888','P006')
+WHERE i.zodertype IN ('2','4','5') AND  i.werks in ('D001','D010') and lgort not in ('P888','P006')
 AND i.matnr IN (select wareid from d_ojl_ware)
 and   zdate>=date'2024-01-01' and i.NAME1  like '%ÕïËù%'
-and i.LIFNR in ('110093','110673','110190','110388')
+and i.LIFNR in ('110093','110673','110190','110388') and i.BUPA<>'D010'
 union all
 SELECT i.zodertype||i.zorder as billno,'' as xsfdm,
 DECODE(werks,'D001','Ì¨ÖÝÈðÈËÌÃÒ©ÒµÓÐÏÞ¹«Ë¾','D006','½ð»ªÈðÈËÌÃ±£¼ÃÌÃÒ½Ò©Á¬ËøÓÐÏÞ¹«Ë¾','D007','Äþ²¨ÈðÈËÌÃºëµÂÒ½Ò©Á¬ËøÓÐÏÞ¹«Ë¾','D010','Õã½­ÈðÈËÌÃÒ½Ò©Á¬ËøÓÐÏÞ¹«Ë¾') as xsfmc,
@@ -162,9 +162,9 @@ i.VFDAT AS yxq,i.lgobe AS CKMC,t.fileno AS fileno,ZSCQYMC as scqy,i.lgort
 left join d_msd_busno_zs b on trim(i.bupa)=b.zsbm
 left join s_busi@hydee_zy c on b.busno=c.busno
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=i.matnr
-WHERE i.zodertype IN ('2','4','5') AND  i.werks in ('D001','D006','D007','D010') and lgort not in ('P888','P006')
+WHERE i.zodertype IN ('2','4','5') AND  i.werks in ('D001','D010') and lgort not in ('P888','P006')
 AND i.matnr IN (select wareid from d_ojl_ware)
 and   zdate>=date'2024-01-01' and i.NAME1  like '%ÕïËù%' and floor(i.menge*0.25)>0
-and i.LIFNR in ('110093','110673','110190','110388')
+and i.LIFNR in ('110093','110673','110190','110388') and i.BUPA<>'D010'
 /
 
