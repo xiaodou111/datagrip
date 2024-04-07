@@ -1,4 +1,4 @@
---todo 循环医保明细
+
 DECLARE
     P_StartDate DATE := DATE '2023-01-01';  -- 起始日期
     P_EndDate DATE := DATE '2024-04-01';  -- 结束日期

@@ -24,7 +24,6 @@ SELECT
       a.dmbtr AS dj,
     a.MENGE*dmbtr AS je
   from stock_out a
-  left join  s_busi@hydee_zy b  ON b.BUSNO= '8'||a.BUPA
   where matnr in (
 select wareid from d_gls_ware_py
   )
@@ -58,7 +57,6 @@ SELECT
       a.dmbtr AS dj,
     a.MENGE*dmbtr AS je
   from stock_in a
-  left join  s_busi@hydee_zy b  ON b.BUSNO= '8'||a.BUPA
   where matnr in (
 select wareid from d_gls_ware_py
   )
@@ -93,7 +91,6 @@ select wareid from d_gls_ware_py
       a.dmbtr AS dj,
     a.MENGE*dmbtr AS je
   from stock_out a
-  left join  s_busi@hydee_zy b  ON b.BUSNO= '8'||a.BUPA
   where matnr in (
 select wareid from d_gls_ware_py
   )
@@ -128,7 +125,6 @@ SELECT
       a.dmbtr AS dj,
     a.MENGE*dmbtr AS je
   from stock_in a
-  left join  s_busi@hydee_zy b  ON b.BUSNO= '8'||a.BUPA
   where matnr in (
 select wareid from d_gls_ware_py
   )
@@ -185,7 +181,6 @@ SELECT
       a.dmbtr AS dj,
     a.MENGE*dmbtr AS je
   from stock_out a
-  left join  s_busi@hydee_zy b  ON b.BUSNO= '8'||a.BUPA
   where matnr in (
    10601827
   )
@@ -212,7 +207,6 @@ SELECT
       a.dmbtr AS dj,
     a.MENGE*dmbtr AS je
   from stock_in a
-  left join  s_busi@hydee_zy b  ON b.BUSNO= '8'||a.BUPA
   where matnr in (
   10601827
   )
@@ -247,7 +241,6 @@ SELECT
       a.dmbtr AS dj,
     a.MENGE*dmbtr AS je
   from stock_out a
-  left join  s_busi@hydee_zy b  ON b.BUSNO= '8'||a.BUPA
   where matnr in (
  10502632
   )
@@ -281,7 +274,6 @@ SELECT
       a.dmbtr AS dj,
     a.MENGE*dmbtr AS je
   from stock_in a
-  left join  s_busi@hydee_zy b  ON b.BUSNO= '8'||a.BUPA
   where matnr in (
 10502632
   )
