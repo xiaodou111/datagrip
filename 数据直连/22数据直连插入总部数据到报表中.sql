@@ -1,10 +1,10 @@
 select * from t_sjzl_wh where ZLKMC like '%石药%' for update
 insert into t_sjzl_wh(ZLKMC,ZLKDM,CREATETIME,CGY,WATCH_USER,SFYW,ZBORMD) values 
-('勃林格(DTP)-库存','V_KC_BLG_P001_TY',sysdate,10003937,10003937,1,2);
+('默沙东(DTP)-三门人民路店','V_KC_SYSS_P001_TY',sysdate,10003937,10003937,1,2);
 insert into t_sjzl_wh(ZLKMC,ZLKDM,CREATETIME,CGY,WATCH_USER,SFYW,ZBORMD) values 
-('勃林格(DTP)-采购','V_ACCEPT_BLG_P001_TY',sysdate,10003937,10003937,1,2);
+('沈阳三生(DTP)-采购','V_ACCEPT_SYSS_P001_TY',sysdate,10003937,10003937,1,2);
 insert into t_sjzl_wh(ZLKMC,ZLKDM,CREATETIME,CGY,WATCH_USER,SFYW,ZBORMD) values 
-('勃林格(DTP)-销售','V_SALE_BLG_P001_TY',sysdate,10003937,10003937,1,2);
+('沈阳三生(DTP)-销售','V_SALE_SYSS_P001_TY',sysdate,10003937,10003937,1,2);
 V_ACCEPT_NH_P001
 V_ACCEPT_NH_P001_ZJ
 V_SALE_NH_P001_1
