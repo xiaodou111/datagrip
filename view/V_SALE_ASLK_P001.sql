@@ -1,4 +1,4 @@
-create view V_SALE_ASLK_P001 as
+create or replace view V_SALE_ASLK_P001 as
 SELECT '销售出库' as zordertype,a.zdate,a.lsck, to_char(a.wareid) as wareid, to_char(b.warename) as cpmc,b.warespec as cpgg, a.ph,b.wareunit as dw,a.wareqty as sl,a.dj,a.wareqty*a.dj as je,
 '' as jdbj,to_char(a.wareid) as cpdm,a.wareqty as cksl,0 as rksl,a.lsck as orgname,b.warespec as zguig,to_char(b.warename) as maktx,
 to_char(a.wareid) as matnr,'P001' as lgort,null as zname1 ,1 as rowno
@@ -42,7 +42,7 @@ union all
   INNER JOIN stock_in c ON a.zorder=c.zorder AND a.matnr=c.matnr AND a.zgysph=c.zgysph  and a.charg=c.charg
   WHERE a.zodertype=3  AND a.matnr in (
 select WAREID FROM d_aslk_ware2 UNION ALL select WAREID FROM d_aslk_ware3
-  ) AND  (a.lgort in ('P002','P007','P015','P016','P025') or c.lgort in ('P002','P007','P015','P016','P025'))
+  ) AND  a.lgort in ('P001','P002','P007','P015','P016','P025') and c.lgort in ('P001','P002','P007','P015','P016','P025')
     and a.werks='D001'
 and a.LIFNR in('110032','110073','110093','110220','110288','110388','110602','110634','110673','110190','110221','110451','110339','110473','110293','110076','110344')
    and a.zdate >= date'2023-09-01'
@@ -56,7 +56,7 @@ union all
   INNER JOIN stock_in c ON a.zorder=c.zorder AND a.matnr=c.matnr AND a.zgysph=c.zgysph  and a.charg=c.charg
   WHERE a.zodertype=3  AND a.matnr in (
 select WAREID FROM d_aslk_ware2 UNION ALL select WAREID FROM d_aslk_ware3
-  ) AND  (a.lgort in ('P002','P007','P015','P016','P025') or c.lgort in ('P002','P007','P015','P016','P025'))
+  ) AND  a.lgort in ('P001','P002','P007','P015','P016','P025') and c.lgort in ('P001','P002','P007','P015','P016','P025')
     and a.werks='D001'
  and a.LIFNR in('110032','110073','110093','110220','110288','110388','110602','110634','110673','110190','110221','110451','110339','110473','110293','110076','110344')
    and a.zdate >= date'2023-09-01'
@@ -68,7 +68,7 @@ FROM  stock_out o
 INNER JOIN stock_in i ON o.zorder=i.zorder AND o.matnr=i.matnr AND o.zgysph=i.zgysph and o.menge=i.menge and o.CHARG=i.CHARG
 WHERE o.zodertype=3
 and o.werks IN ('D001')   and o.matnr in  (select WAREID FROM d_aslk_ware2 UNION ALL select WAREID FROM d_aslk_ware3)
-and  o.lgort in('P001','P018','P021') AND i.lgort IN('P888','P006')
+AND i.lgort IN('P888','P006','P889')
 AND i.lifnr in('110032','110073','110093','110220','110288','110388','110602','110634','110673','110190','110221','110451','110339','110473','110293','110076','110344')
 and o.zdate >= date'2023-09-01'
 UNION ALL
@@ -78,7 +78,7 @@ FROM  stock_out o
 INNER JOIN stock_in i ON o.zorder=i.zorder AND o.matnr=i.matnr AND o.zgysph=i.zgysph and o.menge=i.menge and o.CHARG=i.CHARG
 WHERE o.zodertype=3
 and o.werks IN ('D001')   and o.matnr in  (select WAREID FROM d_aslk_ware2 UNION ALL select WAREID FROM d_aslk_ware3)
-and  o.lgort IN('P888','P006') AND i.lgort in('P001','P018','P021')
+and o.lgort IN('P888','P006','P889')
 AND i.lifnr in('110032','110073','110093','110220','110288','110388','110602','110634','110673','110190','110221','110451','110339','110473','110293','110076','110344')
 and o.zdate >= date'2023-09-01'
 
