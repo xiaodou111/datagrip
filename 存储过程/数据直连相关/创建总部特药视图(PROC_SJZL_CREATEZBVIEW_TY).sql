@@ -1,9 +1,9 @@
-create procedure proc_sjzl_createzbview_ty (p_name in varchar2,
+create or replace procedure proc_sjzl_createzbview_ty (p_name in varchar2,
                                               p_waretable in VARCHAR2,
                                              p_werks  in VARCHAR2,
                                              p_ifty  in varchar2,
-                                             p_lifnrs IN VARCHAR2
-
+                                             p_lifnrs IN VARCHAR2,
+                                             p_date IN date
 
                                           --    p_jm in in varchar2(100),
                                            --   ds in in varchar2(100),
@@ -67,7 +67,7 @@ i.matnr as cpdm,i.maktx as cpmc,i.zguig as cpgg,
 from stock_in i
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=i.matnr
 where i.werks in ('||v_werks||')  and i.zodertype =1 and i.matnr in(select wareid from '||p_waretable||')
-and zdate between  date''2024-01-01'' and  trunc(sysdate)
+and zdate between  TO_DATE(''' || TO_CHAR(p_date, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'') and  trunc(sysdate)
 UNION ALL
 SELECT o.name1 AS XSFMC,'''' as cgfdm,
 DECODE(werks,''D001'',''台州瑞人堂药业有限公司'',''D002'',''瑞人堂医药集团股份有限公司'',''D010'',''浙江瑞人堂医药连锁有限公司'') as cgfmc,
@@ -76,7 +76,7 @@ o.matnr AS CPDM,o.maktx AS CPMC,o.zguig as cpgg,o.mseh6 AS DW,o.zgysph as ph,-o.
 FROM stock_out o
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=o.matnr
 WHERE zodertype=1 AND o.werks  in ('||v_werks||') AND o.matnr in(select wareid from '||p_waretable||')
- and zdate between  date''2024-01-01''and  trunc(sysdate)';
+ and zdate between TO_DATE(''' || TO_CHAR(p_date, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')  and  trunc(sysdate)';
   else
   v_kk:='create  VIEW '|| v_accept ||' AS
 select i.name1 as xsfmc ,'''' as cgfdm,
@@ -86,7 +86,7 @@ i.matnr as cpdm,i.maktx as cpmc,i.zguig as cpgg,
 from stock_in i
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=i.matnr
 where i.werks in ('||v_werks||')  and i.zodertype =1 and i.matnr in(select wareid from '||p_waretable||')
-and zdate between  date''2024-01-01'' and  trunc(sysdate) and i.LIFNR in ('||v_lifnrs||')
+and zdate between  TO_DATE(''' || TO_CHAR(p_date, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'') and  trunc(sysdate) and i.LIFNR in ('||v_lifnrs||')
 UNION ALL
 SELECT o.name1 AS XSFMC,'''' as cgfdm,
 DECODE(werks,''D001'',''台州瑞人堂药业有限公司'',''D002'',''瑞人堂医药集团股份有限公司'',''D010'',''浙江瑞人堂医药连锁有限公司'') as cgfmc,
@@ -95,7 +95,7 @@ o.matnr AS CPDM,o.maktx AS CPMC,o.zguig as cpgg,o.mseh6 AS DW,o.zgysph as ph,-o.
 FROM stock_out o
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=o.matnr
 WHERE zodertype=1 AND o.werks  in ('||v_werks||') AND o.matnr in(select wareid from '||p_waretable||')
- and zdate between  date''2024-01-01''and  trunc(sysdate) and o.LIFNR in ('||v_lifnrs||')'  ;
+ and zdate between   TO_DATE(''' || TO_CHAR(p_date, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'') and  trunc(sysdate) and o.LIFNR in ('||v_lifnrs||')'  ;
    end if;
        dbms_output.put_line(v_kk);
        dbms_output.put_line('-------------');
@@ -143,7 +143,7 @@ from stock_out o left join customer_list l on l.kunnr = o.bupa
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=o.matnr
 WHERE   o.zodertype IN (''2'',''4'',''5'') and werks in ('||v_werks||') and lgort not in (''P888'',''P006'')
 and o.matnr in  (select wareid from '||p_waretable||')
-and   zdate>=date''2024-01-01''
+and   zdate>=TO_DATE(''' || TO_CHAR(p_date, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')
 
 UNION ALL
 SELECT i.zodertype||i.zorder as billno,'''' as xsfdm,
@@ -158,7 +158,7 @@ i.VFDAT AS yxq,i.lgobe AS CKMC,t.fileno AS fileno,ZSCQYMC as scqy,i.lgort
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=i.matnr
 WHERE i.zodertype IN (''2'',''4'',''5'') AND  i.werks in ('||v_werks||') and lgort not in (''P888'',''P006'')
 AND i.matnr IN (select wareid from '||p_waretable||')
-and   zdate>=date''2024-01-01''
+and   zdate>=TO_DATE(''' || TO_CHAR(p_date, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')
 --P888,P006采购退货即入库
 union all
 select o.zodertype||o.zorder as billno,'''' as xsfdm,
@@ -173,7 +173,7 @@ from stock_out o left join customer_list l on l.kunnr = o.bupa
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=o.matnr
 WHERE   o.zodertype IN (''1'') and werks in ('||v_werks||') and lgort in (''P888'',''P006'')
 and o.matnr in  (select wareid from '||p_waretable||')
-and   zdate>=date''2024-01-01''
+and   zdate>=TO_DATE(''' || TO_CHAR(p_date, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')
 --P888,P006采购入库即出库
 union all
 SELECT i.zodertype||i.zorder as billno,'''' as xsfdm,
@@ -188,7 +188,7 @@ i.VFDAT AS yxq,i.lgobe AS CKMC,t.fileno AS fileno,ZSCQYMC as scqy,''P001''
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=i.matnr
 WHERE i.zodertype IN (''1'') AND  i.werks in ('||v_werks||')  and lgort in (''P888'',''P006'')
 AND i.matnr IN (select wareid from '||p_waretable||')
-and   zdate>=date''2024-01-01''
+and   zdate>=TO_DATE(''' || TO_CHAR(p_date, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')
 --P888,P006移到P001,显示负数
 union all
 select o.zodertype||o.zorder as billno,'''' as xsfdm,
@@ -202,7 +202,7 @@ join stock_in i  ON o.zorder=i.zorder AND o.matnr=i.matnr AND o.zgysph=i.zgysph 
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=o.matnr
 WHERE  o.lgort in(''P888'',''P006'') AND i.lgort=''P001'' and o.zodertype IN (''3'') and o.werks in ('||v_werks||')
 and o.matnr in  (select wareid from '||p_waretable||')
-and   o.zdate>=date''2024-01-01''
+and   o.zdate>=TO_DATE(''' || TO_CHAR(p_date, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')
 union all
 --P001移到P888,P006,显示正数出库
 select o.zodertype||o.zorder as billno,'''' as xsfdm,
@@ -216,7 +216,7 @@ join stock_in o  ON o.zorder=i.zorder AND o.matnr=i.matnr AND o.zgysph=i.zgysph 
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=o.matnr
 WHERE  o.lgort in(''P888'',''P006'') AND i.lgort=''P001'' and o.zodertype IN (''3'') and o.werks in ('||v_werks||')
 and o.matnr in  (select wareid from '||p_waretable||')
-and   o.zdate>=date''2024-01-01''';
+and   o.zdate>=TO_DATE(''' || TO_CHAR(p_date, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')';
  else
 v_kk2:='create    VIEW '|| v_sale ||' AS
 select o.zodertype||o.zorder as billno,'''' as xsfdm,
@@ -231,7 +231,7 @@ from stock_out o left join customer_list l on l.kunnr = o.bupa
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=o.matnr
 WHERE   o.zodertype IN (''2'',''4'',''5'') and werks in ('||v_werks||') and lgort not in (''P888'',''P006'')
 and o.matnr in  (select wareid from '||p_waretable||') and o.LIFNR in ('||v_lifnrs||')
-and   zdate>=date''2024-01-01''
+and   zdate>=TO_DATE(''' || TO_CHAR(p_date, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')
 
 UNION ALL
 SELECT i.zodertype||i.zorder as billno,'''' as xsfdm,
@@ -246,7 +246,7 @@ i.VFDAT AS yxq,i.lgobe AS CKMC,t.fileno AS fileno,ZSCQYMC as scqy,i.lgort
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=i.matnr
 WHERE i.zodertype IN (''2'',''4'',''5'') AND  i.werks in ('||v_werks||') and lgort not in (''P888'',''P006'')
 AND i.matnr IN (select wareid from '||p_waretable||') and i.LIFNR in ('||v_lifnrs||')
-and   zdate>=date''2024-01-01''
+and   zdate>=TO_DATE(''' || TO_CHAR(p_date, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')
 --P888,P006采购退货即入库
 union all
 select o.zodertype||o.zorder as billno,'''' as xsfdm,
@@ -261,7 +261,7 @@ from stock_out o left join customer_list l on l.kunnr = o.bupa
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=o.matnr
 WHERE   o.zodertype IN (''1'') and werks in ('||v_werks||') and lgort in (''P888'',''P006'')
 and o.matnr in  (select wareid from '||p_waretable||') and o.LIFNR in ('||v_lifnrs||')
-and   zdate>=date''2024-01-01''
+and   zdate>=TO_DATE(''' || TO_CHAR(p_date, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')
 --P888,P006采购入库即出库
 union all
 SELECT i.zodertype||i.zorder as billno,'''' as xsfdm,
@@ -276,7 +276,7 @@ i.VFDAT AS yxq,i.lgobe AS CKMC,t.fileno AS fileno,ZSCQYMC as scqy,''P001''
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=i.matnr
 WHERE i.zodertype IN (''1'') AND  i.werks in ('||v_werks||')  and lgort in (''P888'',''P006'')
 AND i.matnr IN (select wareid from '||p_waretable||') and i.LIFNR in ('||v_lifnrs||')
-and   zdate>=date''2024-01-01''
+and   zdate>=TO_DATE(''' || TO_CHAR(p_date, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')
 --P888,P006移到P001,显示负数
 union all
 select o.zodertype||o.zorder as billno,'''' as xsfdm,
@@ -290,7 +290,7 @@ join stock_in i  ON o.zorder=i.zorder AND o.matnr=i.matnr AND o.zgysph=i.zgysph 
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=o.matnr
 WHERE  o.lgort in(''P888'',''P006'') AND i.lgort=''P001'' and o.zodertype IN (''3'') and o.werks in ('||v_werks||')
 and o.matnr in  (select wareid from '||p_waretable||') and o.LIFNR in ('||v_lifnrs||')
-and   o.zdate>=date''2024-01-01''
+and   o.zdate>=TO_DATE(''' || TO_CHAR(p_date, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')
 union all
 --P001移到P888,P006,显示正数出库
 select o.zodertype||o.zorder as billno,'''' as xsfdm,
@@ -304,7 +304,7 @@ join stock_in o  ON o.zorder=i.zorder AND o.matnr=i.matnr AND o.zgysph=i.zgysph 
  LEFT JOIN t_ware_base@hydee_zy t ON t.wareid=o.matnr
 WHERE  o.lgort in(''P888'',''P006'') AND i.lgort=''P001'' and o.zodertype IN (''3'') and o.werks in ('||v_werks||')
 and o.matnr in  (select wareid from '||p_waretable||') and i.LIFNR in ('||v_lifnrs||')
-and   o.zdate>=date''2024-01-01''';
+and   o.zdate>=TO_DATE(''' || TO_CHAR(p_date, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')';
  end if;
    dbms_output.put_line(v_kk2);
        execute immediate  v_kk2 ;
