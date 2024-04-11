@@ -3,10 +3,10 @@ with first as (select a.SALENO, a.ACCDATE, d.WAREQTY,
                       h.busno, s.ORGNAME, tb.CLASSNAME as 药店所在省份, tb1.CLASSNAME as 药店所在城市, d.WAREID,
                       h.IDCARDNO,
                       USERNAME,
-                      min(a.ACCDATE) OVER (PARTITION BY h.IDCARDNO,a.busno,d.WAREID ) as 本店第一次购10601875时间,
-                      sum(d.WAREQTY) over ( partition by h.IDCARDNO,a.busno,d.WAREID
+                      min(a.ACCDATE) OVER (PARTITION BY h.IDCARDNO,d.WAREID ) as 本店第一次购10601875时间,
+                      sum(d.WAREQTY) over ( partition by h.IDCARDNO,d.WAREID
                           order by a.ACCDATE ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) as 购买10601875总数量,
-                      row_number() over (partition by h.IDCARDNO,a.busno,d.WAREID order by a.ACCDATE ) rn
+                      row_number() over (partition by h.IDCARDNO,d.WAREID order by a.ACCDATE ) rn
                from t_remote_prescription_h h
                         join t_sale_h a on substr(a.notes, 0,
                                                   decode(instr(a.notes, ' '), 0, length(a.notes) + 1,
@@ -29,18 +29,18 @@ with first as (select a.SALENO, a.ACCDATE, d.WAREQTY,
                               h.busno, s.ORGNAME, d.WAREID,
                               w.WARENAME, h.IDCARDNO, h.USERNAME,
                               购买10601875总数量 as j皮下曲妥珠单抗支数,
-                              sum(d.WAREQTY) over ( partition by h.IDCARDNO,a.busno,d.WAREID
+                              sum(d.WAREQTY) over ( partition by h.IDCARDNO,d.WAREID
                                   order by a.ACCDATE ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) as k转皮下后帕妥珠单抗支数,
                               0 as l皮下phegso支数,
-                              Max(a.ACCDATE) OVER (PARTITION BY h.IDCARDNO,a.busno,d.WAREID ) AS r本店最近一次购药时间,
+                              Max(a.ACCDATE) OVER (PARTITION BY h.IDCARDNO,d.WAREID ) AS r本店最近一次购药时间,
                               LAG(a.ACCDATE, 1)
-                                  OVER (PARTITION BY h.IDCARDNO,a.busno,d.WAREID ORDER BY a.ACCDATE ) AS s本店前一次购药时间,
-                              min(a.ACCDATE) OVER (PARTITION BY h.IDCARDNO,a.busno,d.WAREID ) AS ac本店第一次购药时间,
-                              (Max(a.ACCDATE) OVER (PARTITION BY h.IDCARDNO,a.busno,d.WAREID ) -
-                               min(a.ACCDATE) OVER (PARTITION BY h.IDCARDNO,a.busno,d.WAREID ) +
+                                  OVER (PARTITION BY h.IDCARDNO,d.WAREID ORDER BY a.ACCDATE ) AS s本店前一次购药时间,
+                              min(a.ACCDATE) OVER (PARTITION BY h.IDCARDNO,d.WAREID ) AS ac本店第一次购药时间,
+                              (Max(a.ACCDATE) OVER (PARTITION BY h.IDCARDNO,d.WAREID ) -
+                               min(a.ACCDATE) OVER (PARTITION BY h.IDCARDNO,d.WAREID ) +
                                21) / 21 as M理论购药支数,
                               count(distinct a.ACCDATE) over ( partition by h.IDCARDNO) as q本店累计购药次数,
-                              row_number() over (partition by h.IDCARDNO,a.busno,d.WAREID order by a.ACCDATE desc) rn2
+                              row_number() over (partition by h.IDCARDNO,d.WAREID order by a.ACCDATE desc) rn2
 
                        from t_remote_prescription_h h
                                 join t_sale_h a on substr(a.notes, 0,
@@ -89,8 +89,26 @@ select first.busno,
 from first
          left join after10601875 aa on first.IDCARDNO = aa.IDCARDNO and aa.rn2 = 1
          left join d_luoshi_px_hf hf on aa.IDCARDNO = hf.idcard
-         left join d_patient_files files on files.IDCARDNO = aa.IDCARDNO and files.BUSNO = aa.BUSNO
+         left join d_patient_files files on files.IDCARDNO = aa.IDCARDNO
 where rn = 1;
+
+create table d_luoshi_pxsf_1 as
+select BUSNO, ORGNAME, "药店所在省份", "药店所在城市", IDCARDNO, USERNAME, I新皮下方案, J皮下曲妥珠单抗支数,
+       K转皮下后帕妥珠单抗支数, L皮下PHEGSO支数, M理论购药支数, N实际药房购药期间盒数偏差分析, O皮下支数核查,
+       P转皮下后帕妥支数核查, Q本店累计购药次数, R本店最近一次购药时间, S本店前一次购药时间, T最近两次购药周期,
+       U本店下次理论购药时间, V推测是否已完成疗程, W最近一次购药距离今日天数, X最近购药距首次购药累计时长,
+       Y2022年以来本店平均购药周期, "随访时间", "随访反馈", "随访备注", AC本店第一次购药时间, RN2
+from v_luoshi_pxsf;
+select * from d_luoshi_pxsf_1;
+--报表
+select a.BUSNO, ORGNAME, "药店所在省份", "药店所在城市", fi.IDCARDNO, USERNAME,fi.疾病分期,fi.是否早期新辅助治疗,fi.新皮下方案, J皮下曲妥珠单抗支数,
+       K转皮下后帕妥珠单抗支数, L皮下PHEGSO支数, M理论购药支数, N实际药房购药期间盒数偏差分析, O皮下支数核查,
+       P转皮下后帕妥支数核查, Q本店累计购药次数, R本店最近一次购药时间, S本店前一次购药时间, T最近两次购药周期,
+       U本店下次理论购药时间, V推测是否已完成疗程, W最近一次购药距离今日天数, X最近购药距首次购药累计时长,
+       Y2022年以来本店平均购药周期, "随访时间", "随访反馈", "随访备注", AC本店第一次购药时间, RN2
+from d_luoshi_pxsf_1 a
+left join d_patient_files fi on a.idcardno=fi.idcardno;
+
 
 
 --随访表
@@ -106,35 +124,35 @@ drop table d_luoshi_px_hf;
 --触发器 TR_V_LUOSHI_PXSF
 
 
--- create or replace trigger TR_V_LUOSHI_PXSF
---     instead of update
---     on V_LUOSHI_PXSF
---     for each row
--- begin
---     MERGE INTO d_luoshi_px_hf T1
---     USING
---         (SELECT
---              :new.BUSNO   BUSNO,
---              :new.IDCARDNO IDCARDNO,
---              :new.随访时间 随访时间,
---              :new.随访反馈 随访反馈,
---              :new.随访备注 随访备注
---          FROM dual) T2
---     ON (T1.idcard = T2.IDCARDNO AND T1.BUSNO=T2.BUSNO)
---     WHEN MATCHED THEN
---         UPDATE SET
---         T1.sfday= T2.随访时间,
---         T1.sfresult= T2.随访反馈,
---         T1.notes= T2.随访备注
---     WHEN NOT MATCHED THEN
---         INSERT (idcard,BUSNO, sfday,sfresult,notes) VALUES (
---
---              :new.IDCARDNO,
---              :new.BUSNO,
---              :new.随访时间,
---              :new.随访反馈,
---              :new.随访备注);
--- end;
+create or replace trigger TR_V_LUOSHI_PXSF
+    instead of update
+    on V_LUOSHI_PXSF
+    for each row
+begin
+    MERGE INTO d_luoshi_px_hf T1
+    USING
+        (SELECT
+             :new.BUSNO   BUSNO,
+             :new.IDCARDNO IDCARDNO,
+             :new.随访时间 随访时间,
+             :new.随访反馈 随访反馈,
+             :new.随访备注 随访备注
+         FROM dual) T2
+    ON (T1.idcard = T2.IDCARDNO AND T1.BUSNO=T2.BUSNO)
+    WHEN MATCHED THEN
+        UPDATE SET
+        T1.sfday= T2.随访时间,
+        T1.sfresult= T2.随访反馈,
+        T1.notes= T2.随访备注
+    WHEN NOT MATCHED THEN
+        INSERT (idcard,BUSNO, sfday,sfresult,notes) VALUES (
+
+             :new.IDCARDNO,
+             :new.BUSNO,
+             :new.随访时间,
+             :new.随访反馈,
+             :new.随访备注);
+end;
 
 
 

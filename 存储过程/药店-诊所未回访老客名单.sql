@@ -1,4 +1,4 @@
-create PROCEDURE proc_ybcust_ydzs
+create or replace PROCEDURE proc_ybcust_ydzs
 IS
 
 
@@ -16,10 +16,10 @@ BEGIN
                                 job_type            => 'STORED_PROCEDURE',
                                 job_action          => 'proc_d_zhyb_year_2023',*/
    
-  
-   delete from D_ZHYB_YEAR_2023_1;
-   --.获取所有销售记录中每个身份证 药店所在地和参保地对应的 药店或诊所最后一次的记录
-   insert into D_ZHYB_YEAR_2023_1 
+  --D_ZHYB_YEAR_2023_1   获取所有销售记录中每个身份证 2023年药店所在地和参保地对应的 药店或诊所最后一次的记录
+   delete from D_ZHYB_YEAR_2024_1;
+   --.获取所有销售记录中每个身份证 2024年药店所在地和参保地对应的 药店或诊所最后一次的记录
+   insert into D_ZHYB_YEAR_2024_1
    select execdate, customer, idcard, cbdid, cbd, busno, saleno, cbrylx 
    from (
    select execdate, customer, idcard, cbdid, cbd, a.busno, saleno, cbrylx, 
@@ -39,7 +39,7 @@ BEGIN
     and CBRYLX not like '%居民%'  THEN '医保市本级' 
     when replace(tb2.classname,'台州市玉环市','台州市玉环县') IN ('台州市本级','台州市椒江区') and CBRYLX like '%居民%'  THEN '农保市本级'
       else  replace(tb2.classname,'台州市玉环市','台州市玉环县') end 
-   ) WHERE rn = 1;
+   and a.EXECDATE>=date'2024-01-01' and a.EXECDATE<date'2024-01-01') WHERE rn = 1;
    
  
    
@@ -80,7 +80,7 @@ WHERE rn=1*/
     /*DELETE from d_zhyb_year_2023_zs a WHERE EXISTS(SELECT 1 FROM D_ZHYB_YEAR_2023_1 b WHERE a.idcard=b.idcard
     AND b.execdate between trunc(SYSDATE)-1 AND trunc(SYSDATE) );*/
     
-    --每个身份证23年开始最后一次在 药店所在地和参保地对应的 诊所消费的记录
+    --每个身份证24年开始最后一次在 药店所在地和参保地对应的 诊所消费的记录
     delete from d_zhyb_year_2023_zs;
     INSERT INTO d_zhyb_year_2023_zs (execdate,customer,idcard,cbdid,cbd,busno)
     SELECT execdate,customer,idcard,cbdid,cbd,busno  FROM (
@@ -90,7 +90,7 @@ WHERE rn=1*/
   JOIN t_busno_class_set ts ON a.busno = ts.busno AND ts.classgroupno = '305' AND ts.classcode = '30511'
   JOIN t_busno_class_set ts2 on a.busno=ts2.busno and ts2.classgroupno ='324'
    join t_busno_class_base tb2 on ts2.classgroupno=ts2.classgroupno and ts2.classcode=tb2.classcode
-  WHERE a.execdate >= DATE '2023-01-01'
+  WHERE a.execdate >= DATE '2024-01-01'
   and 
    --取参保地和药店所在地对应的数据
     CASE WHEN a.cbd IN ('台州市本级','台州市椒江区','台州市黄岩区','台州市路桥区')
@@ -105,7 +105,7 @@ WHERE rn=1*/
 ) WHERE rn = 1;
 
 
-    --每个身份证23年开始最后一次在 药店所在地和参保地对应的 药店消费的记录
+    --每个身份证24年开始最后一次在 药店所在地和参保地对应的 药店消费的记录
    delete from d_zhyb_year_2023_yd;
   INSERT INTO d_zhyb_year_2023_yd (execdate,customer,idcard,cbdid,cbd,busno)
      SELECT execdate,customer,idcard,cbdid,cbd,busno  FROM (
@@ -115,7 +115,7 @@ WHERE rn=1*/
   JOIN t_busno_class_set ts ON a.busno = ts.busno AND ts.classgroupno = '305' AND ts.classcode = '30510'
   JOIN t_busno_class_set ts2 on a.busno=ts2.busno and ts2.classgroupno ='324'
    join t_busno_class_base tb2 on ts2.classgroupno=ts2.classgroupno and ts2.classcode=tb2.classcode
-  WHERE a.execdate >= DATE '2023-01-01'
+  WHERE a.execdate >= DATE '2024-01-01'
   and 
    --取参保地和药店所在地对应的数据
     CASE WHEN a.cbd IN ('台州市本级','台州市椒江区','台州市黄岩区','台州市路桥区')
@@ -159,7 +159,7 @@ WHERE EXISTS(SELECT 1 FROM d_zhyb_year_2023_yd b
 
 --插入前一天数据中 没在诊所消费的数据(在药店消费的数据)  并把表中原先有身份证的删除
 INSERT into d_zhyb_year_2022_notzs(execdate,customer,idcard,cbdid,cbd,busno,saleno,cbrylx,TYPE)
-SELECT a.*,'诊所核心会员'  FROM D_ZHYB_YEAR_2023_1  a
+SELECT EXECDATE, CUSTOMER, IDCARD, CBDID, CBD, BUSNO, SALENO, CBRYLX,'诊所核心会员'  FROM D_ZHYB_YEAR_2023_1  a
 WHERE NOT EXISTS(SELECT 1 FROM d_zhyb_year_2023_zs b WHERE a.idcard=b.idcard)
 and a.execdate between trunc(SYSDATE)-1 AND trunc(SYSDATE) ;
 
@@ -172,7 +172,7 @@ and a.idcard=b.idcard and not a.execdate between trunc(SYSDATE)-1 AND trunc(SYSD
 
 
 INSERT into d_zhyb_year_2022_notyd(execdate,customer,idcard,cbdid,cbd,busno,saleno,cbrylx,TYPE)
-SELECT a.*,'药店核心会员'  FROM D_ZHYB_YEAR_2023_1  a
+SELECT EXECDATE, CUSTOMER, IDCARD, CBDID, CBD, BUSNO, SALENO, CBRYLX,'药店核心会员'  FROM D_ZHYB_YEAR_2023_1  a
 WHERE NOT EXISTS(SELECT 1 FROM d_zhyb_year_2023_yd b WHERE a.idcard=b.idcard)
 and a.execdate  between trunc(SYSDATE)-1 AND trunc(SYSDATE);
 
@@ -222,3 +222,32 @@ and  exists(select 1 from     t_yby_order_h b WHERE    a.idcard=b.identityno  an
   END;
 /
 
+
+--重新统计运行
+-- --2024药店有消费,诊所未消费--诊所核心会员
+-- INSERT into d_zhyb_year_2022_notzs(EXECDATE, CUSTOMER, IDCARD, CBDID, CBD, BUSNO, SALENO, CBRYLX, TYPE)
+-- SELECT a.EXECDATE, a.CUSTOMER, a.IDCARD, a.CBDID, a.CBD, a.BUSNO, a.SALENO, a.CBRYLX,'诊所核心会员'
+-- FROM D_ZHYB_YEAR_2024_1  a
+-- WHERE NOT EXISTS(SELECT 1 FROM d_zhyb_year_2023_zs b WHERE a.idcard=b.idcard);
+--
+-- --2023年11-12月有到诊所消费且24年未消费的--2023核心诊所会员
+-- INSERT into d_zhyb_year_2022_notzs(EXECDATE, CUSTOMER, IDCARD, CBDID, CBD, BUSNO, SALENO, CBRYLX, TYPE)
+-- SELECT a.EXECDATE, a.CUSTOMER, a.IDCARD, a.CBDID, a.CBD, a.BUSNO, a.SALENO, a.CBRYLX,'2023核心诊所会员'
+-- FROM D_ZHYB_YEAR_2023_1  a
+-- where a.EXECDATE>=date'2023-11-01' and a.EXECDATE<date'2024-01-01'
+--   and a.mdlx=30511
+-- and NOT EXISTS(SELECT 1 FROM D_ZHYB_YEAR_2024_1 b WHERE a.idcard=b.idcard);
+--
+-- --2024诊所有消费,药店未消费--药店核心会员
+-- delete from  d_zhyb_year_2022_notyd;
+-- INSERT into d_zhyb_year_2022_notyd(EXECDATE, CUSTOMER, IDCARD, CBDID, CBD, BUSNO, SALENO, CBRYLX, TYPE)
+-- SELECT a.EXECDATE, a.CUSTOMER, a.IDCARD, a.CBDID, a.CBD, a.BUSNO, a.SALENO, a.CBRYLX,'药店核心会员'
+-- FROM D_ZHYB_YEAR_2024_1  a
+-- WHERE NOT EXISTS(SELECT 1 FROM d_zhyb_year_2023_yd b WHERE a.idcard=b.idcard);
+-- --2023年11-12月有到药店消费且24年未消费的--2023核心药店会员
+-- INSERT into d_zhyb_year_2022_notyd(EXECDATE, CUSTOMER, IDCARD, CBDID, CBD, BUSNO, SALENO, CBRYLX, TYPE)
+-- SELECT a.EXECDATE, a.CUSTOMER, a.IDCARD, a.CBDID, a.CBD, a.BUSNO, a.SALENO, a.CBRYLX,'2023核心药店会员'
+-- FROM D_ZHYB_YEAR_2023_1  a
+-- where a.EXECDATE>=date'2023-11-01' and a.EXECDATE<date'2024-01-01'
+--   and a.mdlx=30510
+-- and NOT EXISTS(SELECT 1 FROM D_ZHYB_YEAR_2024_1 b WHERE a.idcard=b.idcard);

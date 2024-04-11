@@ -1,18 +1,14 @@
 select * from t_sjzl_wh where ZLKMC like '%石药%' for update
 insert into t_sjzl_wh(ZLKMC,ZLKDM,CREATETIME,CGY,WATCH_USER,SFYW,ZBORMD) values 
-('默沙东(DTP)-三门人民路店','V_KC_SYSS_P001_TY',sysdate,10003937,10003937,1,2);
+('欧加隆(非DTP)-库存','V_KC_OJL_P001',sysdate,10001014,10001014,1,2);
 insert into t_sjzl_wh(ZLKMC,ZLKDM,CREATETIME,CGY,WATCH_USER,SFYW,ZBORMD) values 
-('沈阳三生(DTP)-采购','V_ACCEPT_SYSS_P001_TY',sysdate,10003937,10003937,1,2);
+('欧加隆(非DTP)-采购','V_ACCEPT_OJL_P001',sysdate,10001014,10001014,1,2);
 insert into t_sjzl_wh(ZLKMC,ZLKDM,CREATETIME,CGY,WATCH_USER,SFYW,ZBORMD) values 
-('沈阳三生(DTP)-销售','V_SALE_SYSS_P001_TY',sysdate,10003937,10003937,1,2);
-V_ACCEPT_NH_P001
-V_ACCEPT_NH_P001_ZJ
-V_SALE_NH_P001_1
-V_SALE_NH_P001_ZJ
+('欧加隆(非DTP)-销售','V_SALE_OJL_P001',sysdate,10001014,10001014,1,2);
 
-v_accept_xs_86219
-v_kc_xs_86219
-v_sale_xs_86219
+ select * from V_SALE_OJL_P001;
+                                 select * from V_ACCEPT_OJL_P001;
+                                 select * from V_KC_OJL_P001;
 
 select ROWID,zlkmc, zlkdm, remark,
        createtime, cgy, watch_user, sfyw, wareids, zbormd, busnos, werks, viewdate, waretable

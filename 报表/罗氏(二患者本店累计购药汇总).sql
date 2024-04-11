@@ -48,19 +48,19 @@ select files.BUSNO,
                                          nvl(px.R本店最近一次购药时间, date'1900-01-01')))
            end
            as ai最近一次购药距离今日天数,
-       pxhf.SFDAY as 皮下最近一次随访时间,
-       pxhf.SFRESULT as 皮下最近一次随访反馈,
-       pxhf.NOTES as 皮下最近一次随访备注,
-       jmhf.SFDAY as 静脉最近一次随访时间,
-       jmhf.SFRESULT as 静脉最近一次随访反馈,
-       jmhf.NOTES as 静脉最近一次随访备注,
+       px.随访时间 as 皮下最近一次随访时间,
+       px.随访反馈 as 皮下最近一次随访反馈,
+       px.随访备注 as 皮下最近一次随访备注,
+       jm.随访时间 as 静脉最近一次随访时间,
+       jm.随访反馈 as 静脉最近一次随访反馈,
+       jm.随访备注 as 静脉最近一次随访备注,
        jm.AC本店第一次购药时间 as 第一次静脉购药时间,
        px.AC本店第一次购药时间 as 第一次皮下购药时间
 from d_patient_files files
-         left join D_LUOSHI_JMSF jm on files.IDCARDNO = jm.IDCARDNO and files.BUSNO = jm.BUSNO
-         left join d_luoshi_pxsf px on files.IDCARDNO = px.IDCARDNO and files.BUSNO = px.BUSNO
-         left join d_luoshi_jm_hf jmhf on files.IDCARDNO = jmhf.IDCARD and files.busno = jmhf.BUSNO
-         left join d_luoshi_px_hf pxhf on files.IDCARDNO = pxhf.IDCARD and files.busno = pxhf.BUSNO
+         left join D_LUOSHI_JMSF_1 jm on files.IDCARDNO = jm.IDCARDNO and files.BUSNO = jm.BUSNO
+         left join d_luoshi_pxsf_1 px on files.IDCARDNO = px.IDCARDNO and files.BUSNO = px.BUSNO
+--          left join d_luoshi_jm_hf jmhf on files.IDCARDNO = jmhf.IDCARD and files.busno = jmhf.BUSNO
+--          left join d_luoshi_px_hf pxhf on files.IDCARDNO = pxhf.IDCARD and files.busno = pxhf.BUSNO
          left join d_luoshi_idrank rank on files.IDCARDNO = RANK.IDCARDNO
          left join s_busi s on files.BUSNO = s.BUSNO
          join t_busno_class_set ts on files.busno = ts.busno and ts.classgroupno = '322'
