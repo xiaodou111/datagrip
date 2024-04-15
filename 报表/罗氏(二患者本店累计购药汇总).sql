@@ -3,8 +3,8 @@ select files.BUSNO,
        s.orgname,
        tb.CLASSNAME as 药店所在省份,
        tb1.CLASSNAME as 药店所在城市,
-       rank.RANK,
-       rank.USERNAME,
+       substr(files.IDCARDNO,-10) as RANK,
+       files.USERNAME,
        --疾病分期	是否早期新辅助治疗	原用药方案	该方案曲妥珠单抗是否为赫赛汀	新皮下方案	是否由静脉转为皮下治疗	静脉总支数
        files.疾病分期,
        files.是否早期新辅助治疗,
@@ -61,7 +61,7 @@ from d_patient_files files
          left join d_luoshi_pxsf_1 px on files.IDCARDNO = px.IDCARDNO and files.BUSNO = px.BUSNO
 --          left join d_luoshi_jm_hf jmhf on files.IDCARDNO = jmhf.IDCARD and files.busno = jmhf.BUSNO
 --          left join d_luoshi_px_hf pxhf on files.IDCARDNO = pxhf.IDCARD and files.busno = pxhf.BUSNO
-         left join d_luoshi_idrank rank on files.IDCARDNO = RANK.IDCARDNO
+--          left join d_luoshi_idrank rank on files.IDCARDNO = RANK.IDCARDNO
          left join s_busi s on files.BUSNO = s.BUSNO
          join t_busno_class_set ts on files.busno = ts.busno and ts.classgroupno = '322'
          join t_busno_class_base tb on ts.classgroupno = tb.classgroupno and ts.classcode = tb.classcode

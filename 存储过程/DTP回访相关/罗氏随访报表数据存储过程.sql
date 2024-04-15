@@ -8,51 +8,50 @@ begin
 --1.维护d_patient_files表IDCARDNO用来完成更新操作,当有新的IDCARDNO时,需要插入d_patient_files表支持海典里的更新
 MERGE INTO d_patient_files T1
 USING
-    (SELECT IDCARDNO,busno
-     FROM (select h.IDCARDNO,a.busno,
-                  row_number() over (partition by h.IDCARDNO order by a.ACCDATE) rn
---        count(h.IDCARDNO) over (partition by h.IDCARDNO,d.WAREID) sl
-           from t_remote_prescription_h h
-
-                    join t_sale_h a on substr(a.notes, 0,
-                                              decode(instr(a.notes, ' '), 0, length(a.notes) + 1, instr(a.notes, ' ')) -
-                                              1) =
-                                       h.CFNO
-                    join t_sale_d d on a.SALENO = d.SALENO
-           where
+    (select IDCARDNO, busno, rn, lastbuytime,参保地,异地标志,USERNAME,CAGE,SEX
+from (select h.IDCARDNO,a.busno,cyb.参保地,cyb.异地标志,h.USERNAME,h.CAGE,h.SEX,
+             row_number() over (partition by h.IDCARDNO order by a.ACCDATE desc) rn,
+             max(a.ACCDATE) OVER (PARTITION BY h.IDCARDNO,d.WAREID ) AS lastbuytime
+      from t_remote_prescription_h h
+                        join t_sale_h a on substr(a.notes, 0,
+                                                  decode(instr(a.notes, ' '), 0, length(a.notes) + 1,
+                                                         instr(a.notes, ' ')) -
+                                                  1) =
+                                           h.CFNO
+                        join t_sale_d d on a.SALENO = d.SALENO
+      left join D_ZHYB_HZ_CYB cyb on cyb.ERP销售单号 = a.SALENO
+      where
 --           a.ACCDATE >= date'2023-01-01' and
-d.WAREID in (10502445, 10601875, 10600308)
---         and IDCARDNO = '332627195902110027'
-          )
-     WHERE rn = 1 and IDCARDNO is not null) T2
+d.WAREID in (10502445, 10601875, 10600308))
+where lastbuytime>date'2023-01-01' and rn=1 and IDCARDNO is not null) T2
 ON (T1.IDCARDNO = T2.IDCARDNO )
 
 WHEN NOT MATCHED THEN
-    INSERT (IDCARDNO,BUSNO)
-    VALUES (T2.IDCARDNO,T2.BUSNO);
+    INSERT (IDCARDNO,BUSNO,参保地,异地标志,USERNAME,CAGE,SEX)
+    VALUES (T2.IDCARDNO,T2.BUSNO,t2.参保地,t2.异地标志,t2.USERNAME,t2.CAGE,t2.SEX);
 --2.每天更新身份证号对应的序号
-MERGE INTO d_luoshi_idrank T1
-USING
-(
-select DENSE_RANK() over ( order by IDCARDNO) as idno,IDCARDNO,USERNAME from
-      (select
-       h.IDCARDNO,h.USERNAME,
-       row_number() over (partition by h.IDCARDNO order by a.ACCDATE) rn
-from t_remote_prescription_h h
-         join t_sale_h a on substr(a.notes, 0,
-                                   decode(instr(a.notes, ' '), 0, length(a.notes) + 1, instr(a.notes, ' ')) - 1) =
-          h.CFNO
-         join t_sale_d d on a.SALENO = d.SALENO
-where
---           a.ACCDATE >= date'2023-01-01' and
-d.WAREID in (10502445, 10601875, 10600308) and h.IDCARDNO is not null )
-          where rn=1
-)  T2
-ON ( T1.IDCARDNO=T2.IDCARDNO)
--- WHEN MATCHED THEN
--- UPDATE SET T1.b= T2.b
-WHEN NOT MATCHED THEN
-INSERT (IDCARDNO,rank,username) VALUES(T2.IDCARDNO,T2.idno,t2.USERNAME);
+-- MERGE INTO d_luoshi_idrank T1
+-- USING
+-- (
+-- select DENSE_RANK() over ( order by IDCARDNO) as idno,IDCARDNO,USERNAME from
+--       (select
+--        h.IDCARDNO,h.USERNAME,
+--        row_number() over (partition by h.IDCARDNO order by a.ACCDATE) rn
+-- from t_remote_prescription_h h
+--          join t_sale_h a on substr(a.notes, 0,
+--                                    decode(instr(a.notes, ' '), 0, length(a.notes) + 1, instr(a.notes, ' ')) - 1) =
+--           h.CFNO
+--          join t_sale_d d on a.SALENO = d.SALENO
+-- where
+-- --           a.ACCDATE >= date'2023-01-01' and
+-- d.WAREID in (10502445, 10601875, 10600308) and h.IDCARDNO is not null )
+--           where rn=1
+-- )  T2
+-- ON ( T1.IDCARDNO=T2.IDCARDNO)
+-- -- WHEN MATCHED THEN
+-- -- UPDATE SET T1.b= T2.b
+-- WHEN NOT MATCHED THEN
+-- INSERT (IDCARDNO,rank,username) VALUES(T2.IDCARDNO,T2.idno,t2.USERNAME);
 
 -- 3.更新汇总表里使用的静脉和皮下数据
 MERGE INTO d_luoshi_jmsf_1 T1

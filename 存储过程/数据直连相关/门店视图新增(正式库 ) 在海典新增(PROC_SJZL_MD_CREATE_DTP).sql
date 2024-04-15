@@ -76,7 +76,7 @@ having sum(d.wareqty) > 0';
         v_kk2:='CREATE  VIEW '|| v_sale ||' AS
 SELECT a.saleno,a.compid as xsfdm,''浙江瑞人堂医药连锁有限公司'' as xsfmc,a.busno cgfdm,nvl(a.ext_str1,d.doctorname) as cgfmc,
 b.wareid as cpdm,c.warename as cpmc,c.warespec as cpgg,c.wareunit as dw,b.makeno as ph,b.wareqty*b.times as sl,b.netprice as dj,b.wareqty*b.times * b.netprice as je,
-b.accdate as cjsj,CASE when b.wareqty >=0 then ''纯销'' else ''退货'' end as 销售类型,''P001''库位,b.invalidate  有效日期,''''AS syz,b.invalidate as yxq,null as billno
+b.accdate as cjsj,CASE when b.wareqty >=0 then ''纯销'' else ''退货'' end as 销售类型,''P001''库位,b.invalidate  有效日期,null AS syz,b.invalidate as yxq,null as billno
 ,f.factoryname,c.fileno,d.zdcont,d.kb
 FROM t_sale_h a
 LEFT JOIN t_remote_prescription_h d ON  substr(a.notes,0,decode(instr(a.notes,'' ''),0,length(a.notes)+1,instr(a.notes,'' ''))-1)=d.cfno
@@ -85,7 +85,7 @@ LEFT JOIN t_remote_prescription_h d ON  substr(a.notes,0,decode(instr(a.notes,''
 and b.wareid in(select wareid from '||p_waretable||')
 AND a.busno in ('|| p_busno ||')  and a.accdate>=date''2024-01-01''  and  a.accdate< trunc(sysdate)
 union all
-SELECT a.ABNORMITYNO,s.COMPID,''浙江瑞人堂医药连锁有限公司'',c.busno as cgfdm,s.ORGNAME,
+SELECT a.ABNORMITYNO,s.COMPID,''浙江瑞人堂医药连锁有限公司'',c.busno as cgfdm,case when WAREQTYA-WAREQTYB>0 then ''报溢'' else ''报损'' end,
 a.wareid,b.warename,b.warespec,b.wareunit,a.makeno,WAREQTYB-WAREQTYA,a.saleprice,
 (WAREQTYA-WAREQTYB) * a.saleprice,trunc(c.LASTTIME),case when WAREQTYA-WAREQTYB>0 then ''报溢'' else ''报损'' end ,''P001'',a.invalidate,a.SALETAX,a.invalidate,null
 ,f.FACTORYNAME,b.FILENO,null,null

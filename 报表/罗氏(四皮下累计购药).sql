@@ -2,7 +2,7 @@ create or replace view v_luoshi_pxsf as
 with first as (select a.SALENO, a.ACCDATE, d.WAREQTY,
                       h.busno, s.ORGNAME, tb.CLASSNAME as 药店所在省份, tb1.CLASSNAME as 药店所在城市, d.WAREID,
                       h.IDCARDNO,
-                      USERNAME,
+                      h.USERNAME,
                       min(a.ACCDATE) OVER (PARTITION BY h.IDCARDNO,d.WAREID ) as 本店第一次购10601875时间,
                       sum(d.WAREQTY) over ( partition by h.IDCARDNO,d.WAREID
                           order by a.ACCDATE ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) as 购买10601875总数量,
@@ -101,11 +101,11 @@ select BUSNO, ORGNAME, "药店所在省份", "药店所在城市", IDCARDNO, USERNAME, I新皮
 from v_luoshi_pxsf;
 select * from d_luoshi_pxsf_1;
 --报表
-select a.BUSNO, ORGNAME, "药店所在省份", "药店所在城市", fi.IDCARDNO, USERNAME,fi.疾病分期,fi.是否早期新辅助治疗,fi.新皮下方案, J皮下曲妥珠单抗支数,
+select a.BUSNO, ORGNAME, 药店所在省份, 药店所在城市, fi.IDCARDNO, a.USERNAME,fi.疾病分期,fi.是否早期新辅助治疗,fi.新皮下方案, J皮下曲妥珠单抗支数,
        K转皮下后帕妥珠单抗支数, L皮下PHEGSO支数, M理论购药支数, N实际药房购药期间盒数偏差分析, O皮下支数核查,
        P转皮下后帕妥支数核查, Q本店累计购药次数, R本店最近一次购药时间, S本店前一次购药时间, T最近两次购药周期,
        U本店下次理论购药时间, V推测是否已完成疗程, W最近一次购药距离今日天数, X最近购药距首次购药累计时长,
-       Y2022年以来本店平均购药周期, "随访时间", "随访反馈", "随访备注", AC本店第一次购药时间, RN2
+       Y2022年以来本店平均购药周期, 随访时间, 随访反馈, 随访备注, AC本店第一次购药时间, RN2
 from d_luoshi_pxsf_1 a
 left join d_patient_files fi on a.idcardno=fi.idcardno;
 

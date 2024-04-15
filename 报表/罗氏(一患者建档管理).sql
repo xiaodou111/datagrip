@@ -1,7 +1,3 @@
-select 1
-from v_luoshi_jmsf a
-         left join v_luoshi_pxsf b on a.IDCARDNO = b.IDCARDNO;
-
 
 -- with px_date as (select *
 --                  --在这个表中说明属于转皮下了
@@ -19,66 +15,59 @@ from v_luoshi_jmsf a
 --                          and a.SALENO not in (select RETSALENO from T_SALE_RETURN_h))
 --                  where rn = 1);
 
-alter table d_patient_files add 就诊医院科室病区 varchar2(200);
-alter table d_patient_files add 医保归属地 varchar2(40);
-alter table d_patient_files add 是否异地医保 varchar2(6);
-alter table d_patient_files add 疾病首次确诊时间 date;
-alter table d_patient_files add 首诊医院 varchar2(200);
-create table d_luoshi_user_temp(
-    userid number
-)
-select * from d_luoshi_user_temp;
 
-select busno, ORGNAME, 药店所在省份, 药店所在城市, WAREID, WARENAME, IDCARDNO,rank,
+select * from d_luoshi_user_temp;
+--最后一次购药在2023.1.1以前的不建档,首次建档后，后续换门店的话，把药店名称改成最新的那家
+--海典报表
+select busno, ORGNAME, 药店所在省份, 药店所在城市, IDCARDNO,rank,
        USERNAME, CAGE, SEX, 就诊医院科室病区, 参保地,
        异地标志, 患者是否知情, 是否同意将信息反馈给主治医生, 随访人姓名, 随访人与患者关系, 随访人联系电话, 疾病分期,
        是否早期新辅助治疗, 原用药方案, 该方案曲妥珠单抗是否为赫赛汀, 如为其他方案请选具体方案, 新皮下方案,
        是否静脉转化为皮下,
        是否联合化疗, 是否手术, ER雌激素受体是否阳性, PR孕激素受体是否阳性, 是否有淋巴结转移, 是否转移有远处器官转移,
        疾病首次确诊时间, 首次输注购买帕妥或曲妥的时间, 首诊医院, 患者非本店购药帕妥或曲妥支数, 患者本店静脉购药支数,
-       患者本店皮下购药支数, CREATETIME, ZDCONT, ACCDATE, rn
+       患者本店皮下购药支数
 from (select
 --     a.ACCDATE,a.SALENO,h.CFNO,
-h.busno, s.ORGNAME, tb.CLASSNAME as 药店所在省份, tb1.CLASSNAME as 药店所在城市, d.WAREID, w.WARENAME, h.IDCARDNO,
-rank.rank,
-h.USERNAME, CAGE, SEX, fi.就诊医院科室病区,
-nvl(fi.医保归属地,cyb.参保地) as 参保地, nvl(fi.是否异地医保,cyb.异地标志) as 异地标志,
+fi.busno, s.ORGNAME, tb.CLASSNAME as 药店所在省份, tb1.CLASSNAME as 药店所在城市, fi.IDCARDNO,
+substr(fi.IDCARDNO,-10) as RANK,
+fi.USERNAME, CAGE, SEX, fi.就诊医院科室病区,
+fi.医保归属地 as 参保地, fi.是否异地医保 as 异地标志,
 fi.患者是否知情, fi.是否同意将信息反馈给主治医生 as 是否同意将信息反馈给主治医生, fi.随访人姓名, fi.随访人与患者关系,
 fi.随访人联系电话,
 fi.疾病分期, fi.是否早期新辅助治疗, fi.原用药方案, fi.该方案曲妥珠单抗是否为赫赛汀, fi.如为其他方案请选具体方案,
 fi.新皮下方案, fi.是否静脉转化为皮下, fi.是否联合化疗, fi.是否手术, fi.ER雌激素受体是否阳性, fi.PR孕激素受体是否阳性,
 fi.是否有淋巴结转移, fi.是否转移有远处器官转移,
-fi.疾病首次确诊时间 as 疾病首次确诊时间, a.ACCDATE as 首次输注购买帕妥或曲妥的时间,
+fi.疾病首次确诊时间 as 疾病首次确诊时间, fi.首次输注时间 as 首次输注购买帕妥或曲妥的时间,
 fi.首诊医院 as 首诊医院, fi.患者非本店购药帕妥或曲妥支数,
 nvl(jm.K患者本店总购药支数,0)+nvl(px.K转皮下后帕妥珠单抗支数,0) as 患者本店静脉购药支数,
-px.J皮下曲妥珠单抗支数 as 患者本店皮下购药支数,
-h.CREATETIME, h.ZDCONT, a.ACCDATE,
-row_number() over (partition by h.IDCARDNO order by a.ACCDATE) rn
+px.J皮下曲妥珠单抗支数 as 患者本店皮下购药支数
+--h.CREATETIME, h.ZDCONT, a.ACCDATE,
 --        count(h.IDCARDNO) over (partition by h.IDCARDNO,d.WAREID) sl
-      from t_remote_prescription_h h
-
-      join t_sale_h a on substr(a.notes, 0,
-                                         decode(instr(a.notes, ' '), 0, length(a.notes) + 1, instr(a.notes, ' ')) - 1) =
-                                  h.CFNO
-               join t_sale_d d on a.SALENO = d.SALENO
-               left join D_ZHYB_HZ_CYB cyb on cyb.ERP销售单号 = a.SALENO
-               left join d_patient_files fi on fi.IDCARDNO = h.IDCARDNO
-               left join s_busi s on h.BUSNO = s.BUSNO
-               left join t_busno_class_set ts on a.busno = ts.busno and ts.classgroupno = '322'
+              from
+               d_patient_files fi
+               left join s_busi s on fi.BUSNO = s.BUSNO
+               left join t_busno_class_set ts on fi.busno = ts.busno and ts.classgroupno = '322'
                left join t_busno_class_base tb on ts.classgroupno = tb.classgroupno and ts.classcode = tb.classcode
-               left join t_busno_class_set ts1 on a.busno = ts1.busno and ts1.classgroupno = '323'
+               left join t_busno_class_set ts1 on fi.busno = ts1.busno and ts1.classgroupno = '323'
                left join t_busno_class_base tb1 on ts1.classgroupno = tb1.classgroupno and ts1.classcode = tb1.classcode
-               left join t_ware_base w on w.WAREID = d.WAREID
-               left join d_luoshi_idrank rank on h.IDCARDNO=rank.idcardno
-               left join d_luoshi_pxsf  px on h.IDCARDNO=px.IDCARDNO
-               left join D_LUOSHI_JMSF  jm on h.IDCARDNO=jm.IDCARDNO
-      where
-d.WAREID in (10502445, 10601875, 10600308)
-     )
-where rn = 1;
+--                left join d_luoshi_idrank rank on h.IDCARDNO=rank.idcardno
+               left join d_luoshi_pxsf_1  px on fi.IDCARDNO=px.IDCARDNO
+               left join D_LUOSHI_JMSF_1  jm on fi.IDCARDNO=jm.IDCARDNO);
+
+alter table d_patient_files  add 参保地 varchar2(40);
+alter table d_patient_files  add 异地标志 varchar2(40);
+select * from d_patient_files;
 
 
 
+
+select * from d_patient_files;
+
+
+select * from d_luoshi_pxsf;
+select * from D_LUOSHI_JMSF_1;
+select * from d_luoshi_pxsf_1;
 
 
 alter table d_patient_files add 就诊医院科室病区 varchar2(200);
@@ -86,6 +75,9 @@ alter table d_patient_files add 医保归属地 varchar2(40);
 alter table d_patient_files add 是否异地医保 varchar2(6);
 alter table d_patient_files add 疾病首次确诊时间 date;
 alter table d_patient_files add 首诊医院 varchar2(200);
+alter table d_patient_files add username varchar2(40);
+alter table d_patient_files add cage varchar2(40);
+alter table d_patient_files add sex varchar2(2);
 select * from d_patient_files;
 UPDATE d_patient_files SET 是否早期新辅助治疗='是' WHERE idcardno='330324197209215762';
 select * from D_LUOSHI_JMSF;
@@ -183,6 +175,18 @@ left join t_remote_prescription_h h  on substr(a.notes, 0,
                                           h.CFNO
  where a.ACCDATE >= date'2022-01-01' and d.WAREID in (10600308) ---10502445,
                 and cyb.身份证号 = '53293019850121172X';
+
+
+
+select substr(IDCARDNO,-12),max(IDCARDNO) from t_remote_prescription_h group by substr(IDCARDNO,-12)
+having count(*)>1;
+
+select substr(IDCARDNO,-4),IDCARDNO from t_remote_prescription_h
+                                         where substr(IDCARDNO,-12)='197010204435';
+
+
+
+                                    group by IDCARDNO
 
 
 
