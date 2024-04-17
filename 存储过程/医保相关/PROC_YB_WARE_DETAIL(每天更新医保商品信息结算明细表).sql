@@ -1,4 +1,4 @@
-create PROCEDURE proc_yb_WARE_DETAIL
+create or replace PROCEDURE proc_yb_WARE_DETAIL
 
 IS
 
@@ -6,7 +6,7 @@ begin
 
 
 insert into D_YBZD_detail
-with a1 as (select yh.RECEIPTDATE,d.BUSNO, tb.CLASSNAME, d.SALENO,d.SALER, d.WAREID, d.WAREQTY, d.NETAMT, d.NETPRICE, ext.WE_SCHAR01,
+with a1 as (select yh.RECEIPTDATE,d.BUSNO, tb.CLASSNAME, d.SALENO,d.SALER, d.WAREID, d.WAREQTY, d.NETAMT, d.NETPRICE,d.ROWNO, ext.WE_SCHAR01,
 --        ext.WE_NUM04 as 药店医保支付价,
 --        ext.WE_NUM05 as 门诊医保支付价,
                    decode(tb.CLASSCODE, '30510', ext.WE_NUM04, '30511', ext.WE_NUM05) as 门店诊所医保支付价,
@@ -52,7 +52,7 @@ group by  ORDERNO,WARECODE, EXT_CHAR08) yd  on yh.ORDERNO=yd.ORDERNO and yd.WARE
 --   TO_DATE('20240101 07:10:00', 'YYYYMMDD HH24:MI:SS')
 --     AND TO_DATE('20240104 07:10:00', 'YYYYMMDD HH24:MI:SS')
             ),
-     a2 as (select RECEIPTDATE,BUSNO, CLASSNAME, SALENO,SALER, WAREID,MAKENO,INVALIDATE, WAREQTY, NETAMT, NETPRICE, WE_SCHAR01, 门店诊所医保支付价,
+     a2 as (select RECEIPTDATE,BUSNO, CLASSNAME, SALENO,SALER, WAREID,MAKENO,INVALIDATE, WAREQTY, NETAMT,ROWNO, NETPRICE, WE_SCHAR01, 门店诊所医保支付价,
                    医保超限价, EXT_CHAR08,
                    case
                        when WE_SCHAR01 = '医保乙' then round(EXT_CHAR08 * (a1.NETAMT - 医保超限价), 2)
@@ -72,7 +72,7 @@ group by  ORDERNO,WARECODE, EXT_CHAR08) yd  on yh.ORDERNO=yd.ORDERNO and yd.WARE
                  from a2
                  group by SALENO),
     --每一个每个商品的医保比例
-     yb_bl as (select a2.SALENO, a2.WAREID,a2.WAREQTY,
+     yb_bl as (select a2.SALENO, a2.WAREID,a2.WAREQTY,a2.MAKENO,ROWNO,
                       b.整单医保支付价,
                       case
                                 when b.整单医保支付价 = 0 then 0
@@ -99,7 +99,8 @@ select a2.RECEIPTDATE,a2.BUSNO, a2.CLASSNAME, a2.SALENO,a2.SALER, a2.WAREID,a2.W
 --
 from a2
          left join yb_zfze b on a2.SALENO = b.SALENO
-         left join yb_bl bl on a2.SALENO = bl.SALENO and a2.WAREID = bl.WAREID  and a2.WAREQTY=bl.WAREQTY;
+         left join yb_bl bl on a2.SALENO = bl.SALENO and a2.WAREID = bl.WAREID  and a2.WAREQTY=bl.WAREQTY and a2.MAKENO=bl.MAKENO
+            and  a2.ROWNO = bl.ROWNO;
 
   commit;
 

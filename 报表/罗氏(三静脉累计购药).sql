@@ -39,7 +39,7 @@ row_number() over (partition by h.IDCARDNO,d.WAREID order by a.ACCDATE desc) rn
                                                         instr(a.notes, ' ')) - 1) =
                                           h.CFNO
                        join t_sale_d d on a.SALENO = d.SALENO
-                       join D_ZHYB_HZ_CYB cyb on cyb.ERP销售单号 = a.SALENO
+                       left join D_ZHYB_HZ_CYB cyb on cyb.ERP销售单号 = a.SALENO
                        left join d_patient_files fi on fi.IDCARDNO = h.IDCARDNO
                        join s_busi s on h.BUSNO = s.BUSNO
                        join t_busno_class_set ts on a.busno = ts.busno and ts.classgroupno = '322'
@@ -78,7 +78,7 @@ row_number() over (partition by h.IDCARDNO,d.WAREID order by a.ACCDATE desc) rn
                                                         instr(a.notes, ' ')) - 1) =
                                           h.CFNO
                        join t_sale_d d on a.SALENO = d.SALENO
-                       join D_ZHYB_HZ_CYB cyb on cyb.ERP销售单号 = a.SALENO
+                       left join D_ZHYB_HZ_CYB cyb on cyb.ERP销售单号 = a.SALENO
                        left join d_patient_files fi on fi.IDCARDNO = h.IDCARDNO
                        join s_busi s on h.BUSNO = s.BUSNO
                        join t_busno_class_set ts on a.busno = ts.busno and ts.classgroupno = '322'

@@ -1,10 +1,10 @@
 select * from t_sjzl_wh where ZLKMC like '%石药%' for update
 insert into t_sjzl_wh(ZLKMC,ZLKDM,CREATETIME,CGY,WATCH_USER,SFYW,ZBORMD) values 
-('中美华东(非DTP)-库存','V_KC_ZMHD_P001',sysdate,10001014,10001014,1,2);
+('北京韩美(非DTP)-库存','V_KC_BJHM_P001',sysdate,10009982,10009982,1,2);
 insert into t_sjzl_wh(ZLKMC,ZLKDM,CREATETIME,CGY,WATCH_USER,SFYW,ZBORMD) values 
-('中美华东(非DTP)-采购','V_ACCEPT_ZMHD_P001',sysdate,10001014,10001014,1,2);
+('北京韩美(非DTP)-采购','V_ACCEPT_BJHM_P001',sysdate,10009982,10009982,1,2);
 insert into t_sjzl_wh(ZLKMC,ZLKDM,CREATETIME,CGY,WATCH_USER,SFYW,ZBORMD) values 
-('中美华东(非DTP)-销售','V_SALE_ZMHD_P001',sysdate,10001014,10001014,1,2);
+('北京韩美(非DTP)-销售','V_SALE_BJHM_P001',sysdate,10009982,10009982,1,2);
 
 
 delete from t_sjzl_wh  where ZLKMC like '%中美华东%';
