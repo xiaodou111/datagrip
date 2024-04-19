@@ -1,4 +1,4 @@
-create PROCEDURE proc_yb_first_md_new1
+create or REPLACE PROCEDURE proc_yb_first_md_new1
 
 IS
 /*rows_updated NUMBER;
@@ -8,39 +8,65 @@ begin
 
 
   --DELETE from D_YB_NEW_CUS_2023_09 WHERE RECEIPTDATE>=date'2023-01-01';
-  INSERT INTO D_YB_NEW_CUS_2023_09 
-(erpsaleno, receiptdate, busno, saler, username, customername, identityno, nb_flag, cbd, cbdname, netsum, status, yg_flag,jslx,orderno)
-SELECT erpsaleno, receiptdate, busno, saler, username, customername, identityno, nb_flag, cbd, cbdname, netsum, status, yg_flag,
-jslx,orderno
-FROM (    
-SELECT a.erpsaleno, a.receiptdate, a.busno, a.saler, a.username, a.customername, a.identityno,a.nb_flag, a.cbd, a.cbdname, 
-a.netsum, a.status, a.yg_flag,a.jslx,
-a.orderno,a.cbrylb,
-ROW_NUMBER() OVER (PARTITION BY 
-  CASE
-    WHEN tb2.classcode IN ('324331001','324331002') THEN '324331001'
-    ELSE tb2.classcode
-  END,
-  tb22.classcode, 
-a.IDENTITYNO,a.nb_flag ORDER BY a.receiptdate ASC) rn
- FROM d_yb_first_cus a
- join t_busno_class_set ts on a.busno=ts.busno and ts.classgroupno ='303'
-join t_busno_class_base tb on ts.classgroupno=ts.classgroupno and ts.classcode=tb.classcode 
-AND tb.classcode IN('303100','303101','303102')
- join t_busno_class_set ts2 on a.busno=ts2.busno and ts2.classgroupno ='324'
-    join t_busno_class_base tb2 on ts2.classgroupno=ts2.classgroupno and ts2.classcode=tb2.classcode
-    join t_busno_class_set ts22 on a.busno=ts22.busno and ts22.classgroupno ='305'
-    join t_busno_class_base tb22 on ts22.classgroupno=ts22.classgroupno and ts22.classcode=tb22.classcode
-    --加上国谈条件
-    join d_zjys_wl2023xse xse on xse.ERP销售号=a.erpsaleno 
-    JOIN d_zhyb_hz_cyb cyb ON a.erpsaleno=cyb.erp销售单号 --AND d_zhyb_hz_cyb.异地标志='非异地'
-    JOIN d_ll_zxcy ON cyb.erp销售单号=d_ll_zxcy.saleno 
-    WHERE a.RECEIPTDATE >= DATE'2024-01-01'
-    AND a.CBD IN('331082','331004','331083','331024','331081','331023','331022','331003','331002','331099','331001')  
-    --国谈条件
-    AND nvl(cyb.统筹支付数,0)+nvl(cyb.公补基金支付数,0)+nvl(cyb.个人当年帐户支付数,0)<>0
-and cyb.医疗费用总额 - nvl(gtjeed,0)<>0
-  ) WHERE rn=1 and receiptdate between trunc(sysdate)-1 and trunc(sysdate);
+  INSERT INTO D_YB_NEW_CUS_2024_04
+(ERPSALENO, RECEIPTDATE, BUSNO, SALER, USERNAME, CUSTOMERNAME, IDENTITYNO, NB_FLAG, CBD, CBDNAME, NETSUM, STATUS,
+ YG_FLAG, JSLX, ORDERNO)
+SELECT ERPSALENO, RECEIPTDATE, BUSNO, SALER, USERNAME, CUSTOMERNAME, IDENTITYNO, NB_FLAG, CBD, CBDNAME, NETSUM, STATUS,
+       YG_FLAG,
+       JSLX, ORDERNO
+FROM (SELECT A.ERPSALENO, A.RECEIPTDATE, A.BUSNO, A.SALER, A.USERNAME, A.CUSTOMERNAME, A.IDENTITYNO, A.NB_FLAG, A.CBD,
+             A.CBDNAME,
+             A.NETSUM, A.STATUS, A.YG_FLAG, A.JSLX,
+             A.ORDERNO, A.CBRYLB,
+             ROW_NUMBER() OVER (PARTITION BY
+                 CASE
+                     WHEN TB2.CLASSCODE IN ('324331001', '324331002') THEN '324331001'
+                     ELSE TB2.CLASSCODE
+                     END,
+                 TB22.CLASSCODE,
+                 A.IDENTITYNO,A.NB_FLAG ORDER BY A.RECEIPTDATE ASC) RN
+FROM D_YB_FIRST_CUS A
+         JOIN T_BUSNO_CLASS_SET TS ON A.BUSNO = TS.BUSNO AND TS.CLASSGROUPNO = '303'
+         JOIN T_BUSNO_CLASS_BASE TB ON TS.CLASSGROUPNO = TS.CLASSGROUPNO AND TS.CLASSCODE = TB.CLASSCODE
+    AND TB.CLASSCODE IN ('303100', '303101', '303102')
+         JOIN T_BUSNO_CLASS_SET TS2 ON A.BUSNO = TS2.BUSNO AND TS2.CLASSGROUPNO = '324'
+         JOIN T_BUSNO_CLASS_BASE TB2 ON TS2.CLASSGROUPNO = TS2.CLASSGROUPNO AND TS2.CLASSCODE = TB2.CLASSCODE
+         JOIN T_BUSNO_CLASS_SET TS22 ON A.BUSNO = TS22.BUSNO AND TS22.CLASSGROUPNO = '305'
+         JOIN T_BUSNO_CLASS_BASE TB22 ON TS22.CLASSGROUPNO = TS22.CLASSGROUPNO AND TS22.CLASSCODE = TB22.CLASSCODE
+--加上国谈条件
+WHERE A.RECEIPTDATE >= DATE'2024-01-01'
+  AND A.CBD IN
+      ('331082', '331004', '331083', '331024', '331081', '331023', '331022', '331003', '331002', '331099', '331001')
+  --国谈条件
+  AND EXISTS(SELECT 1
+FROM (SELECT A.SALENO
+FROM V_YB_SPXX_DETAIL A
+         JOIN T_BUSNO_CLASS_SET TS ON A.BUSNO = TS.BUSNO AND TS.CLASSGROUPNO = '305'
+         JOIN T_BUSNO_CLASS_BASE TB ON TS.CLASSGROUPNO = TB.CLASSGROUPNO AND TS.CLASSCODE = TB.CLASSCODE
+WHERE TB.CLASSCODE = '30510'
+  AND NVL(统筹支付数, 0) + NVL(个人当年帐户支付数, 0) + NVL(公补基金支付数, 0) <> 0
+  AND NOT EXISTS(SELECT 1 FROM T_SALE_RETURN_H T1 WHERE T1.SALENO = A.SALENO)
+  AND NOT EXISTS(SELECT 1 FROM T_SALE_RETURN_H T2 WHERE T2.RETSALENO = A.SALENO)
+  AND NOT EXISTS(SELECT 1
+FROM D_LL_GTML GT
+WHERE GT.WAREID = A.WAREID
+  AND A.ACCDATE BETWEEN GT.BEGINDATE AND GT.ENDDATE
+  AND GT.PZFL IN ('双通道品种', '国谈品种'))
+UNION ALL
+SELECT A.SALENO
+FROM V_YB_SPXX_DETAIL A
+         JOIN T_BUSNO_CLASS_SET TS ON A.BUSNO = TS.BUSNO AND TS.CLASSGROUPNO = '305'
+         JOIN T_BUSNO_CLASS_BASE TB ON TS.CLASSGROUPNO = TB.CLASSGROUPNO AND TS.CLASSCODE = TB.CLASSCODE
+WHERE TB.CLASSCODE = '30511'
+  AND NVL(统筹支付数, 0) + NVL(个人当年帐户支付数, 0) + NVL(公补基金支付数, 0) <> 0
+  AND NOT EXISTS(SELECT 1 FROM T_SALE_RETURN_H T1 WHERE T1.SALENO = A.SALENO)
+  AND NOT EXISTS(SELECT 1 FROM T_SALE_RETURN_H T2 WHERE T2.RETSALENO = A.SALENO)
+  AND NOT EXISTS(SELECT 1
+FROM D_LL_GTML GT
+WHERE GT.WAREID = A.WAREID
+  AND A.ACCDATE BETWEEN GT.BEGINDATE AND GT.ENDDATE
+  AND GT.PZFL IN ('国谈品种'))) aaa where aaa.SALENO=a.ERPSALENO  ))
+WHERE RN = 1 and receiptdate between trunc(sysdate)-1 and trunc(sysdate);
   --杭州新增人头
   
  -- DELETE from  D_YB_NEW_CUS_2023_hz;
