@@ -1,4 +1,4 @@
-create PROCEDURE proc_yb_xz_hz_2404(p_begin IN DATE,
+create or replace PROCEDURE proc_yb_xz_hz_2404(p_begin IN DATE,
                                           p_end IN DATE,
                                           p_sql OUT SYS_REFCURSOR )
 IS
@@ -212,7 +212,7 @@ join t_busno_class_base tb on ts.classgroupno=ts.classgroupno and ts.classcode=t
  FROM bb
 
 UNION ALL
-SELECT '事业部汇总：',syb,qy,NULL,NULL,lx,
+SELECT '事业部汇总：',syb,case when qy in ('台州市本级','台州市椒江区') then '台州市椒江区' else qy end as qy,NULL,NULL,lx,
 SUM(ybsl) AS ybsl,
 CASE WHEN SUM(ybsl)=0 OR SUM(qnybsl)=0 THEN 0 ELSE (SUM(ybsl)-SUM(qnybsl))/SUM(qnybsl) END AS ybtb,
 CASE WHEN SUM(ybsl)=0 OR SUM(syybsl)=0 THEN 0 ELSE (SUM(ybsl)-SUM(syybsl))/SUM(syybsl) END AS ybhb,
@@ -237,10 +237,10 @@ CASE WHEN SUM(ybstzy)=0 OR SUM(syybstzy)=0 THEN 0 ELSE (SUM(ybstzy)-SUM(syybstzy
 SUM(nbstzy) AS nbstzy,
 CASE WHEN SUM(nbstzy)=0 OR SUM(qnnbstzy)=0 THEN 0 ELSE (SUM(nbstzy)-SUM(qnnbstzy))/SUM(qnnbstzy) END AS nbstzytb,
 CASE WHEN SUM(nbstzy)=0 OR SUM(synbstzy)=0 THEN 0 ELSE (SUM(nbstzy)-SUM(synbstzy))/SUM(synbstzy) END AS nbstzyhb
-FROM  bb  GROUP BY syb,qy,lx
+FROM  bb  GROUP BY syb,case when qy in ('台州市本级','台州市椒江区') then '台州市椒江区' else qy end ,lx
 
 UNION ALL
-SELECT '片区汇总：',PQ,qy,NULL,NULL,lx,
+SELECT '片区汇总：',PQ,case when qy in ('台州市本级','台州市椒江区') then '台州市椒江区' else qy end as qy,NULL,NULL,lx,
 SUM(ybsl) AS ybsl,
 CASE WHEN SUM(ybsl)=0 OR SUM(qnybsl)=0 THEN 0 ELSE (SUM(ybsl)-SUM(qnybsl))/SUM(qnybsl) END AS ybtb,
 CASE WHEN SUM(ybsl)=0 OR SUM(syybsl)=0 THEN 0 ELSE (SUM(ybsl)-SUM(syybsl))/SUM(syybsl) END AS ybhb,
@@ -265,9 +265,9 @@ CASE WHEN SUM(ybstzy)=0 OR SUM(syybstzy)=0 THEN 0 ELSE (SUM(ybstzy)-SUM(syybstzy
 SUM(nbstzy) AS nbstzy,
 CASE WHEN SUM(nbstzy)=0 OR SUM(qnnbstzy)=0 THEN 0 ELSE (SUM(nbstzy)-SUM(qnnbstzy))/SUM(qnnbstzy) END AS nbstzytb,
 CASE WHEN SUM(nbstzy)=0 OR SUM(synbstzy)=0 THEN 0 ELSE (SUM(nbstzy)-SUM(synbstzy))/SUM(synbstzy) END AS nbstzyhb
-FROM  bb GROUP BY PQ,lx,qy
+FROM  bb GROUP BY PQ,lx,case when qy in ('台州市本级','台州市椒江区') then '台州市椒江区' else qy end
 UNION ALL
-SELECT '区域汇总：',qy,NULL,NULL,NULL,lx,
+SELECT '区域汇总：',case when qy in ('台州市本级','台州市椒江区') then '台州市椒江区' else qy end as qy,NULL,NULL,NULL,lx,
 SUM(nvl(ybsl,0)) AS ybsl,
 CASE WHEN nvl(SUM(ybsl),0)=0 OR nvl(SUM(qnybsl),0)=0 THEN 0 ELSE (SUM(ybsl)-SUM(qnybsl))/SUM(qnybsl) END AS ybtb,
 CASE WHEN nvl(SUM(ybsl),0)=0 OR nvl(SUM(syybsl),0)=0 THEN 0 ELSE (SUM(ybsl)-SUM(syybsl))/SUM(syybsl) END AS ybhb,
@@ -292,7 +292,7 @@ CASE WHEN nvl(SUM(ybstzy),0)=0 OR nvl(SUM(syybstzy),0)=0 THEN 0 ELSE (SUM(ybstzy
 SUM(nvl(nbstzy,0)) AS nbstzy,
 CASE WHEN nvl(SUM(nbstzy),0)=0 OR nvl(SUM(qnnbstzy),0)=0 THEN 0 ELSE (SUM(nbstzy)-SUM(qnnbstzy))/SUM(qnnbstzy) END AS nbstzytb,
 CASE WHEN nvl(SUM(nbstzy),0)=0 OR nvl(SUM(synbstzy),0)=0 THEN 0 ELSE (SUM(nbstzy)-SUM(synbstzy))/SUM(synbstzy) END AS nbstzyhb
-FROM  bb  GROUP BY qy,lx
+FROM  bb  GROUP BY case when qy in ('台州市本级','台州市椒江区') then '台州市椒江区' else qy end,lx
 UNION ALL
 SELECT '台州事业部汇总：',null,NULL,NULL,NULL,lx,
 SUM(ybsl) AS ybsl,
