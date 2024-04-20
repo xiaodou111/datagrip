@@ -1,5 +1,6 @@
 --d_luoshi_qcsj 罗氏需要导入的期初数据
     --D_LUOSHI_PROG  患者方案开始时间和结束时间维护,需要加个历史表,每个方案都需要一条记录,加个历史表防止对原表进行修改操作恢复不了
+    alter table d_luoshi_qcsj add firsttime date;
 --todo 罗氏修改方案时间
 select BUSNO, IDCARDNO, USERNAME, PROGRAMME, WAREID, BEGINDATE, ENDDATE
 from D_LUOSHI_PROG;
@@ -75,12 +76,8 @@ where h.IDCARDNO = p.IDCARDNO
 ),
 a1 as(
 select
-a.SALENO, a.ACCDATE, a.WAREQTY,a.IDCARDNO,a.USERNAME,
+a.SALENO, a.ACCDATE, a.WAREQTY,a.IDCARDNO,a.USERNAME,WAREID,
 a.busno,
--- s.ORGNAME, tb.CLASSNAME as 药店所在省份, tb1.CLASSNAME as 药店所在城市, d.WAREID, w.WARENAME, h.IDCARDNO,h.USERNAME,
--- null as 用药方案, null as 该方案曲妥珠单抗是否为赫赛汀, null as 疾病分期, null as 是否早期新辅助治疗,
--- null as k患者本店总购药支数,
--- null as l二二年1月以前累计购药盒数,
 sum(a.WAREQTY)
     over ( partition by a.IDCARDNO order by a.ACCDATE ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) m二二年1月以来本店累计购药支数,
 Max(a.ACCDATE) OVER (PARTITION BY a.IDCARDNO ) AS r本店最近一次购药时间,
@@ -92,18 +89,32 @@ count(distinct a.SALENO) over ( partition by a.IDCARDNO) as q本店累计购药次数,
 row_number() over (partition by a.IDCARDNO order by a.ACCDATE desc) rn
  from a
 left join d_patient_files fi on fi.IDCARDNO = a.IDCARDNO
-)
+),
+add_qc as (
+   select a1.busno as busno,a1.IDCARDNO as IDCARDNO,a1.USERNAME as USERNAME,a1.WAREID as WAREID,
+    nvl(qc.LBEFORE22,0)+nvl(qc.MSUMSLNOW,0)+nvl(m二二年1月以来本店累计购药支数,0) as  k患者本店总购药支数,
+       nvl(qc.LBEFORE22,0) as l二二年1月以前累计购药盒数,
+       nvl(qc.MSUMSLNOW,0)+nvl(m二二年1月以来本店累计购药支数,0) as m二二年1月以来本店累计购药支数,
+    N理论购药支数,
+       nvl(q本店累计购药次数,qc.QSUMCS) as q本店累计购药次数,
+       nvl(r本店最近一次购药时间,qc.RLASTBUYTIME) as r本店最近一次购药时间,
+       nvl(s本店前一次购药时间,qc.SLAGBUYTIME) as s本店前一次购药时间,
+       nvl(ac本店第一次购药时间,qc.firsttime) as ac本店第一次购药时间,rn
+    from  a1
+    left join d_luoshi_qcsj qc on a1.IDCARDNO=qc.IDCARDNO
+    where rn=1
+    )
 select
-a1.busno,
-       ORGNAME, 药店所在省份, 药店所在城市,
---        WAREID, WARENAME,
-       a1.IDCARDNO, a1.USERNAME,
+aa.busno,
+tb.CLASSNAME as 药店所在省份,
+tb1.CLASSNAME as 药店所在城市,
+       aa.IDCARDNO, aa.USERNAME,
        files.原用药方案 as 用药方案,
        files.该方案曲妥珠单抗是否为赫赛汀,
        files.疾病分期,
        files.是否早期新辅助治疗,
-       nvl(before_22.二二年以前累计购药盒数,0)+nvl(m二二年1月以来本店累计购药支数,0) as  k患者本店总购药支数,
-       nvl(before_22.二二年以前累计购药盒数,0) as l二二年1月以前累计购药盒数,
+       k患者本店总购药支数,
+       l二二年1月以前累计购药盒数,
        m二二年1月以来本店累计购药支数,
        N理论购药支数,
        case when N理论购药支数 - m二二年1月以来本店累计购药支数 >= 1 then '有非本店购买可能' else '皆在本店购买' end as o实际药房购药期间盒数偏差分析,
@@ -113,15 +124,20 @@ a1.busno,
        s本店前一次购药时间,
        r本店最近一次购药时间 - s本店前一次购药时间 as t最近两次购药周期,
        r本店最近一次购药时间 + 21 as u本店下次理论购药时间,
-       case when nvl(before_22.二二年以前累计购药盒数,0)+nvl(m二二年1月以来本店累计购药支数,0) >= 19 then 'Y' else 'N' end as v推测是否已完成疗程,
+       case when k患者本店总购药支数 >= 19 then 'Y' else 'N' end as v推测是否已完成疗程,
        trunc(sysdate - r本店最近一次购药时间) as w最近一次购药距离今日天数,
        trunc(r本店最近一次购药时间 - ac本店第一次购药时间) as x最近购药距首次购药累计时长,
        case when q本店累计购药次数<=1 then null else (trunc(r本店最近一次购药时间 - ac本店第一次购药时间)) / (q本店累计购药次数 - 1) end as y2022年以来本店平均购药周期,
        null as 随访时间,null as 随访反馈,null as 随访备注,
 --        hf.sfday as 随访时间, hf.sfresult as 随访反馈, hf.notes as 随访备注,
        ac本店第一次购药时间,rn
-from a1
-left join d_patient_files files on files.IDCARDNO=a1.IDCARDNO
+from add_qc aa
+join t_busno_class_set ts on aa.busno = ts.busno and ts.classgroupno = '322'
+         join t_busno_class_base tb on ts.classgroupno = tb.classgroupno and ts.classcode = tb.classcode
+         join t_busno_class_set ts1 on aa.busno = ts1.busno and ts1.classgroupno = '323'
+         join t_busno_class_base tb1 on ts1.classgroupno = tb1.classgroupno and ts1.classcode = tb1.classcode
+left join d_patient_files files on files.IDCARDNO=aa.IDCARDNO
+
 ;
 ;
 --方案六,七,九
