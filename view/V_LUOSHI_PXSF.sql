@@ -16,7 +16,7 @@ from t_remote_prescription_h h
 where EXISTS(select 1
 from D_LUOSHI_PROG p
 where h.IDCARDNO = p.IDCARDNO
-  and p.PROGRAMME in (5, 6, 7)
+  and p.PROGRAMME in (4,5,6)
   and a.ACCDATE between p.BEGINDATE and p.ENDDATE)
   and d.WAREID IN (10601875, 10600308)
   and not EXISTS(select 1 from T_SALE_RETURN_H rh where rh.RETSALENO = a.SALENO)
@@ -68,7 +68,7 @@ where b1.rn=1 ),
         case
            when q本店皮下累计购药次数 <= 1 then null
            else (trunc(r本店最近一次购药时间 - ac本店第一次购药时间)) / (q本店皮下累计购药次数 - 1) end as y2022年以来本店平均购药周期,
-       null as 随访时间, null as 随访反馈, null as 随访备注, aa.ac本店第一次购药时间, aa.rn
+       hf.SFDAY as 随访时间, hf.SFRESULT as 随访反馈, hf.NOTES as 随访备注, aa.ac本店第一次购药时间, aa.rn
 from add_qc aa
 left join s_busi s on aa.busno=s.BUSNO
 join t_busno_class_set ts on aa.busno = ts.busno and ts.classgroupno = '322'
@@ -76,5 +76,6 @@ join t_busno_class_base tb on ts.classgroupno = tb.classgroupno and ts.classcode
 join t_busno_class_set ts1 on aa.busno = ts1.busno and ts1.classgroupno = '323'
 join t_busno_class_base tb1 on ts1.classgroupno = tb1.classgroupno and ts1.classcode = tb1.classcode
 left join d_patient_files files on files.IDCARDNO=aa.IDCARDNO
+left join d_luoshi_px_hf hf on aa.IDCARDNO=hf.IDCARD
 /
 

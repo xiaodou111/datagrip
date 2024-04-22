@@ -118,23 +118,20 @@ begin
     MERGE INTO d_luoshi_px_hf T1
     USING
         (SELECT
-             :new.BUSNO   BUSNO,
              :new.IDCARDNO IDCARDNO,
              :new.Ëæ·ÃÊ±¼ä Ëæ·ÃÊ±¼ä,
              :new.Ëæ·Ã·´À¡ Ëæ·Ã·´À¡,
              :new.Ëæ·Ã±¸×¢ Ëæ·Ã±¸×¢
          FROM dual) T2
-    ON (T1.idcard = T2.IDCARDNO AND T1.BUSNO=T2.BUSNO)
+    ON (T1.idcard = T2.IDCARDNO)
     WHEN MATCHED THEN
         UPDATE SET
         T1.sfday= T2.Ëæ·ÃÊ±¼ä,
         T1.sfresult= T2.Ëæ·Ã·´À¡,
         T1.notes= T2.Ëæ·Ã±¸×¢
     WHEN NOT MATCHED THEN
-        INSERT (idcard,BUSNO, sfday,sfresult,notes) VALUES (
-
+        INSERT (idcard, sfday,sfresult,notes) VALUES (
              :new.IDCARDNO,
-             :new.BUSNO,
              :new.Ëæ·ÃÊ±¼ä,
              :new.Ëæ·Ã·´À¡,
              :new.Ëæ·Ã±¸×¢);
