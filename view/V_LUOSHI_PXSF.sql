@@ -34,23 +34,25 @@ left join (
 ) B2 on b1.IDCARDNO=b2.IDCARDNO and b1.SALENO=b2.SALENO and b1.WAREID=b2.WAREID
 where b1.rn=1 ),
  add_qc as (
-   select a1.busno as busno,a1.IDCARDNO as IDCARDNO,a1.USERNAME as USERNAME,a1.WAREID as WAREID,
+   select nvl(a1.busno,files.BUSNO) as busno,nvl(a1.IDCARDNO,files.IDCARDNO) as IDCARDNO,
+          nvl(a1.USERNAME,files.USERNAME) as USERNAME,a1.WAREID as WAREID,
        nvl(qc.QTZSL,0)+nvl(sumqtqty,0) as j皮下曲妥珠单抗支数,
        nvl(qc.PTZSL,0)+nvl(sumptqty,0)  as k转皮下后帕妥珠单抗支数,
        nvl(qc.SUMCS,0)+nvl(count,0) as q本店皮下累计购药次数,
        nvl(r本店最近一次购药时间,qc.LASTBUYTIME) as r本店最近一次购药时间,
-       nvl(s本店前一次购药时间,qc.LAGBUYTIME) as s本店前一次购药时间,
+       case when s本店前一次购药时间 is null then qc.LASTBUYTIME else s本店前一次购药时间 end as s本店前一次购药时间,
        nvl(ac本店第一次购药时间,qc.firsttime) as ac本店第一次购药时间,
        (trunc(r本店最近一次购药时间 - ac本店第一次购药时间)+21)/21 as M理论购药支数,
        0 as l皮下phegso支数,
        rn
     from  a1
-    left join d_luoshi_qcpx qc on a1.IDCARDNO=qc.IDCARDNO
+    left join  d_patient_files files on a1.IDCARDNO=files.IDCARDNO
+    full join d_luoshi_qcpx qc on a1.IDCARDNO=qc.IDCARDNO
     )
  select aa.busno,s.ORGNAME,tb.CLASSNAME as 药店所在省份,tb1.CLASSNAME as 药店所在城市,aa.IDCARDNO,aa.USERNAME,
         files.疾病分期,files.是否早期新辅助治疗,files.新皮下方案,
         aa.j皮下曲妥珠单抗支数, aa.k转皮下后帕妥珠单抗支数,aa.l皮下phegso支数,
-        aa.M理论购药支数,
+        trunc(r本店最近一次购药时间 - ac本店第一次购药时间) as M理论购药支数,
         case when M理论购药支数 - j皮下曲妥珠单抗支数 >= 1 then '有非本店购买可能' else '皆在本店购买' end as n实际药房购药期间盒数偏差分析,
         case when j皮下曲妥珠单抗支数 + l皮下phegso支数 - q本店皮下累计购药次数 < 0 then '重新核查盒数' else '0' end as o皮下支数核查,
         case
