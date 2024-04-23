@@ -1,11 +1,22 @@
 --d_luoshi_qcsj 罗氏静脉需要导入的期初数据
 --d_luoshi_qcpx 罗氏皮下需要导入的期初数据
     --D_LUOSHI_PROG  患者方案开始时间和结束时间维护,需要加个历史表,每个方案都需要一条记录,加个历史表防止对原表进行修改操作恢复不了
-    alter table d_luoshi_qcsj add firsttime date;
---todo 罗氏修改方案时间
+select * from d_luoshi_qcsj;
+select * from d_luoshi_qcpx;
 select BUSNO, IDCARDNO, USERNAME, PROGRAMME, WAREID, BEGINDATE, ENDDATE
 from D_LUOSHI_PROG;
-332623195005301346
+--根据建档表的原用药方案和新皮下方案插入患者方案维护
+ insert into D_LUOSHI_PROG(busno,IDCARDNO,USERNAME,PROGRAMME,BEGINDATE)
+select busno,IDCARDNO,USERNAME,case when program1 is null then program else program1 end as fa,begindate from (
+select busno,IDCARDNO,USERNAME,case when 原用药方案='双靶(帕妥珠单抗+曲妥珠单抗)' then 2
+    when  原用药方案='单靶(单曲妥珠单抗)' then 1
+    when  原用药方案='其他方案(含曲妥珠单抗或帕妥珠单抗)' then 3 end as program,
+    case when 新皮下方案='单靶(曲妥珠单抗HSC)' then 4
+    when 新皮下方案='双靶(曲妥珠单抗HSC+帕妥珠单抗)' then 5
+    when 新皮下方案='其他方案(曲妥珠单抗HSC+吡咯替尼)' then 6
+    when 新皮下方案='双靶(皮下双靶PHEGSO)' then 7 end as program1,date'2024-04-20' as begindate
+    from d_patient_files);
+
  insert into D_LUOSHI_PROG(IDCARDNO,PROGRAMME,BEGINDATE,ENDDATE) values('332623195005301346',1,date'2021-04-01',date'2021-07-25');
  insert into D_LUOSHI_PROG(IDCARDNO,PROGRAMME,BEGINDATE,ENDDATE) values('332623195005301346',3,date'2021-07-25',date'2023-12-31');
  insert into D_LUOSHI_PROG(IDCARDNO,PROGRAMME,BEGINDATE,ENDDATE) values('332623195005301346',5,date'2023-12-31',date'9999-12-31');
@@ -188,148 +199,3 @@ left join d_patient_files files on files.IDCARDNO=aa.IDCARDNO
 
 ;
 ;
---方案六,七,九
-select d.WAREID, h.IDCARDNO, a.ACCDATE, d.WAREQTY,
-       SUM(d.WAREQTY) over ( partition by h.IDCARDNO order by a.ACCDATE ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) sumqty,
-       COUNT(distinct a.SALENO) over ( partition by h.IDCARDNO) count
-from t_remote_prescription_h h
-         join t_sale_h a on SUBSTR(a.notes, 0, DECODE(INSTR(a.notes, ' '), 0, LENGTH(a.notes) + 1, INSTR(a.notes, ' ')) - 1) =h.CFNO
-         join t_sale_d d on a.SALENO = d.SALENO
-where EXISTS(select 1
-from D_LUOSHI_PROG p
-where h.IDCARDNO = p.IDCARDNO
-  and p.PROGRAMME in (6,7,9)
-  and a.ACCDATE between p.BEGINDATE and p.ENDDATE)
-  and d.WAREID IN (10601875)
-  and not exists(select 1 from T_SALE_RETURN_H rh where rh.RETSALENO=a.SALENO)
-  and not exists(select 1 from T_SALE_RETURN_H rh where rh.SALENO=a.SALENO)
-;
-
-
-
-
---方案八
-select d.WAREID, h.IDCARDNO, a.ACCDATE, d.WAREQTY,
-       SUM(d.WAREQTY) over ( partition by h.IDCARDNO order by a.ACCDATE ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) sumqty,
-       COUNT(distinct a.SALENO) over ( partition by h.IDCARDNO) count
-from t_remote_prescription_h h
-         join t_sale_h a on SUBSTR(a.notes, 0, DECODE(INSTR(a.notes, ' '), 0, LENGTH(a.notes) + 1, INSTR(a.notes, ' ')) - 1) =h.CFNO
-         join t_sale_d d on a.SALENO = d.SALENO
-where EXISTS(select 1
-from D_LUOSHI_PROG p
-where h.IDCARDNO = p.IDCARDNO
-  and p.PROGRAMME in (6,7,9)
-  and a.ACCDATE between p.BEGINDATE and p.ENDDATE)
-  and d.WAREID IN (10600308)
-  and not exists(select 1 from T_SALE_RETURN_H rh where rh.RETSALENO=a.SALENO)
-  and not exists(select 1 from T_SALE_RETURN_H rh where rh.SALENO=a.SALENO);
---方案六
-
-create or replace procedure proc_luoshi_update
-    is
-    v_varcahr1 varchar2(100);
-    v_varcahr2 varchar2(100);
-    v_varcahr3 varchar2(100);
-    v_num      number;
-    v_num      number;
-    v_num      number;
-    v_begin    Date;
-    v_end      Date;
-
-
-begin
-
-    DBMS_OUTPUT.PUT_LINE(v_row_count);
-exception
-    when others then
-        RAISE_APPLICATION_ERROR(-20001, '单轨制更新(处方来源单号)没有行受到影响');
-
-end ;
-insert into D_LUOSHI_PROG
-values (81001, '123456789012345678', '张三', '方案1', 10502445, date'2024-04-01');
-select BUSNO, IDCARDNO, USERNAME, PROGRAMME, WAREID, BEGINDATE
-from D_LUOSHI_PROG;
-
-
-
-update D_LUOSHI_PROG
-set PROGRAMME='方案2',
-    BEGINDATE=date'2024-04-15'
-where IDCARDNO = '123456789012345678';
-
-
-select *
-from D_LUOSHI_PROG_HISTORY;
-CREATE OR REPLACE TRIGGER trg_d_luoshi_prog
-    AFTER UPDATE
-    ON D_LUOSHI_PROG
-    FOR EACH ROW
-BEGIN
-
-    INSERT INTO D_LUOSHI_PROG_HISTORY (HISTORY_ID, BUSNO, IDCARDNO, USERNAME, PROGRAMME, WAREID, BEGINDATE, ACTION,
-                                       ACTION_DATE)
-    VALUES (D_LUOSHI_PROG_HISTORY_SEQ.NEXTVAL, :NEW.BUSNO, :NEW.IDCARDNO, :NEW.USERNAME, :NEW.PROGRAMME, :NEW.WAREID,
-            :NEW.BEGINDATE, 'UPDATE', SYSDATE);
-
-
-END;
-/
-
-
-
-select IDCARDNO, COUNT(*)
-FROM (select IDCARDNO, busno, rn, lastbuytime, 参保地, 异地标志, USERNAME, CAGE, SEX
-from (select h.IDCARDNO, a.busno, cyb.参保地, cyb.异地标志, h.USERNAME, h.CAGE, h.SEX,
-             ROW_NUMBER() over (partition by h.IDCARDNO order by a.ACCDATE desc) rn,
-             MAX(a.ACCDATE) OVER (PARTITION BY h.IDCARDNO,d.WAREID ) AS lastbuytime
-from t_remote_prescription_h h
-         join t_sale_h a on SUBSTR(a.notes, 0,
-                                   DECODE(INSTR(a.notes, ' '), 0, LENGTH(a.notes) + 1,
-                                          INSTR(a.notes, ' ')) -
-                                   1) =
-                            h.CFNO
-         join t_sale_d d on a.SALENO = d.SALENO
-         left join D_ZHYB_HZ_CYB cyb on cyb.ERP销售单号 = a.SALENO
-where
-
---           a.ACCDATE >= date'2023-01-01' and
-d.WAREID in (10502445, 10601875, 10600308))
-where lastbuytime > date'2023-01-01'
-  and IDCARDNO is not null)
-GROUP BY IDCARDNO;
-
-
-
-select h.IDCARDNO, d.WAREID
-from t_remote_prescription_h h
-         join t_sale_h a on SUBSTR(a.notes, 0,
-                                   DECODE(INSTR(a.notes, ' '), 0, LENGTH(a.notes) + 1,
-                                          INSTR(a.notes, ' ')) -
-                                   1) =
-                            h.CFNO
-         join t_sale_d d on a.SALENO = d.SALENO
-         left join D_ZHYB_HZ_CYB cyb on cyb.ERP销售单号 = a.SALENO
-where
-
---           a.ACCDATE >= date'2023-01-01' and
-d.WAREID in (10502445, 10601875, 10600308)
-GROUP BY h.IDCARDNO, d.WAREID
-HAVING COUNT(DISTINCT d.WAREID) = 2;
-
-
-
-select h.IDCARDNO, a.busno, cyb.参保地, cyb.异地标志, h.USERNAME, h.CAGE, h.SEX, d.WAREID, d.WAREQTY, a.ACCDATE
-
-
-from t_remote_prescription_h h
-         join t_sale_h a on SUBSTR(a.notes, 0,
-                                   DECODE(INSTR(a.notes, ' '), 0, LENGTH(a.notes) + 1,
-                                          INSTR(a.notes, ' ')) -
-                                   1) =
-                            h.CFNO
-         join t_sale_d d on a.SALENO = d.SALENO
-         left join D_ZHYB_HZ_CYB cyb on cyb.ERP销售单号 = a.SALENO
-where IDCARDNO = '332623195005301346'
-  AND
---           a.ACCDATE >= date'2023-01-01' and
-    d.WAREID in (10502445, 10601875, 10600308);

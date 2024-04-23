@@ -64,19 +64,26 @@ row_number() over (partition by a.IDCARDNO order by a.ACCDATE desc) rn
  from a
 left join d_patient_files fi on fi.IDCARDNO = a.IDCARDNO
 ),
+ arn as (
+     select SALENO, ACCDATE, WAREQTY, IDCARDNO, USERNAME, WAREID, busno, m二二年1月以来本店累计购药支数, r本店最近一次购药时间,
+            s本店前一次购药时间, ac本店第一次购药时间, N理论购药支数, q本店累计购药次数, rn
+     from a1
+     where rn=1
+ ),
 add_qc as (
-   select a1.busno as busno,a1.IDCARDNO as IDCARDNO,a1.USERNAME as USERNAME,a1.WAREID as WAREID,
+   select nvl(a1.busno,files.BUSNO) as busno,nvl(a1.IDCARDNO,files.IDCARDNO) as IDCARDNO,nvl(a1.USERNAME,files.USERNAME) as USERNAME
+          ,a1.WAREID ,
     nvl(qc.LBEFORE22,0)+nvl(qc.MSUMSLNOW,0)+nvl(m二二年1月以来本店累计购药支数,0) as  k患者本店总购药支数,
        nvl(qc.LBEFORE22,0) as l二二年1月以前累计购药盒数,
        nvl(qc.MSUMSLNOW,0)+nvl(m二二年1月以来本店累计购药支数,0) as m二二年1月以来本店累计购药支数,
     N理论购药支数,
-       nvl(q本店累计购药次数,qc.QSUMCS) as q本店累计购药次数,
+       nvl(q本店累计购药次数,0)+nvl(qc.QSUMCS,0) as q本店累计购药次数,
        nvl(r本店最近一次购药时间,qc.RLASTBUYTIME) as r本店最近一次购药时间,
-       nvl(s本店前一次购药时间,qc.SLAGBUYTIME) as s本店前一次购药时间,
-       nvl(ac本店第一次购药时间,qc.firsttime) as ac本店第一次购药时间,rn
-    from  a1
-    left join d_luoshi_qcsj qc on a1.IDCARDNO=qc.IDCARDNO
-    where rn=1
+       case when s本店前一次购药时间 is null then qc.RLASTBUYTIME else s本店前一次购药时间 end as s本店前一次购药时间,
+       nvl(qc.firsttime,ac本店第一次购药时间) as ac本店第一次购药时间,rn
+    from  d_luoshi_qcsj qc
+    left join  d_patient_files files on qc.IDCARDNO=files.IDCARDNO
+    full join arn a1 on a1.IDCARDNO=qc.IDCARDNO
     )
 select
 aa.busno,
@@ -90,7 +97,7 @@ tb1.CLASSNAME as 药店所在城市,
        k患者本店总购药支数,
        l二二年1月以前累计购药盒数,
        m二二年1月以来本店累计购药支数,
-       N理论购药支数,
+       (trunc(r本店最近一次购药时间 - ac本店第一次购药时间)+21)/21 as N理论购药支数 ,
        case when N理论购药支数 - m二二年1月以来本店累计购药支数 >= 1 then '有非本店购买可能' else '皆在本店购买' end as o实际药房购药期间盒数偏差分析,
        case when m二二年1月以来本店累计购药支数 - q本店累计购药次数 < 0 then '重新核查盒数' else '0' end as p本店购买盒数核查,
        q本店累计购药次数,

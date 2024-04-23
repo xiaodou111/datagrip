@@ -68,7 +68,7 @@ select * from d_patient_files;
 select * from d_luoshi_pxsf;
 select * from D_LUOSHI_JMSF_1;
 select * from d_luoshi_pxsf_1;
-
+select * from d_luoshi_pxsf_1;
 
 alter table d_patient_files add 就诊医院科室病区 varchar2(200);
 alter table d_patient_files add 医保归属地 varchar2(40);
