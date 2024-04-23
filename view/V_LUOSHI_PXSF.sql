@@ -45,9 +45,9 @@ where b1.rn=1 ),
        (trunc(r本店最近一次购药时间 - ac本店第一次购药时间)+21)/21 as M理论购药支数,
        0 as l皮下phegso支数,
        rn
-    from  a1
-    left join  d_patient_files files on a1.IDCARDNO=files.IDCARDNO
-    full join d_luoshi_qcpx qc on a1.IDCARDNO=qc.IDCARDNO
+    from  D_LUOSHI_QCPX qc
+    left join  d_patient_files files on qc.IDCARDNO=files.IDCARDNO
+    full join a1  on a1.IDCARDNO=qc.IDCARDNO
     )
  select aa.busno,s.ORGNAME,tb.CLASSNAME as 药店所在省份,tb1.CLASSNAME as 药店所在城市,aa.IDCARDNO,aa.USERNAME,
         files.疾病分期,files.是否早期新辅助治疗,files.新皮下方案,
