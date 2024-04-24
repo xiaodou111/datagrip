@@ -1,4 +1,4 @@
-create procedure proc_luoshi_basedata
+create or replace procedure proc_luoshi_basedata
 
 is
 
@@ -22,7 +22,9 @@ from (select h.IDCARDNO,a.busno,cyb.参保地,cyb.异地标志,h.USERNAME,h.CAGE,h.SEX,
       left join D_ZHYB_HZ_CYB cyb on cyb.ERP销售单号 = a.SALENO
       where
 --           a.ACCDATE >= date'2023-01-01' and
-d.WAREID in (10502445, 10601875, 10600308))
+d.WAREID in (10502445, 10601875, 10600308)
+      and not EXISTS(select 1 from T_SALE_RETURN_H rh where rh.RETSALENO = a.SALENO)
+  and not EXISTS(select 1 from T_SALE_RETURN_H rh where rh.SALENO = a.SALENO))
 where lastbuytime>date'2023-01-01' and rn=1 and IDCARDNO is not null) T2
 ON (T1.IDCARDNO = T2.IDCARDNO )
 

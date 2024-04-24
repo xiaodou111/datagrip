@@ -1,5 +1,7 @@
 create or replace view V_LUOSHI_PXSF as
-with base as (select d.WAREID, h.IDCARDNO, a.ACCDATE, d.WAREQTY, a.SALENO, a.BUSNO, h.USERNAME,
+with base as (
+-- 按方案统计每个阶段的销售记录
+select d.WAREID, h.IDCARDNO, a.ACCDATE, d.WAREQTY, a.SALENO, a.BUSNO, h.USERNAME,
                      SUM(case when d.WAREID = 10601875 then d.WAREQTY else 0 end) over
                          ( partition by h.IDCARDNO order by a.ACCDATE ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) sumqtqty,--曲妥数量
                      SUM(case when d.WAREID = 10600308 then d.WAREQTY else 0 end) over
@@ -7,7 +9,7 @@ with base as (select d.WAREID, h.IDCARDNO, a.ACCDATE, d.WAREQTY, a.SALENO, a.BUS
                      COUNT(case when d.WAREID = 10601875 then d.WAREQTY else null end)
                            over ( partition by h.IDCARDNO) count,  --购买次数以曲妥次数为准
                      MAX(a.ACCDATE) OVER (PARTITION BY h.IDCARDNO ) AS r本店最近一次购药时间,
---                      LAG(a.ACCDATE, 1) OVER (PARTITION BY h.IDCARDNO ORDER BY a.ACCDATE ) AS s本店前一次购药时间,需要查找上次买10601875的记录
+                      LAG(a.ACCDATE, 1) OVER (PARTITION BY h.IDCARDNO,d.WAREID ORDER BY a.ACCDATE ) AS s本店前一次购药时间,--需要查找上次买10601875的记录
                      MIN(a.ACCDATE) OVER (PARTITION BY h.IDCARDNO ) AS ac本店第一次购药时间,
                      ROW_NUMBER() over (partition by h.IDCARDNO order by a.ACCDATE desc ) rn
 from t_remote_prescription_h h
@@ -21,18 +23,13 @@ where h.IDCARDNO = p.IDCARDNO
   and d.WAREID IN (10601875, 10600308)
   and not EXISTS(select 1 from T_SALE_RETURN_H rh where rh.RETSALENO = a.SALENO)
   and not EXISTS(select 1 from T_SALE_RETURN_H rh where rh.SALENO = a.SALENO)),
+--保留最后一条记录
 a1 as (
 select B1.WAREID, B1.IDCARDNO, B1.ACCDATE, B1.WAREQTY, B1.SALENO, B1.BUSNO, B1.USERNAME, B1.sumqtqty, B1.sumptqty, B1.count,
-       B1.r本店最近一次购药时间, B2.s本店前一次购药时间, B1.ac本店第一次购药时间, B1.rn
+       B1.r本店最近一次购药时间, B1.s本店前一次购药时间, B1.ac本店第一次购药时间, B1.rn
 from base B1
-left join (
-    select d.WAREID, h.IDCARDNO, a.ACCDATE,a.SALENO,LAG(a.ACCDATE, 1) OVER (PARTITION BY IDCARDNO ORDER BY a.ACCDATE ) AS s本店前一次购药时间
-    from t_remote_prescription_h h
-         join t_sale_h a on SUBSTR(a.notes, 0, DECODE(INSTR(a.notes, ' '), 0, LENGTH(a.notes) + 1, INSTR(a.notes, ' ')) - 1) =h.CFNO
-         join t_sale_d d on a.SALENO = d.SALENO
-    where d.WAREID=10601875
-) B2 on b1.IDCARDNO=b2.IDCARDNO and b1.SALENO=b2.SALENO and b1.WAREID=b2.WAREID
 where b1.rn=1 ),
+ --系统数据和期初导入数据进行合并
  add_qc as (
    select nvl(a1.busno,files.BUSNO) as busno,nvl(a1.IDCARDNO,files.IDCARDNO) as IDCARDNO,
           nvl(a1.USERNAME,files.USERNAME) as USERNAME,a1.WAREID as WAREID,
@@ -52,7 +49,7 @@ where b1.rn=1 ),
  select aa.busno,s.ORGNAME,tb.CLASSNAME as 药店所在省份,tb1.CLASSNAME as 药店所在城市,aa.IDCARDNO,aa.USERNAME,
         files.疾病分期,files.是否早期新辅助治疗,files.新皮下方案,
         aa.j皮下曲妥珠单抗支数, aa.k转皮下后帕妥珠单抗支数,aa.l皮下phegso支数,
-        trunc(r本店最近一次购药时间 - ac本店第一次购药时间) as M理论购药支数,
+        (trunc(r本店最近一次购药时间 - ac本店第一次购药时间)+21)/21 as M理论购药支数,
         case when M理论购药支数 - j皮下曲妥珠单抗支数 >= 1 then '有非本店购买可能' else '皆在本店购买' end as n实际药房购药期间盒数偏差分析,
         case when j皮下曲妥珠单抗支数 + l皮下phegso支数 - q本店皮下累计购药次数 < 0 then '重新核查盒数' else '0' end as o皮下支数核查,
         case

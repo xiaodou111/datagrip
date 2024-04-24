@@ -241,3 +241,9 @@ begin
              :new.Ëæ·Ã±¸×¢);
 end;
 
+
+delete from d_luoshi_jm_hf ;
+
+select idcard,  sfday, sfresult, notes
+from d_luoshi_jm_hf;
+

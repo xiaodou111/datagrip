@@ -1,9 +1,10 @@
 create or replace view V_LUOSHI_JMSF as
 with a as (
+--按方案统计每个阶段的销售记录
 --方案一
-select d.WAREID, h.IDCARDNO, a.ACCDATE, d.WAREQTY,a.SALENO,a.BUSNO,h.USERNAME,
-       SUM(d.WAREQTY) over ( partition by h.IDCARDNO order by a.ACCDATE ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) sumqty,
-       COUNT(distinct a.SALENO) over ( partition by h.IDCARDNO) count
+select d.WAREID, h.IDCARDNO, a.ACCDATE, d.WAREQTY,a.SALENO,a.BUSNO,h.USERNAME
+--        SUM(d.WAREQTY) over ( partition by h.IDCARDNO order by a.ACCDATE ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) sumqty,
+--        COUNT(distinct a.SALENO) over ( partition by h.IDCARDNO) count
 from t_remote_prescription_h h
          join t_sale_h a on SUBSTR(a.notes, 0, DECODE(INSTR(a.notes, ' '), 0, LENGTH(a.notes) + 1, INSTR(a.notes, ' ')) - 1) =h.CFNO
          join t_sale_d d on a.SALENO = d.SALENO
@@ -17,9 +18,9 @@ where h.IDCARDNO = p.IDCARDNO
   and not exists(select 1 from T_SALE_RETURN_H rh where rh.SALENO=a.SALENO)
 union all
 --方案二
-select d.WAREID, h.IDCARDNO, a.ACCDATE, d.WAREQTY,a.SALENO,a.BUSNO,h.USERNAME,
-       SUM(d.WAREQTY) over ( partition by h.IDCARDNO order by a.ACCDATE ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) sumqty,
-       COUNT(distinct a.SALENO) over ( partition by h.IDCARDNO) count
+select d.WAREID, h.IDCARDNO, a.ACCDATE, d.WAREQTY,a.SALENO,a.BUSNO,h.USERNAME
+--        SUM(d.WAREQTY) over ( partition by h.IDCARDNO order by a.ACCDATE ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) sumqty,
+--        COUNT(distinct a.SALENO) over ( partition by h.IDCARDNO) count
 from t_remote_prescription_h h
          join t_sale_h a on SUBSTR(a.notes, 0, DECODE(INSTR(a.notes, ' '), 0, LENGTH(a.notes) + 1, INSTR(a.notes, ' ')) - 1) =h.CFNO
          join t_sale_d d on a.SALENO = d.SALENO
@@ -33,9 +34,9 @@ where h.IDCARDNO = p.IDCARDNO
   and not exists(select 1 from T_SALE_RETURN_H rh where rh.SALENO=a.SALENO)
 union all
 --方案三
-select d.WAREID, h.IDCARDNO, a.ACCDATE, d.WAREQTY,a.SALENO,a.BUSNO,h.USERNAME,
-       SUM(d.WAREQTY) over ( partition by h.IDCARDNO order by a.ACCDATE ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) sumqty,
-       COUNT(distinct a.SALENO) over ( partition by a.busno,h.IDCARDNO) count
+select d.WAREID, h.IDCARDNO, a.ACCDATE, d.WAREQTY,a.SALENO,a.BUSNO,h.USERNAME
+--        SUM(d.WAREQTY) over ( partition by h.IDCARDNO order by a.ACCDATE ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) sumqty,
+--        COUNT(distinct a.SALENO) over ( partition by a.busno,h.IDCARDNO) count
 from t_remote_prescription_h h
          join t_sale_h a on SUBSTR(a.notes, 0, DECODE(INSTR(a.notes, ' '), 0, LENGTH(a.notes) + 1, INSTR(a.notes, ' ')) - 1) =h.CFNO
          join t_sale_d d on a.SALENO = d.SALENO
@@ -48,6 +49,7 @@ where h.IDCARDNO = p.IDCARDNO
   and not exists(select 1 from T_SALE_RETURN_H rh where rh.RETSALENO=a.SALENO)
   and not exists(select 1 from T_SALE_RETURN_H rh where rh.SALENO=a.SALENO)
 ),
+--统计每个方案汇总后的分析数据
 a1 as(
 select
 a.SALENO, a.ACCDATE, a.WAREQTY,a.IDCARDNO,a.USERNAME,WAREID,
@@ -64,12 +66,14 @@ row_number() over (partition by a.IDCARDNO order by a.ACCDATE desc) rn
  from a
 left join d_patient_files fi on fi.IDCARDNO = a.IDCARDNO
 ),
+    --每人只保留一条记录
  arn as (
      select SALENO, ACCDATE, WAREQTY, IDCARDNO, USERNAME, WAREID, busno, m二二年1月以来本店累计购药支数, r本店最近一次购药时间,
             s本店前一次购药时间, ac本店第一次购药时间, N理论购药支数, q本店累计购药次数, rn
      from a1
      where rn=1
  ),
+    --系统数据和期初导入数据进行合并
 add_qc as (
    select nvl(a1.busno,files.BUSNO) as busno,nvl(a1.IDCARDNO,files.IDCARDNO) as IDCARDNO,nvl(a1.USERNAME,files.USERNAME) as USERNAME
           ,a1.WAREID ,
