@@ -59,8 +59,8 @@ sum(a.WAREQTY)
 Max(a.ACCDATE) OVER (PARTITION BY a.IDCARDNO ) AS r本店最近一次购药时间,
 LAG(a.ACCDATE, 1) OVER (PARTITION BY a.IDCARDNO ORDER BY a.ACCDATE ) AS s本店前一次购药时间,
 min(a.ACCDATE) OVER (PARTITION BY a.IDCARDNO ) AS ac本店第一次购药时间,
-(Max(a.ACCDATE) OVER (PARTITION BY a.IDCARDNO ) - min(a.ACCDATE) OVER (PARTITION BY a.IDCARDNO ) +
- 21) / 21 as N理论购药支数,
+-- (Max(a.ACCDATE) OVER (PARTITION BY a.IDCARDNO ) - min(a.ACCDATE) OVER (PARTITION BY a.IDCARDNO ) +
+--  21) / 21 as N理论购药支数,
 count(distinct a.SALENO) over ( partition by a.IDCARDNO) as q本店累计购药次数,
 row_number() over (partition by a.IDCARDNO order by a.ACCDATE desc) rn
  from a
@@ -69,7 +69,9 @@ left join d_patient_files fi on fi.IDCARDNO = a.IDCARDNO
     --每人只保留一条记录
  arn as (
      select SALENO, ACCDATE, WAREQTY, IDCARDNO, USERNAME, WAREID, busno, m二二年1月以来本店累计购药支数, r本店最近一次购药时间,
-            s本店前一次购药时间, ac本店第一次购药时间, N理论购药支数, q本店累计购药次数, rn
+            s本店前一次购药时间, ac本店第一次购药时间,
+--             N理论购药支数,
+            q本店累计购药次数, rn
      from a1
      where rn=1
  ),
@@ -80,10 +82,12 @@ add_qc as (
     nvl(qc.LBEFORE22,0)+nvl(qc.MSUMSLNOW,0)+nvl(m二二年1月以来本店累计购药支数,0) as  k患者本店总购药支数,
        nvl(qc.LBEFORE22,0) as l二二年1月以前累计购药盒数,
        nvl(qc.MSUMSLNOW,0)+nvl(m二二年1月以来本店累计购药支数,0) as m二二年1月以来本店累计购药支数,
-    N理论购药支数,
+--     N理论购药支数,
        nvl(q本店累计购药次数,0)+nvl(qc.QSUMCS,0) as q本店累计购药次数,
        nvl(r本店最近一次购药时间,qc.RLASTBUYTIME) as r本店最近一次购药时间,
-       case when s本店前一次购药时间 is null then qc.RLASTBUYTIME else s本店前一次购药时间 end as s本店前一次购药时间,
+        case when r本店最近一次购药时间 is null then qc.SLAGBUYTIME else
+           case when s本店前一次购药时间 is null then qc.RLASTBUYTIME
+               else s本店前一次购药时间 end end as s本店前一次购药时间,
        nvl(qc.firsttime,ac本店第一次购药时间) as ac本店第一次购药时间,rn
     from  d_luoshi_qcsj qc
     left join  d_patient_files files on qc.IDCARDNO=files.IDCARDNO
@@ -102,7 +106,7 @@ tb1.CLASSNAME as 药店所在城市,
        l二二年1月以前累计购药盒数,
        m二二年1月以来本店累计购药支数,
        (trunc(r本店最近一次购药时间 - ac本店第一次购药时间)+21)/21 as N理论购药支数 ,
-       case when N理论购药支数 - m二二年1月以来本店累计购药支数 >= 1 then '有非本店购买可能' else '皆在本店购买' end as o实际药房购药期间盒数偏差分析,
+       case when (trunc(r本店最近一次购药时间 - ac本店第一次购药时间)+21)/21 - m二二年1月以来本店累计购药支数 >= 1 then '有非本店购买可能' else '皆在本店购买' end as o实际药房购药期间盒数偏差分析,
        case when m二二年1月以来本店累计购药支数 - q本店累计购药次数 < 0 then '重新核查盒数' else '0' end as p本店购买盒数核查,
        q本店累计购药次数,
        r本店最近一次购药时间,

@@ -37,9 +37,11 @@ where b1.rn=1 ),
        nvl(qc.PTZSL,0)+nvl(sumptqty,0)  as k转皮下后帕妥珠单抗支数,
        nvl(qc.SUMCS,0)+nvl(count,0) as q本店皮下累计购药次数,
        nvl(r本店最近一次购药时间,qc.LASTBUYTIME) as r本店最近一次购药时间,
-       case when s本店前一次购药时间 is null then qc.LASTBUYTIME else s本店前一次购药时间 end as s本店前一次购药时间,
-       nvl(ac本店第一次购药时间,qc.firsttime) as ac本店第一次购药时间,
-       (trunc(r本店最近一次购药时间 - ac本店第一次购药时间)+21)/21 as M理论购药支数,
+       case when r本店最近一次购药时间 is null then qc.LAGBUYTIME else
+           case when s本店前一次购药时间 is null then qc.LASTBUYTIME
+               else s本店前一次购药时间 end end as s本店前一次购药时间,
+       nvl(qc.firsttime,ac本店第一次购药时间) as ac本店第一次购药时间,
+--        (trunc(r本店最近一次购药时间 - ac本店第一次购药时间)+21)/21 as M理论购药支数,
        0 as l皮下phegso支数,
        rn
     from  D_LUOSHI_QCPX qc
@@ -50,7 +52,7 @@ where b1.rn=1 ),
         files.疾病分期,files.是否早期新辅助治疗,files.新皮下方案,
         aa.j皮下曲妥珠单抗支数, aa.k转皮下后帕妥珠单抗支数,aa.l皮下phegso支数,
         (trunc(r本店最近一次购药时间 - ac本店第一次购药时间)+21)/21 as M理论购药支数,
-        case when M理论购药支数 - j皮下曲妥珠单抗支数 >= 1 then '有非本店购买可能' else '皆在本店购买' end as n实际药房购药期间盒数偏差分析,
+        case when (trunc(r本店最近一次购药时间 - ac本店第一次购药时间)+21)/21 - j皮下曲妥珠单抗支数 >= 1 then '有非本店购买可能' else '皆在本店购买' end as n实际药房购药期间盒数偏差分析,
         case when j皮下曲妥珠单抗支数 + l皮下phegso支数 - q本店皮下累计购药次数 < 0 then '重新核查盒数' else '0' end as o皮下支数核查,
         case
            when files.新皮下方案 = '双靶(曲妥珠单抗HSC+帕妥珠单抗)' and k转皮下后帕妥珠单抗支数 < q本店皮下累计购药次数
