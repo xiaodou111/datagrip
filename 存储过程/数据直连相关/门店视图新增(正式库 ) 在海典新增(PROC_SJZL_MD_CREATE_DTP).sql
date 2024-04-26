@@ -12,10 +12,29 @@ create or replace procedure proc_sjzl_md_create_dtp(p_name in varchar2,
         v_accept VARCHAR2(50);
         v_kc VARCHAR2(50);
         v_sale VARCHAR2(50);
-        
+        v_busnos  VARCHAR2(500);
      begin
 
   --  f_get_sjzl_rename
+      if p_busno=81001 then
+          v_busnos:='81001,81005';
+       else if p_busno=81020 then
+          v_busnos:='81020,81021';
+        else if p_busno=81072 then
+          v_busnos:='81072,81074';
+        else if p_busno=81086 then
+          v_busnos:='81086,81087';
+        else if p_busno=81499  then
+        v_busnos:='81499,81501';
+        else if p_busno=81551 then
+        v_busnos:='81551 ,81553';
+        else v_busnos:=p_busno;
+        end if;
+       end if;
+      end if;
+        end if;
+        end if;
+       end if;
 
      /*  SELECT f_get_sjzl_rename(p_wareids)
       into v_wareids
@@ -44,7 +63,7 @@ case when h.billcode = ''DIS'' then b2.orgname else b1.orgname end as cgfmc,d.wa
   w.warespec as cpgg,d.makeno as ph,case when h.billcode = ''DIR'' then -d.wareqty else d.wareqty end as sl,w.wareunit as dw,d.purprice as dj,
        (case when h.billcode = ''DIR'' then -d.wareqty else d.wareqty end) * d.purprice as je,h.execdate as cjsj,h.billcode,h.distno,d.invalidate
        ,f.factoryname,w.fileno
-       from t_dist_d d join t_dist_h h on h.distno = d.distno and h.status = 1 and h.billcode in (''DIS'',''DIR'') and (h.objbusno IN ('|| p_busno ||') or h.srcbusno IN('|| p_busno ||'))
+       from t_dist_d d join t_dist_h h on h.distno = d.distno and h.status = 1 and h.billcode in (''DIS'',''DIR'') and (h.objbusno IN ('|| v_busnos ||') or h.srcbusno IN('|| v_busnos ||'))
                 left join s_busi b1 on b1.compid = h.compid and b1.busno = h.srcbusno
                 left join s_busi b2 on b2.compid = h.compid and b2.busno = h.objbusno
                 left join t_ware w on w.compid = h.compid and w.wareid = d.wareid
@@ -64,7 +83,7 @@ select sysdate as kcrq,''''as gsdm,b.orgname as gsmc,d.wareid as cpdm,w.warename
                  left join t_ware w on w.compid = h.compid and w.wareid = d.wareid
                  LEFT join t_factory f ON w.factoryid=f.factoryid
                where d.wareid in (select wareid from '||p_waretable||')
-               and d.busno in ('|| p_busno ||')
+               and d.busno in ('|| v_busnos ||')
 group by b.orgname,d.wareid,w.warename,w.warespec,w.wareunit,i.makeno,i.purprice,i.createtime,f.factoryname,i.invalidate,w.fileno
 having sum(d.wareqty) > 0';
 
@@ -83,7 +102,7 @@ LEFT JOIN t_remote_prescription_h d ON  substr(a.notes,0,decode(instr(a.notes,''
  ,t_sale_d b ,t_ware_base c,t_factory f
  where a.saleno=b.saleno and b.wareid=c.wareid AND c.factoryid=f.factoryid
 and b.wareid in(select wareid from '||p_waretable||')
-AND a.busno in ('|| p_busno ||')  and a.accdate>=date''2024-01-01''  and  a.accdate< trunc(sysdate)
+AND a.busno in ('|| v_busnos ||')  and a.accdate>=date''2024-01-01''  and  a.accdate< trunc(sysdate)
 union all
 SELECT a.ABNORMITYNO,s.COMPID,''浙江瑞人堂医药连锁有限公司'',c.busno as cgfdm,case when WAREQTYA-WAREQTYB>0 then ''报溢'' else ''报损'' end,
 a.wareid,b.warename,b.warespec,b.wareunit,a.makeno,WAREQTYB-WAREQTYA,a.saleprice,
@@ -94,7 +113,7 @@ inner join t_abnormity_h c on a.ABNORMITYNO=c.ABNORMITYNO
 left join s_busi s on c.BUSNO=s.BUSNO
 left join t_ware_base b   on  a.wareid=b.wareid
 left join t_factory f on b.FACTORYID=f.FACTORYID
- WHERE c.BUSNO in ('|| p_busno ||')  and a.wareid in (select wareid from '||p_waretable||')
+ WHERE c.BUSNO in ('|| v_busnos ||')  and a.wareid in (select wareid from '||p_waretable||')
 and  WAREQTYA<>WAREQTYB';
 
 --sc.compname s_company sc  a.compid=sc.compid
