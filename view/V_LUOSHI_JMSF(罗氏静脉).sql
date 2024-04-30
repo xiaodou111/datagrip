@@ -58,6 +58,7 @@ sum(a.WAREQTY)
     over ( partition by a.IDCARDNO order by a.ACCDATE ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) m二二年1月以来本店累计购药支数,
 Max(a.ACCDATE) OVER (PARTITION BY a.IDCARDNO ) AS r本店最近一次购药时间,
 LAG(a.ACCDATE, 1) OVER (PARTITION BY a.IDCARDNO ORDER BY a.ACCDATE ) AS s本店前一次购药时间,
+LAG(a.ACCDATE, 2) OVER (PARTITION BY a.IDCARDNO ORDER BY a.ACCDATE ) AS 本店倒数第三次购药时间,
 min(a.ACCDATE) OVER (PARTITION BY a.IDCARDNO ) AS ac本店第一次购药时间,
 -- (Max(a.ACCDATE) OVER (PARTITION BY a.IDCARDNO ) - min(a.ACCDATE) OVER (PARTITION BY a.IDCARDNO ) +
 --  21) / 21 as N理论购药支数,
@@ -69,7 +70,7 @@ left join d_patient_files fi on fi.IDCARDNO = a.IDCARDNO
     --每人只保留一条记录
  arn as (
      select SALENO, ACCDATE, WAREQTY, IDCARDNO, USERNAME, WAREID, busno, m二二年1月以来本店累计购药支数, r本店最近一次购药时间,
-            s本店前一次购药时间, ac本店第一次购药时间,
+            s本店前一次购药时间,本店倒数第三次购药时间, ac本店第一次购药时间,
 --             N理论购药支数,
             q本店累计购药次数, rn
      from a1
@@ -88,6 +89,13 @@ add_qc as (
         case when r本店最近一次购药时间 is null then qc.SLAGBUYTIME else
            case when s本店前一次购药时间 is null then qc.RLASTBUYTIME
                else s本店前一次购药时间 end end as s本店前一次购药时间,
+       case when 本店倒数第三次购药时间 is not null then 本店倒数第三次购药时间
+           else
+       case when r本店最近一次购药时间 is not null and s本店前一次购药时间 is not null  then qc.RLASTBUYTIME
+           else
+       case when r本店最近一次购药时间 is not null and s本店前一次购药时间 is null then qc.SLAGBUYTIME
+           else null
+            end end end as 本店倒数第三次购药时间,
        nvl(qc.firsttime,ac本店第一次购药时间) as ac本店第一次购药时间,rn
     from  d_luoshi_qcsj qc
     left join  d_patient_files files on qc.IDCARDNO=files.IDCARDNO
@@ -111,13 +119,15 @@ tb1.CLASSNAME as 药店所在城市,
        q本店累计购药次数,
        r本店最近一次购药时间,
        s本店前一次购药时间,
+       本店倒数第三次购药时间,
        r本店最近一次购药时间 - s本店前一次购药时间 as t最近两次购药周期,
+       s本店前一次购药时间-本店倒数第三次购药时间 as 倒三到倒二次购药周期,
        r本店最近一次购药时间 + 21 as u本店下次理论购药时间,
        case when k患者本店总购药支数 >= 19 then 'Y' else 'N' end as v推测是否已完成疗程,
        trunc(sysdate - r本店最近一次购药时间) as w最近一次购药距离今日天数,
        trunc(r本店最近一次购药时间 - ac本店第一次购药时间) as x最近购药距首次购药累计时长,
        case when q本店累计购药次数<=1 then null else (trunc(r本店最近一次购药时间 - ac本店第一次购药时间)) / (q本店累计购药次数 - 1) end as y2022年以来本店平均购药周期,
-       hf.SFDAY as 随访时间, hf.SFRESULT as 随访反馈, hf.NOTES as 随访备注,
+       hf.SFDAY as 随访时间, hf.SFRESULT as 随访反馈, hf.NOTES as 随访备注,hf.BGFJL as 不规范记录,
 --        hf.sfday as 随访时间, hf.sfresult as 随访反馈, hf.notes as 随访备注,
        ac本店第一次购药时间,rn
 from add_qc aa

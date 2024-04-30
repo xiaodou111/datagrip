@@ -10,6 +10,7 @@ select d.WAREID, h.IDCARDNO, a.ACCDATE, d.WAREQTY, a.SALENO, a.BUSNO, h.USERNAME
                            over ( partition by h.IDCARDNO) count,  --购买次数以曲妥次数为准
                      MAX(a.ACCDATE) OVER (PARTITION BY h.IDCARDNO ) AS r本店最近一次购药时间,
                       LAG(a.ACCDATE, 1) OVER (PARTITION BY h.IDCARDNO,d.WAREID ORDER BY a.ACCDATE ) AS s本店前一次购药时间,--需要查找上次买10601875的记录
+                      LAG(a.ACCDATE, 2) OVER (PARTITION BY h.IDCARDNO,d.WAREID ORDER BY a.ACCDATE ) AS 本店倒数第三次购药时间,
                      MIN(a.ACCDATE) OVER (PARTITION BY h.IDCARDNO ) AS ac本店第一次购药时间,
                      ROW_NUMBER() over (partition by h.IDCARDNO order by a.ACCDATE desc ) rn
 from t_remote_prescription_h h
@@ -26,7 +27,7 @@ where h.IDCARDNO = p.IDCARDNO
 --保留最后一条记录
 a1 as (
 select B1.WAREID, B1.IDCARDNO, B1.ACCDATE, B1.WAREQTY, B1.SALENO, B1.BUSNO, B1.USERNAME, B1.sumqtqty, B1.sumptqty, B1.count,
-       B1.r本店最近一次购药时间, B1.s本店前一次购药时间, B1.ac本店第一次购药时间, B1.rn
+       B1.r本店最近一次购药时间, B1.s本店前一次购药时间,本店倒数第三次购药时间, B1.ac本店第一次购药时间, B1.rn
 from base B1
 where b1.rn=1 ),
  --系统数据和期初导入数据进行合并
@@ -40,6 +41,13 @@ where b1.rn=1 ),
        case when r本店最近一次购药时间 is null then qc.LAGBUYTIME else
            case when s本店前一次购药时间 is null then qc.LASTBUYTIME
                else s本店前一次购药时间 end end as s本店前一次购药时间,
+        case when 本店倒数第三次购药时间 is not null then 本店倒数第三次购药时间
+           else
+       case when r本店最近一次购药时间 is not null and s本店前一次购药时间 is not null  then qc.LASTBUYTIME
+           else
+       case when r本店最近一次购药时间 is not null and s本店前一次购药时间 is null then qc.LAGBUYTIME
+           else null
+            end end end as 本店倒数第三次购药时间,
        nvl(qc.firsttime,ac本店第一次购药时间) as ac本店第一次购药时间,
 --        (trunc(r本店最近一次购药时间 - ac本店第一次购药时间)+21)/21 as M理论购药支数,
        0 as l皮下phegso支数,
@@ -61,7 +69,9 @@ where b1.rn=1 ),
         q本店皮下累计购药次数 as q本店累计购药次数,
         r本店最近一次购药时间,
         s本店前一次购药时间,
+        本店倒数第三次购药时间,
         r本店最近一次购药时间 - s本店前一次购药时间 as t最近两次购药周期,
+        s本店前一次购药时间-本店倒数第三次购药时间 as 倒三到倒二次购药周期,
         r本店最近一次购药时间 + 21 as u本店下次理论购药时间,
         case when k转皮下后帕妥珠单抗支数 >= 19 then 'Y' else 'N' end as v推测是否已完成疗程,
         trunc(sysdate - r本店最近一次购药时间) as w最近一次购药距离今日天数,
@@ -69,7 +79,7 @@ where b1.rn=1 ),
         case
            when q本店皮下累计购药次数 <= 1 then null
            else (trunc(r本店最近一次购药时间 - ac本店第一次购药时间)) / (q本店皮下累计购药次数 - 1) end as y2022年以来本店平均购药周期,
-       hf.SFDAY as 随访时间, hf.SFRESULT as 随访反馈, hf.NOTES as 随访备注, aa.ac本店第一次购药时间, aa.rn
+       hf.SFDAY as 随访时间, hf.SFRESULT as 随访反馈, hf.NOTES as 随访备注,hf.BGFJL as 不规范记录, aa.ac本店第一次购药时间, aa.rn
 from add_qc aa
 left join s_busi s on aa.busno=s.BUSNO
 join t_busno_class_set ts on aa.busno = ts.busno and ts.classgroupno = '322'

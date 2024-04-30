@@ -121,21 +121,40 @@ begin
              :new.IDCARDNO IDCARDNO,
              :new.随访时间 随访时间,
              :new.随访反馈 随访反馈,
-             :new.随访备注 随访备注
+             :new.随访备注 随访备注,
+             :new.不规范记录 不规范记录
          FROM dual) T2
     ON (T1.idcard = T2.IDCARDNO)
     WHEN MATCHED THEN
         UPDATE SET
         T1.sfday= T2.随访时间,
         T1.sfresult= T2.随访反馈,
-        T1.notes= T2.随访备注
+        T1.notes= T2.随访备注,
+        T1.BGFJL= T2.不规范记录
     WHEN NOT MATCHED THEN
-        INSERT (idcard, sfday,sfresult,notes) VALUES (
+        INSERT (idcard, sfday,sfresult,notes,BGFJL) VALUES (
              :new.IDCARDNO,
              :new.随访时间,
              :new.随访反馈,
-             :new.随访备注);
+             :new.随访备注,
+             :new.不规范记录);
 end;
+ drop trigger TR_V_LUOSHI_PXSF;
+call proc_luoshi_trigger_daily();
+
+BEGIN
+  DBMS_SCHEDULER.CREATE_JOB (
+     job_name        => '每天重建罗氏的触发器',
+     job_type        => 'PLSQL_BLOCK',
+     job_action      => 'BEGIN proc_luoshi_trigger_daily; END;',
+     start_date      => SYSTIMESTAMP,
+     repeat_interval => 'FREQ=DAILY;BYHOUR=0', -- 每天凌晨执行
+     enabled         => TRUE,
+     comments        => '每天重建罗氏的触发器');
+END;
+
+
+
 
 
 
