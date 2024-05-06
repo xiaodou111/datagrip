@@ -75,7 +75,7 @@ select distinct
        c.ext_num28-c.CurrentAccountPay-c.personalPayAmount 个人自付,
        */
        c.ext_num29 医保超限价,
-       med.ERPMEDICALNO as busno,t.compid,/*
+       to_char(med.ERPMEDICALNO) as busno,t.compid,/*
        case when ext_char02='11' then '普通门诊'
          when ext_char02='140104' then '门诊慢病'
          when ext_char02='140201' then '门诊特病'
