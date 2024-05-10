@@ -57,4 +57,15 @@ FROM D_LL_GTML GT
 WHERE GT.WAREID = A.WAREID
   AND A.ACCDATE BETWEEN GT.BEGINDATE AND GT.ENDDATE
   AND GT.PZFL IN ('国谈品种'))) aaa where aaa.SALENO=a.ERPSALENO  ))
-WHERE RN = 1 and receiptdate>= DATE'2024-01-01' and receiptdate<trunc(sysdate);
+WHERE RN = 1 and receiptdate>= DATE'2024-04-01' and receiptdate<trunc(sysdate);
+
+
+select trunc(RECEIPTDATE),count(*) from D_YB_NEW_CUS_2024_04 where RECEIPTDATE>=date'2024-03-01'
+group by trunc(RECEIPTDATE);
+select ACCDATE,count(*) from V_YB_SPXX_DETAIL
+                        where ACCDATE>=date'2024-03-18' group by ACCDATE;
+
+select ACCDATE,count(*)  from D_YBZD_detail where ACCDATE>=date'2024-03-18' group by ACCDATE ;
+
+select trunc(销售日期),count(*) from D_ZHYB_HZ_CYB where 销售日期 >=date'2024-03-18' group by trunc(销售日期);
+select trunc(销售日期),count(*)  from v_zhybjsjlb_c  where 销售日期 >=date'2024-04-18' group by trunc(销售日期);
