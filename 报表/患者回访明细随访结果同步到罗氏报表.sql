@@ -47,13 +47,18 @@ BEGIN
 --     delete from tmp_disable_trigger where table_name='t_remote_prescription_h';
        v_sql:='select PROGRAMME
         from d_luoshi_prog
-        where IDCARDNO ='''||v_oldIDCARDNO||'''';
+        where IDCARDNO ='''||v_oldIDCARDNO||''' and :createtime between BEGINDATE AND ENDDATE ';
 
-    EXECUTE IMMEDIATE v_sql INTO v_program;
+    begin
+    EXECUTE IMMEDIATE v_sql INTO v_program USING v_oldcreatetime;
+    EXCEPTION
+     WHEN no_data_found THEN
+         RAISE_APPLICATION_ERROR(-20001, '查询不到该患者方案,请先维护方案');
+         when others then
+            DBMS_OUTPUT.PUT_LINE('发生未知错误: ' || SQLERRM);
+     end;
         DBMS_OUTPUT.PUT_LINE('v_sql:'||v_sql);
         DBMS_OUTPUT.PUT_LINE('v_program:'||v_program);
-
-    v_program:=1;
     if v_program in (1, 2, 3) then
         --插入到静脉表中
         update d_luoshi_jm_hf set cfsf=v_hfjg where IDCARD = :OLD.IDCARDNO;
