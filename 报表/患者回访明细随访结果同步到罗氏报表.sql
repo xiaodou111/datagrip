@@ -8,7 +8,7 @@ DECLARE
     --  2.患者如果＞21天购药，这部分数据不仅记录在回访表，还需要同步到罗氏表格“不规范购药”里面；
     --  3.患者如果＞21天小于50天未购药，这部分数据不仅记录在回访表，还需要同步到罗氏表格“随访备注”里面；
     --  4.患者如果＞50天未购药，这部分数据不仅记录在回访表，还需要同步到罗氏表格“随访反馈”里面
-    --这里只负责判断插入到哪个表中,1234在中实现
+    --这里只负责判断插入到哪个表中,1234在proc_luoshi_basedata中实现
     v_ifluoshi number;
     v_program  number;
     v_hfjg     varchar2(100);
@@ -40,11 +40,11 @@ BEGIN
          when others then
             DBMS_OUTPUT.PUT_LINE('发生未知错误: ' || SQLERRM);
     end;
---     insert into tmp_disable_trigger(table_name) values ('t_remote_prescription_h');
+    --转换下拉选择中的数字型回访结果为文字
      :NEW.EXT_STR4:=v_hfjg;
     DBMS_OUTPUT.PUT_LINE(':NEW.EXT_STR4:'||:NEW.EXT_STR4);
 
---     delete from tmp_disable_trigger where table_name='t_remote_prescription_h';
+
        v_sql:='select PROGRAMME
         from d_luoshi_prog
         where IDCARDNO ='''||v_oldIDCARDNO||''' and :createtime between BEGINDATE AND ENDDATE ';
