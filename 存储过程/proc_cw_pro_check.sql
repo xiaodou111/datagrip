@@ -80,6 +80,21 @@ SELECT ZMDZ1,busno,WAREID, ×ÜÊıÁ¿,´ı³ö¿âÊıÁ¿×Ü¼Æ,×Ü²»ºÏ¸ñÊıÁ¿,×Ü´ıÑéÊıÁ¿,¿ÉÓÃÊıÁ
                      group by s.ZMDZ1,s.BUSNO,d.WAREID,tws.SALEPRICE,decode(tc.classcode,'01120301','Î÷Ñó²Î','01120306','ÑàÎÑ','01120307','¶¬³æÏÄ²İ')
                      ))
  where lxrn=1 ),
+     a2 as (select ZMDZ1, busno, WAREID, ×ÜÊıÁ¿,´ı³ö¿âÊıÁ¿×Ü¼Æ,×Ü²»ºÏ¸ñÊıÁ¿,×Ü´ıÑéÊıÁ¿,¿ÉÓÃÊıÁ¿, sumsl, SALEPRICE, je, rn,lxrn
+from (
+SELECT ZMDZ1,busno,WAREID, ×ÜÊıÁ¿,´ı³ö¿âÊıÁ¿×Ü¼Æ,×Ü²»ºÏ¸ñÊıÁ¿,×Ü´ıÑéÊıÁ¿,¿ÉÓÃÊıÁ¿,sumsl,SALEPRICE,sumsl*SALEPRICE as je, DENSE_RANK() OVER (ORDER BY sumsl DESC) AS rn,
+        row_number() over (partition by busno ORDER BY sumsl DESC) lxrn
+               FROM (select s.ZMDZ1,s.BUSNO,d.WAREID,sum(d.SUMQTY) as ×ÜÊıÁ¿,sum(d.SUMAWAITQTY) as ´ı³ö¿âÊıÁ¿×Ü¼Æ,
+        sum(d.SUMDEFECTQTY) as ×Ü²»ºÏ¸ñÊıÁ¿,sum(SUMTESTQTY) as ×Ü´ıÑéÊıÁ¿,sum(SUMQTY-SUMAWAITQTY-SUMDEFECTQTY-SUMTESTQTY) as ¿ÉÓÃÊıÁ¿,sum(sum(d.SUMQTY))over ( partition by s.ZMDZ1,d.WAREID) as sumsl,tws.SALEPRICE
+
+                     from T_STORE_h d
+                              join s_busi s on d.BUSNO = s.BUSNO
+                      left join t_ware_saleprice tws on tws.compid=p_compid and tws.salegroupid NOT LIKE '91%' and tws.salegroupid='1000001' and d.WAREID=tws.WAREID
+                       join t_ware_class_base tc on substr(TC.classcode, 1, 6) ='011201' and TC.compid = p_compid and tc.WAREID = d.WAREID and TC.classgroupno = '01'
+                     where d.COMPID = p_compid and s.ZMDZ1 = v_zmdz1
+                     group by s.ZMDZ1,s.BUSNO,d.WAREID,tws.SALEPRICE
+                     ))
+ where rn<=3 ),
 res as (
  select
       COALESCE(d_sl.busno, d_je.busno, d_zx.busno) as busno,
@@ -108,6 +123,12 @@ select  a1.busno,s.ORGNAME, a1.WAREID,w.WARENAME,w.WAREUNIT,w.WARESPEC, f.FACTOR
 from a1
 left join s_busi s on a1.busno =s.BUSNO
 left join t_ware_base w on a1.WAREID=w.WAREID
+left join t_factory f on w.FACTORYID=f.FACTORYID
+union all
+select  a2.busno,s.ORGNAME, a2.WAREID,w.WARENAME,w.WAREUNIT,w.WARESPEC, f.FACTORYNAME,a2.×ÜÊıÁ¿,a2.´ı³ö¿âÊıÁ¿×Ü¼Æ,a2.×Ü²»ºÏ¸ñÊıÁ¿,a2.×Ü´ıÑéÊıÁ¿,a2.¿ÉÓÃÊıÁ¿, a2.SALEPRICE, a2.je, null,null,null
+from a2
+left join s_busi s on a2.busno =s.BUSNO
+left join t_ware_base w on a2.WAREID=w.WAREID
 left join t_factory f on w.FACTORYID=f.FACTORYID order by WAREID,busno;
 
 END ;
