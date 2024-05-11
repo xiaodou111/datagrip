@@ -1,5 +1,5 @@
 create or replace trigger TR_UPDATE_CF_LUOSHI
-    after update of EXT_STR4
+    before update of EXT_STR4
     on T_REMOTE_PRESCRIPTION_H
     for each row
 DECLARE
@@ -13,7 +13,13 @@ DECLARE
     v_program  number;
     v_hfjg     varchar2(100);
     v_sql VARCHAR2(4000);
+    v_oldcreatetime date;
+    v_oldIDCARDNO varchar2(20);
 BEGIN
+    v_oldcreatetime:=:OLD.CREATETIME;
+    v_oldIDCARDNO:=:OLD.IDCARDNO;
+       DBMS_OUTPUT.PUT_LINE(':old.IDCARDNO:'||v_oldIDCARDNO);
+      DBMS_OUTPUT.PUT_LINE(':OLD.CREATETIME:'||v_oldcreatetime);
     select count(*)
     into v_ifluoshi
     from t_remote_prescription_d
@@ -22,40 +28,39 @@ BEGIN
     if v_ifluoshi = 0 then
         return ;
     end if;
-    BEGIN
-        select RESULT
-        into v_hfjg
+
+    begin
+    v_sql:='select RESULT
         from d_luoshi_sf_select
-        where ID = :OLD.EXT_STR4;
-
-        update t_remote_prescription_h set EXT_STR4=v_hfjg where CFNO = :OLD.cfno;
-      DBMS_OUTPUT.PUT_LINE(':old.IDCARDNO:'||:old.IDCARDNO); 
-      DBMS_OUTPUT.PUT_LINE(':OLD.CREATETIME:'||:old.IDCARDNO); 
-       v_sql:='select PROGRAMME
-        into v_program
-        from d_luoshi_prog
-        where IDCARDNO ='||:old.IDCARDNO||'
-          and '||TO_date(:OLD.CREATETIME, 'YYYY-MM-DD HH24:MI:SS') ||'between BEGINDATE and ENDDATE';
-        DBMS_OUTPUT.PUT_LINE('v_sql:'||v_sql); 
-    EXCEPTION
-         WHEN no_data_found THEN
-            DBMS_OUTPUT.PUT_LINE(
-                    '查询不到该患者方案,请先维护方案: SELECT PROGRAMME FROM d_luoshi_prog WHERE IDCARDNO=' ||
-                    :OLD.IDCARDNO || ' AND DATE ''' || TO_date(:OLD.CREATETIME, 'YYYY-MM-DD HH24:MI:SS') ||
-                    ''' BETWEEN BEGINDATE AND ENDDATE');
-            RAISE_APPLICATION_ERROR(-20001, '查询不到该患者方案,请先维护方案');
-         when others then  
+        where ID = '||:NEW.EXT_STR4;
+    EXECUTE IMMEDIATE v_sql INTO v_hfjg;
+    DBMS_OUTPUT.PUT_LINE('v_sql:'||v_sql);
+    DBMS_OUTPUT.PUT_LINE('v_hfjg:'||v_hfjg);
+     EXCEPTION
+         when others then
             DBMS_OUTPUT.PUT_LINE('发生未知错误: ' || SQLERRM);
-     
+    end;
+--     insert into tmp_disable_trigger(table_name) values ('t_remote_prescription_h');
+     :NEW.EXT_STR4:=v_hfjg;
+    DBMS_OUTPUT.PUT_LINE(':NEW.EXT_STR4:'||:NEW.EXT_STR4);
 
-    END;
+--     delete from tmp_disable_trigger where table_name='t_remote_prescription_h';
+       v_sql:='select PROGRAMME
+        from d_luoshi_prog
+        where IDCARDNO ='''||v_oldIDCARDNO||'''';
+
+    EXECUTE IMMEDIATE v_sql INTO v_program;
+        DBMS_OUTPUT.PUT_LINE('v_sql:'||v_sql);
+        DBMS_OUTPUT.PUT_LINE('v_program:'||v_program);
+
+    v_program:=1;
     if v_program in (1, 2, 3) then
         --插入到静脉表中
-        update d_luoshi_jm_hf set cfsf=:new.EXT_STR4 where IDCARD = :OLD.IDCARDNO;
+        update d_luoshi_jm_hf set cfsf=v_hfjg where IDCARD = :OLD.IDCARDNO;
     end if;
     if v_program in (4, 5, 6) then
         --插入到皮下表中
-        update d_luoshi_px_hf set cfsf=:new.EXT_STR4 where IDCARD = :OLD.IDCARDNO;
+        update d_luoshi_px_hf set cfsf=v_hfjg where IDCARD = :OLD.IDCARDNO;
     end if;
 
 END;
