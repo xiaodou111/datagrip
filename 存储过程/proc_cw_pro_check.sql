@@ -9,92 +9,139 @@ BEGIN
  v_zmdz1:=8||p_busno;
  OPEN p_sql FOR
 
- with d_sl as ( select ZMDZ1, busno, WAREID, 总数量, 待出库数量总计, 总不合格数量, 总待验数量, 可用数量, sumsl, SALEPRICE, je, rn
- from (
-SELECT ZMDZ1,busno,WAREID ,总数量,待出库数量总计,总不合格数量,总待验数量,可用数量,sumsl,SALEPRICE,sumsl*SALEPRICE as je, DENSE_RANK() OVER (ORDER BY sumsl DESC) AS rn
-               FROM (
- select s.ZMDZ1,s.BUSNO,d.WAREID,sum(d.SUMQTY) as 总数量,sum(d.SUMAWAITQTY) as 待出库数量总计,
-        sum(d.SUMDEFECTQTY) as 总不合格数量,sum(SUMTESTQTY) as 总待验数量,sum(SUMQTY-SUMAWAITQTY-SUMDEFECTQTY-SUMTESTQTY) as 可用数量,
-        sum(sum(d.SUMQTY))over ( partition by s.ZMDZ1,d.WAREID) as sumsl,tws.SALEPRICE
-                     from t_store_h d
-                              join s_busi s on d.BUSNO = s.BUSNO
-                      left join t_ware_saleprice tws on tws.compid=p_compid and tws.salegroupid NOT LIKE '91%' and tws.salegroupid='1000001' and d.WAREID=tws.WAREID
-                     where d.COMPID = p_compid and s.ZMDZ1 = v_zmdz1
-                       and not exists (select 1
-                                       from t_ware_class_base tc
-                                       where substr(TC.classcode, 1, 4) in ('0112','0116','0118','0119') and TC.compid = p_compid
-                                         and TC.classgroupno = '01'
-                                         and tc.WAREID = d.WAREID)
-                     group by s.ZMDZ1,s.BUSNO,d.WAREID,tws.SALEPRICE ) )where rn <= 10),
+ with d_sl as ( select zmdz1, BUSNO, WAREID, 可用数量, 商品数量, 待出库数量, 待处理数量, SALEPRICE, je, MAKENO, STALLNAME, sumsl, rn
+from (
+select zmdz1, BUSNO, WAREID, 可用数量, 商品数量,待出库数量,待处理数量, SALEPRICE,商品数量*SALEPRICE as je, MAKENO, STALLNAME, sumsl,
+       DENSE_RANK() OVER (ORDER BY sumsl DESC) AS rn
+from (
+select sb.zmdz1,d.BUSNO,d.WAREID,sum(nvl((d.wareqty - d.awaitqty), 0)) as 可用数量, sum(d.WAREQTY) as 商品数量, sum(d.AWAITQTY) as 待出库数量,
+       sum(d.PENDINGQTY) as 待处理数量,tws.SALEPRICE,i.MAKENO,st.STALLNAME,sum(sum(d.WAREQTY)) over ( partition by sb.ZMDZ1,d.WAREID) as sumsl
+from t_store_d d
+ INNER JOIN s_busi sb
+    ON sb.compid = d.compid
+   AND sb.busno = d.busno
+LEFT JOIN t_ware_saleprice tws
+    ON d.compid = tws.compid
+   AND d.wareid = tws.wareid
+   AND sb.salegroupid = tws.salegroupid
+LEFT JOIN t_store_i i
+    ON d.compid = i.compid
+   AND d.wareid = i.wareid
+   AND d.batid = i.batid
+left join t_stall st on d.stallno=st.STALLNO
+ where sb.ZMDZ1 = 81001  and d.WAREQTY <> 0
+ and not exists (select 1
+                              from t_ware_class_base tc
+                              where substr(TC.classcode, 1, 4) in ('0112', '0116', '0118', '0119') and TC.compid = 1000
+                                and TC.classgroupno = '01'
+                                and tc.WAREID = d.WAREID)
+group by  sb.zmdz1,d.BUSNO,d.WAREID,tws.SALEPRICE,i.MAKENO,st.STALLNAME ) a ) where rn <= 10),
 --金额
-d_je as (select ZMDZ1, busno, WAREID, 总数量,待出库数量总计,总不合格数量,总待验数量,可用数量, sumsl, SALEPRICE, je, rn
+d_je as (select zmdz1, BUSNO, WAREID, 可用数量, 商品数量, 待出库数量, 待处理数量, SALEPRICE, je, MAKENO, STALLNAME, sumsl, rn
 from (
-SELECT ZMDZ1,busno,WAREID, 总数量,待出库数量总计,总不合格数量,总待验数量,可用数量,sumsl,SALEPRICE,sumsl*SALEPRICE as je, DENSE_RANK() OVER (ORDER BY sumsl*SALEPRICE DESC) AS rn
-               FROM (select s.ZMDZ1,s.BUSNO,d.WAREID,sum(d.SUMQTY) as 总数量,sum(d.SUMAWAITQTY) as 待出库数量总计,
-        sum(d.SUMDEFECTQTY) as 总不合格数量,sum(SUMTESTQTY) as 总待验数量,sum(SUMQTY-SUMAWAITQTY-SUMDEFECTQTY-SUMTESTQTY) as 可用数量,sum(sum(d.SUMQTY))over ( partition by s.ZMDZ1,d.WAREID) as sumsl,tws.SALEPRICE
-                     from t_store_h d
-                              join s_busi s on d.BUSNO = s.BUSNO
-                      left join t_ware_saleprice tws on tws.compid=p_compid and tws.salegroupid NOT LIKE '91%' and tws.salegroupid='1000001' and d.WAREID=tws.WAREID
-                     where d.COMPID = p_compid and s.ZMDZ1 = v_zmdz1
-                       and not exists (select 1
-                                       from t_ware_class_base tc
-                                       where substr(TC.classcode, 1, 4) in ('0112','0116','0118','0119') and TC.compid = p_compid
-                                         and TC.classgroupno = '01'
-                                         and tc.WAREID = d.WAREID)
-                     group by s.ZMDZ1,s.BUSNO,d.WAREID,tws.SALEPRICE
-                     ))
-where rn <= 10),
+select zmdz1, BUSNO, WAREID, 可用数量, 商品数量,待出库数量,待处理数量, SALEPRICE,商品数量*SALEPRICE as je, MAKENO, STALLNAME, sumsl,
+       DENSE_RANK() OVER (ORDER BY sumsl*SALEPRICE DESC) AS rn
+from (
+select sb.zmdz1,d.BUSNO,d.WAREID,sum(nvl((d.wareqty - d.awaitqty), 0)) as 可用数量, sum(d.WAREQTY) as 商品数量, sum(d.AWAITQTY) as 待出库数量,
+       sum(d.PENDINGQTY) as 待处理数量,tws.SALEPRICE,i.MAKENO,st.STALLNAME,sum(sum(d.WAREQTY)) over ( partition by sb.ZMDZ1,d.WAREID) as sumsl
+from t_store_d d
+ INNER JOIN s_busi sb
+    ON sb.compid = d.compid
+   AND sb.busno = d.busno
+LEFT JOIN t_ware_saleprice tws
+    ON d.compid = tws.compid
+   AND d.wareid = tws.wareid
+   AND sb.salegroupid = tws.salegroupid
+LEFT JOIN t_store_i i
+    ON d.compid = i.compid
+   AND d.wareid = i.wareid
+   AND d.batid = i.batid
+left join t_stall st on d.stallno=st.STALLNO
+ where sb.ZMDZ1 = 81001  and d.WAREQTY <> 0
+ and not exists (select 1
+                              from t_ware_class_base tc
+                              where substr(TC.classcode, 1, 4) in ('0112', '0116', '0118', '0119') and TC.compid = 1000
+                                and TC.classgroupno = '01'
+                                and tc.WAREID = d.WAREID)
+group by  sb.zmdz1,d.BUSNO,d.WAREID,tws.SALEPRICE,i.MAKENO,st.STALLNAME ) a ) where rn <= 10),
 --滞销--6个月没销售
-d_zx as (select ZMDZ1, busno, WAREID, 总数量,待出库数量总计,总不合格数量,总待验数量,可用数量, sumsl, SALEPRICE, je, rn
+d_zx as (select zmdz1, BUSNO, WAREID, 可用数量, 商品数量, 待出库数量, 待处理数量, SALEPRICE, je, MAKENO, STALLNAME, sumsl, rn
 from (
-SELECT ZMDZ1,busno,WAREID, 总数量,待出库数量总计,总不合格数量,总待验数量,可用数量,sumsl,SALEPRICE,sumsl*SALEPRICE as je, DENSE_RANK() OVER (ORDER BY sumsl*SALEPRICE DESC) AS rn
-               FROM (select s.ZMDZ1,s.BUSNO,d.WAREID,sum(d.SUMQTY) as 总数量,sum(d.SUMAWAITQTY) as 待出库数量总计,
-        sum(d.SUMDEFECTQTY) as 总不合格数量,sum(SUMTESTQTY) as 总待验数量,sum(SUMQTY-SUMAWAITQTY-SUMDEFECTQTY-SUMTESTQTY) as 可用数量,sum(sum(d.SUMQTY))over ( partition by s.ZMDZ1,d.WAREID) as sumsl,tws.SALEPRICE
-                     from T_STORE_h d
-                              join s_busi s on d.BUSNO = s.BUSNO
-                      left join t_ware_saleprice tws on tws.compid=p_compid and tws.salegroupid NOT LIKE '91%' and tws.salegroupid='1000001' and d.WAREID=tws.WAREID
-                     where d.COMPID = p_compid and s.ZMDZ1 = v_zmdz1
-                       and not exists (select 1
-                                       from t_ware_class_base tc
-                                       where substr(TC.classcode, 1, 4) in ('0112','0116','0118','0119') and TC.compid = p_compid
-                                         and TC.classgroupno = '01'
-                                         and tc.WAREID = d.WAREID)
-                     and not exists (select WAREID from t_sale_d sd
-join s_busi s on sd.BUSNO = s.BUSNO where s.COMPID = p_compid and s.ZMDZ1 = v_zmdz1 and sd.ACCDATE between ADD_MONTHS(SYSDATE, -6) and SYSDATE
+select zmdz1, BUSNO, WAREID, 可用数量, 商品数量,待出库数量,待处理数量, SALEPRICE,商品数量*SALEPRICE as je, MAKENO, STALLNAME, sumsl,
+       DENSE_RANK() OVER (ORDER BY sumsl*SALEPRICE DESC) AS rn
+from (
+select sb.zmdz1,d.BUSNO,d.WAREID,sum(nvl((d.wareqty - d.awaitqty), 0)) as 可用数量, sum(d.WAREQTY) as 商品数量, sum(d.AWAITQTY) as 待出库数量,
+       sum(d.PENDINGQTY) as 待处理数量,tws.SALEPRICE,i.MAKENO,st.STALLNAME,sum(sum(d.WAREQTY)) over ( partition by sb.ZMDZ1,d.WAREID) as sumsl
+from t_store_d d
+ INNER JOIN s_busi sb
+    ON sb.compid = d.compid
+   AND sb.busno = d.busno
+LEFT JOIN t_ware_saleprice tws
+    ON d.compid = tws.compid
+   AND d.wareid = tws.wareid
+   AND sb.salegroupid = tws.salegroupid
+LEFT JOIN t_store_i i
+    ON d.compid = i.compid
+   AND d.wareid = i.wareid
+   AND d.batid = i.batid
+left join t_stall st on d.stallno=st.STALLNO
+ where sb.ZMDZ1 = 81001  and d.WAREQTY <> 0
+ and not exists (select 1
+                              from t_ware_class_base tc
+                              where substr(TC.classcode, 1, 4) in ('0112', '0116', '0118', '0119') and TC.compid = 1000
+                                and TC.classgroupno = '01'
+                                and tc.WAREID = d.WAREID)
+ and not exists (select 1 from t_sale_d sd
+join s_busi s on sd.BUSNO = s.BUSNO where  s.ZMDZ1 = 81001 and sd.ACCDATE between ADD_MONTHS(SYSDATE, -6) and SYSDATE
 and sd.WAREID=d.WAREID)
-                     group by s.ZMDZ1,s.BUSNO,d.WAREID,tws.SALEPRICE
-                     ))
-where rn <= 10 ),
-   a1 as (select ZMDZ1, busno, WAREID, 总数量,待出库数量总计,总不合格数量,总待验数量,可用数量, sumsl, SALEPRICE, je, rn,lx,lxrn
+group by  sb.zmdz1,d.BUSNO,d.WAREID,tws.SALEPRICE,i.MAKENO,st.STALLNAME  ) a ) where rn <= 10 ),
+   a1 as (select zmdz1, BUSNO, WAREID, 可用数量, 商品数量, 待出库数量, 待处理数量, SALEPRICE, je, MAKENO, STALLNAME, sumsl, rn,lxrn
 from (
-SELECT ZMDZ1,busno,WAREID, 总数量,待出库数量总计,总不合格数量,总待验数量,可用数量,sumsl,SALEPRICE,sumsl*SALEPRICE as je, DENSE_RANK() OVER (ORDER BY sumsl DESC) AS rn,lx,
-        row_number() over (partition by lx,busno ORDER BY sumsl DESC) lxrn
-               FROM (select s.ZMDZ1,s.BUSNO,d.WAREID,sum(d.SUMQTY) as 总数量,sum(d.SUMAWAITQTY) as 待出库数量总计,
-        sum(d.SUMDEFECTQTY) as 总不合格数量,sum(SUMTESTQTY) as 总待验数量,sum(SUMQTY-SUMAWAITQTY-SUMDEFECTQTY-SUMTESTQTY) as 可用数量,sum(sum(d.SUMQTY))over ( partition by s.ZMDZ1,d.WAREID) as sumsl,tws.SALEPRICE,
-                            decode(tc.classcode,'01120301','西洋参','01120306','燕窝','01120307','冬虫夏草') as lx
-                     from T_STORE_h d
-                              join s_busi s on d.BUSNO = s.BUSNO
-                      left join t_ware_saleprice tws on tws.compid=p_compid and tws.salegroupid NOT LIKE '91%' and tws.salegroupid='1000001' and d.WAREID=tws.WAREID
-                       join t_ware_class_base tc on tc.CLASSCODE in ('01120301','01120306','01120307') and TC.compid = p_compid and tc.WAREID = d.WAREID and TC.classgroupno = '01'
-                     where d.COMPID = p_compid and s.ZMDZ1 = v_zmdz1
-                     group by s.ZMDZ1,s.BUSNO,d.WAREID,tws.SALEPRICE,decode(tc.classcode,'01120301','西洋参','01120306','燕窝','01120307','冬虫夏草')
-                     ))
- where lxrn=1 ),
-     a2 as (select ZMDZ1, busno, WAREID, 总数量,待出库数量总计,总不合格数量,总待验数量,可用数量, sumsl, SALEPRICE, je, rn,lxrn
+select zmdz1, BUSNO, WAREID, 可用数量, 商品数量,待出库数量,待处理数量, SALEPRICE,商品数量*SALEPRICE as je, MAKENO, STALLNAME, sumsl,
+       DENSE_RANK() OVER (partition by lx,ZMDZ1 ORDER BY sumsl DESC) AS rn,row_number() over (partition by lx,ZMDZ1 ORDER BY sumsl DESC) lxrn
 from (
-SELECT ZMDZ1,busno,WAREID, 总数量,待出库数量总计,总不合格数量,总待验数量,可用数量,sumsl,SALEPRICE,sumsl*SALEPRICE as je, DENSE_RANK() OVER (ORDER BY sumsl DESC) AS rn,
-        row_number() over (partition by busno ORDER BY sumsl DESC) lxrn
-               FROM (select s.ZMDZ1,s.BUSNO,d.WAREID,sum(d.SUMQTY) as 总数量,sum(d.SUMAWAITQTY) as 待出库数量总计,
-        sum(d.SUMDEFECTQTY) as 总不合格数量,sum(SUMTESTQTY) as 总待验数量,sum(SUMQTY-SUMAWAITQTY-SUMDEFECTQTY-SUMTESTQTY) as 可用数量,sum(sum(d.SUMQTY))over ( partition by s.ZMDZ1,d.WAREID) as sumsl,tws.SALEPRICE
-
-                     from T_STORE_h d
-                              join s_busi s on d.BUSNO = s.BUSNO
-                      left join t_ware_saleprice tws on tws.compid=p_compid and tws.salegroupid NOT LIKE '91%' and tws.salegroupid='1000001' and d.WAREID=tws.WAREID
-                       join t_ware_class_base tc on substr(TC.classcode, 1, 6) ='011201' and TC.compid = p_compid and tc.WAREID = d.WAREID and TC.classgroupno = '01'
-                     where d.COMPID = p_compid and s.ZMDZ1 = v_zmdz1
-                     group by s.ZMDZ1,s.BUSNO,d.WAREID,tws.SALEPRICE
-                     ))
- where rn<=3 ),
+select sb.zmdz1,d.BUSNO,d.WAREID,sum(nvl((d.wareqty - d.awaitqty), 0)) as 可用数量, sum(d.WAREQTY) as 商品数量, sum(d.AWAITQTY) as 待出库数量,
+       sum(d.PENDINGQTY) as 待处理数量,tws.SALEPRICE,i.MAKENO,st.STALLNAME,sum(sum(d.WAREQTY)) over ( partition by sb.ZMDZ1,d.WAREID) as sumsl,
+       decode(tc.classcode,'01120301','西洋参','01120306','燕窝','01120307','冬虫夏草') as lx
+from t_store_d d
+ INNER JOIN s_busi sb
+    ON sb.compid = d.compid
+   AND sb.busno = d.busno
+LEFT JOIN t_ware_saleprice tws
+    ON d.compid = tws.compid
+   AND d.wareid = tws.wareid
+   AND sb.salegroupid = tws.salegroupid
+LEFT JOIN t_store_i i
+    ON d.compid = i.compid
+   AND d.wareid = i.wareid
+   AND d.batid = i.batid
+left join t_stall st on d.stallno=st.STALLNO
+join t_ware_class_base tc on tc.CLASSCODE in ('01120301','01120306','01120307') and TC.compid = 1000 and tc.WAREID = d.WAREID and TC.classgroupno = '01'
+ where sb.ZMDZ1 = 81001  and d.WAREQTY <> 0
+group by  sb.zmdz1,d.BUSNO,d.WAREID,tws.SALEPRICE,i.MAKENO,st.STALLNAME,decode(tc.classcode,'01120301','西洋参','01120306','燕窝','01120307','冬虫夏草') ) a ) where rn=1),
+     a2 as (select zmdz1, BUSNO, WAREID, 可用数量, 商品数量, 待出库数量, 待处理数量, SALEPRICE, je, MAKENO, STALLNAME, sumsl, rn,lxrn
+from (
+select zmdz1, BUSNO, WAREID, 可用数量, 商品数量,待出库数量,待处理数量, SALEPRICE,商品数量*SALEPRICE as je, MAKENO, STALLNAME, sumsl,
+       DENSE_RANK() OVER (partition by ZMDZ1 ORDER BY sumsl DESC) AS rn,row_number() over (partition by ZMDZ1 ORDER BY sumsl DESC) lxrn
+from (
+select sb.zmdz1,d.BUSNO,d.WAREID,sum(nvl((d.wareqty - d.awaitqty), 0)) as 可用数量, sum(d.WAREQTY) as 商品数量, sum(d.AWAITQTY) as 待出库数量,
+       sum(d.PENDINGQTY) as 待处理数量,tws.SALEPRICE,i.MAKENO,st.STALLNAME,sum(sum(d.WAREQTY)) over ( partition by sb.ZMDZ1,d.WAREID) as sumsl
+from t_store_d d
+ INNER JOIN s_busi sb
+    ON sb.compid = d.compid
+   AND sb.busno = d.busno
+LEFT JOIN t_ware_saleprice tws
+    ON d.compid = tws.compid
+   AND d.wareid = tws.wareid
+   AND sb.salegroupid = tws.salegroupid
+LEFT JOIN t_store_i i
+    ON d.compid = i.compid
+   AND d.wareid = i.wareid
+   AND d.batid = i.batid
+left join t_stall st on d.stallno=st.STALLNO
+join t_ware_class_base tc on substr(TC.classcode, 1, 6) ='011201' and TC.compid = 1000 and tc.WAREID = d.WAREID and TC.classgroupno = '01'
+ where sb.ZMDZ1 = 81001  and d.WAREQTY <> 0
+group by  sb.zmdz1,d.BUSNO,d.WAREID,tws.SALEPRICE,i.MAKENO,st.STALLNAME) ) where  rn<=3 ),
 res as (
  select
       COALESCE(d_sl.busno, d_je.busno, d_zx.busno) as busno,
