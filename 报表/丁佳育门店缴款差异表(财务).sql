@@ -11,14 +11,18 @@ BEGIN
  if p_compid<>0 then
  OPEN p_sql FOR
         --收银员日结对账单
-    with cw_rj as (select trunc(ACCDATE) as ACCDATE, h.CHECKNO, h.BUSNO, d.PAYTYPE, d.RECHARGEAMT as 储值卡充值金额,
-                      d.ADVANCE_PAYMENT_AMT as 预约金收款金额
-               from t_payee_check_h h
-                        join t_payee_check_d d on h.CHECKNO = d.CHECKNO
-               join s_busi sb on h.BUSNO=sb.BUSNO
---                where BUSNO = 81001 and trunc(ACCDATE) = date'2024-02-01'
-                   where trunc(ACCDATE) between p_begin and p_end and  sb.ZMDZ=p_zmdz
-                 and d.PAYTYPE in ('1')),
+    with cw_yyj as (select a.CREATE_BUSNO as busno,trunc(ISSUING_DATE) as accdate ,sum(nvl(ADVANCE_PAYAMT,0)) as ADVANCE_PAYAMT  from t_cash_coupon_info a
+                                   join s_busi s on a.CREATE_BUSNO=s.BUSNO
+                                   where nvl(a.status, 0) <> 2
+and s.ZMDZ=p_zmdz and trunc(issuing_date) between p_begin and p_end
+group by trunc(ISSUING_DATE),a.CREATE_BUSNO),
+        cw_czk as (
+            select  sum(nvl(RECHARGE_AMT,0)) as RECHARGE_AMT , a.BUSNO, trunc(a.CREATETIME) as accdate
+from t_card_addmoney a
+join s_busi s on a.BUSNO=s.BUSNO
+where s.ZMDZ = p_zmdz and trunc(a.CREATETIME) between p_begin and p_end
+group by a.BUSNO,trunc(a.CREATETIME)
+        ),
      --门店银行缴款明细
      cw_bankpay as (SELECT a.busno, a.payment_method as PAYTYPE, trunc(a.usedate) as accdate,
                            sum(a.busno_payamt) as busno_payamt
@@ -50,17 +54,17 @@ BEGIN
           from cw_bankpay a
                    full join cw_payls b on a.accdate = b.accdate and a.BUSNO = b.busno and a.PAYTYPE = b.PAYTYPE
           union all
-          select a.accdate, a.BUSNO, 'Z997', nvl(b.PAYNETSUM, 0) as 销售流水实收金额,
-                 a.储值卡充值金额 as 储值卡充值金额, nvl(b.PAYNETSUM, 0)-a.储值卡充值金额 as 收银长款
-          from cw_rj a
+          select a.accdate, a.BUSNO, 'Z997', nvl(c.busno_payamt, 0) as 门店银行缴款明细,
+                 a.RECHARGE_AMT as 储值卡充值金额, nvl(c.busno_payamt, 0)-a.RECHARGE_AMT as 收银长款
+          from cw_czk a
                    left join cw_bankpay c on a.accdate = c.accdate and a.BUSNO = c.busno and c.PAYTYPE = 'Z997'
-                   left join cw_payls b on a.accdate = b.accdate and a.BUSNO = b.busno and b.PAYTYPE = 'Z997'
+--                    left join cw_payls b on a.accdate = b.accdate and a.BUSNO = b.busno and b.PAYTYPE = 'Z997'
           union all
-          select a.accdate, a.BUSNO, 'Z998', nvl(b.PAYNETSUM, 0) as 销售流水实收金额,
-                 a.预约金收款金额 as 预约金收款金额,  nvl(b.PAYNETSUM, 0)-a.预约金收款金额 as 收银长款
-          from cw_rj a
-                   left join cw_bankpay c on a.accdate = c.accdate and a.BUSNO = c.busno and c.PAYTYPE = 'Z998'
-                   left join cw_payls b on a.accdate = b.accdate and a.BUSNO = b.busno and b.PAYTYPE = 'Z998')
+          select a.accdate, a.BUSNO, 'Z998', nvl(c.busno_payamt, 0) as 销售流水实收金额,
+                 a.ADVANCE_PAYAMT as 预约金收款金额,  nvl(c.busno_payamt, 0)-a.ADVANCE_PAYAMT as 收银长款
+          from cw_yyj a
+                   left join cw_bankpay c on a.accdate = c.accdate and a.BUSNO = c.busno and c.PAYTYPE = 'Z998')
+--                    left join cw_payls b on a.accdate = b.accdate and a.BUSNO = b.busno and b.PAYTYPE = 'Z998')
 select s.COMPID,sc.COMPNAME,s.ZMDZ,s2.ORGNAME as mdzname,r.busno as busno,s.ORGNAME,accdate, PAYTYPE,
        s_dddw_list.DDDWLISTDISPLAY, 门店银行缴款明细金额, 销售流水实收金额, 收银长款
 from r
@@ -75,14 +79,18 @@ end if;
  if p_compid=0 then
      OPEN p_sql FOR
 
-    with cw_rj as (select trunc(ACCDATE) as ACCDATE, h.CHECKNO, h.BUSNO, d.PAYTYPE, d.RECHARGEAMT as 储值卡充值金额,
-                      d.ADVANCE_PAYMENT_AMT as 预约金收款金额
-               from t_payee_check_h h
-                        join t_payee_check_d d on h.CHECKNO = d.CHECKNO
-               join s_busi sb on h.BUSNO=sb.BUSNO
---                where BUSNO = 81001 and trunc(ACCDATE) = date'2024-02-01'
-                   where trunc(ACCDATE) between p_begin and p_end and  sb.ZMDZ=p_zmdz
-                 and d.PAYTYPE in ('1')),
+    with cw_yyj as (select a.CREATE_BUSNO as busno,trunc(ISSUING_DATE) as accdate ,sum(nvl(ADVANCE_PAYAMT,0)) as ADVANCE_PAYAMT  from t_cash_coupon_info a
+                                   join s_busi s on a.CREATE_BUSNO=s.BUSNO
+                                   where nvl(a.status, 0) <> 2
+and s.ZMDZ=p_zmdz and trunc(issuing_date) between p_begin and p_end
+group by trunc(ISSUING_DATE),a.CREATE_BUSNO),
+        cw_czk as (
+            select  sum(nvl(RECHARGE_AMT,0)) as RECHARGE_AMT , a.BUSNO, trunc(a.CREATETIME) as accdate
+from t_card_addmoney a
+join s_busi s on a.BUSNO=s.BUSNO
+where s.ZMDZ = p_zmdz and trunc(a.CREATETIME) between p_begin and p_end
+group by a.BUSNO,trunc(a.CREATETIME)
+        ),
      --门店银行缴款明细
      cw_bankpay as (SELECT a.busno, a.payment_method as PAYTYPE, trunc(a.usedate) as accdate,
                            sum(a.busno_payamt) as busno_payamt
@@ -114,17 +122,17 @@ end if;
           from cw_bankpay a
                    full join cw_payls b on a.accdate = b.accdate and a.BUSNO = b.busno and a.PAYTYPE = b.PAYTYPE
           union all
-          select a.accdate, a.BUSNO, 'Z997', nvl(b.PAYNETSUM, 0) as 销售流水实收金额,
-                 a.储值卡充值金额 as 储值卡充值金额, nvl(b.PAYNETSUM, 0)-a.储值卡充值金额 as 收银长款
-          from cw_rj a
+          select a.accdate, a.BUSNO, 'Z997', nvl(c.busno_payamt, 0) as 销售流水实收金额,
+                 a.RECHARGE_AMT as 储值卡充值金额, nvl(c.busno_payamt, 0)-a.RECHARGE_AMT as 收银长款
+          from cw_czk a
                    left join cw_bankpay c on a.accdate = c.accdate and a.BUSNO = c.busno and c.PAYTYPE = 'Z997'
-                   left join cw_payls b on a.accdate = b.accdate and a.BUSNO = b.busno and b.PAYTYPE = 'Z997'
+--                    left join cw_payls b on a.accdate = b.accdate and a.BUSNO = b.busno and b.PAYTYPE = 'Z997'
           union all
-          select a.accdate, a.BUSNO, 'Z998', nvl(b.PAYNETSUM, 0) as 销售流水实收金额,
-                 a.预约金收款金额 as 预约金收款金额,  nvl(b.PAYNETSUM, 0)-a.预约金收款金额 as 收银长款
-          from cw_rj a
-                   left join cw_bankpay c on a.accdate = c.accdate and a.BUSNO = c.busno and c.PAYTYPE = 'Z998'
-                   left join cw_payls b on a.accdate = b.accdate and a.BUSNO = b.busno and b.PAYTYPE = 'Z998')
+          select a.accdate, a.BUSNO, 'Z998', nvl(c.busno_payamt, 0) as 销售流水实收金额,
+                 a.ADVANCE_PAYAMT as 预约金收款金额,  nvl(c.busno_payamt, 0)-a.ADVANCE_PAYAMT as 收银长款
+          from cw_yyj a
+                   left join cw_bankpay c on a.accdate = c.accdate and a.BUSNO = c.busno and c.PAYTYPE = 'Z998')
+--                    left join cw_payls b on a.accdate = b.accdate and a.BUSNO = b.busno and b.PAYTYPE = 'Z998')
 select s.COMPID,sc.COMPNAME,s.ZMDZ,s2.ORGNAME as mdzname,r.busno as busno,s.ORGNAME,accdate, PAYTYPE,
        s_dddw_list.DDDWLISTDISPLAY, 门店银行缴款明细金额, 销售流水实收金额, 收银长款
 from r
