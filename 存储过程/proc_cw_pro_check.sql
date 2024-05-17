@@ -33,11 +33,11 @@ SELECT ZMDZ1,busno,WAREID, ×ÜÊýÁ¿,´ý³ö¿âÊýÁ¿×Ü¼Æ,×Ü²»ºÏ¸ñÊýÁ¿,×Ü´ýÑéÊýÁ¿,¿ÉÓÃÊýÁ
         sum(d.SUMDEFECTQTY) as ×Ü²»ºÏ¸ñÊýÁ¿,sum(SUMTESTQTY) as ×Ü´ýÑéÊýÁ¿,sum(SUMQTY-SUMAWAITQTY-SUMDEFECTQTY-SUMTESTQTY) as ¿ÉÓÃÊýÁ¿,sum(sum(d.SUMQTY))over ( partition by s.ZMDZ1,d.WAREID) as sumsl,tws.SALEPRICE
                      from t_store_h d
                               join s_busi s on d.BUSNO = s.BUSNO
-                      left join t_ware_saleprice tws on tws.compid=d.COMPID and tws.salegroupid NOT LIKE '91%' and tws.salegroupid='1000001' and d.WAREID=tws.WAREID
-                     where  s.ZMDZ1 = v_zmdz1
+                      left join t_ware_saleprice tws on tws.compid=1000 and tws.salegroupid NOT LIKE '91%' and tws.salegroupid='1000001' and d.WAREID=tws.WAREID
+                     where s.ZMDZ1 = v_zmdz1
                        and not exists (select 1
                                        from t_ware_class_base tc
-                                       where substr(TC.classcode, 1, 4) in ('0112','0116','0118','0119') and TC.compid = d.COMPID
+                                       where substr(TC.classcode, 1, 4) in ('0112','0116','0118','0119') and TC.compid = 1000
                                          and TC.classgroupno = '01'
                                          and tc.WAREID = d.WAREID)
                      group by s.ZMDZ1,s.BUSNO,d.WAREID,tws.SALEPRICE
@@ -51,15 +51,15 @@ SELECT ZMDZ1,busno,WAREID, ×ÜÊýÁ¿,´ý³ö¿âÊýÁ¿×Ü¼Æ,×Ü²»ºÏ¸ñÊýÁ¿,×Ü´ýÑéÊýÁ¿,¿ÉÓÃÊýÁ
         sum(d.SUMDEFECTQTY) as ×Ü²»ºÏ¸ñÊýÁ¿,sum(SUMTESTQTY) as ×Ü´ýÑéÊýÁ¿,sum(SUMQTY-SUMAWAITQTY-SUMDEFECTQTY-SUMTESTQTY) as ¿ÉÓÃÊýÁ¿,sum(sum(d.SUMQTY))over ( partition by s.ZMDZ1,d.WAREID) as sumsl,tws.SALEPRICE
                      from T_STORE_h d
                               join s_busi s on d.BUSNO = s.BUSNO
-                      left join t_ware_saleprice tws on tws.compid=d.COMPID and tws.salegroupid NOT LIKE '91%' and tws.salegroupid='1000001' and d.WAREID=tws.WAREID
+                      left join t_ware_saleprice tws on tws.compid=1000 and tws.salegroupid NOT LIKE '91%' and tws.salegroupid='1000001' and d.WAREID=tws.WAREID
                      where  s.ZMDZ1 = v_zmdz1
                        and not exists (select 1
                                        from t_ware_class_base tc
-                                       where substr(TC.classcode, 1, 4) in ('0112','0116','0118','0119') and TC.compid = d.COMPID
+                                       where substr(TC.classcode, 1, 4) in ('0112','0116','0118','0119') and TC.compid = 1000
                                          and TC.classgroupno = '01'
                                          and tc.WAREID = d.WAREID)
                      and not exists (select WAREID from t_sale_d sd
-join s_busi s on sd.BUSNO = s.BUSNO where s.COMPID = d.COMPID and s.ZMDZ1 = v_zmdz1 and sd.ACCDATE between ADD_MONTHS(SYSDATE, -6) and SYSDATE
+join s_busi s on sd.BUSNO = s.BUSNO where  s.ZMDZ1 = v_zmdz1 and sd.ACCDATE between ADD_MONTHS(SYSDATE, -6) and SYSDATE
 and sd.WAREID=d.WAREID)
                      group by s.ZMDZ1,s.BUSNO,d.WAREID,tws.SALEPRICE
                      ))
