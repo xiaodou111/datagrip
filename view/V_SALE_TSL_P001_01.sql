@@ -77,7 +77,7 @@ SELECT
   where matnr in (select wareid from d_tsl_ware) AND
   a.lifnr IN ('110032','110325','110293','110673','110388','110473','110015','110016','110190','110130','112581')
  and LGORT  IN ('P001','P018') AND WERKS IN('D001','D010')  AND ZODERtype=2 AND  zdate>=DATE'2023-01-01'
- AND  zgysph NOT  IN('350705025','350707043')
+ AND  zgysph NOT  IN('350705025','350707043') and a.BUPA not like '%D%'
   UNION all
  SELECT
       a.zdate,
@@ -101,7 +101,7 @@ SELECT
   where matnr in (select wareid from d_tsl_ware) AND
   a.lifnr IN ('110032','110325','110293','110673','110388','110473','110015','110016','110190','110130','112581')
  and LGORT IN ('P001','P018') AND WERKS IN('D001','D010')  AND ZODERtype=2 and  zdate>=DATE'2023-01-01'
- AND  zgysph NOT  IN('350705025','350707043')
+ AND  zgysph NOT  IN('350705025','350707043') and a.BUPA not like '%D%'
 
  union all
    -----p001 与 P006  P888之间的移仓
@@ -128,7 +128,7 @@ SELECT
   WHERE a.zodertype=3  AND a.matnr in (select wareid from d_tsl_ware)
   AND ((a.lgort ='P001' AND c.lgort='P888') OR (a.lgort ='P001' AND c.lgort='P006') OR  (a.lgort ='P888' AND c.lgort='P001') OR (a.lgort ='P006' AND c.lgort='P001') )
    AND  to_char(a.zdate,'yyyy-mm-dd')>='2022-06-01'
-   AND  a.zgysph NOT  IN('350705025','350707043')
+   AND  a.zgysph NOT  IN('350705025','350707043') and a.BUPA not like '%D%'
 UNION ALL
 SELECT ZDATE,'D001',ZNAME1,LGORT,'批发出库单',null,MATNR,MAKTX,ZGUIG,ZSCQYMC,ORGNAME,RKSL,CKSL,PH,dw,0,0 FROM d_sale_tsl_ps
 ;
