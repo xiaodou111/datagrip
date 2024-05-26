@@ -1,7 +1,7 @@
 select * from d_ybsp_jsmx;
 delete from d_ybsp_jsmx;
 DECLARE
-    P_StartDate DATE := DATE '2023-02-01';  -- 起始日期
+    P_StartDate DATE := DATE '2023-01-01';  -- 起始日期
     P_EndDate DATE := DATE '2024-05-17';  -- 结束日期
     BatchSize NUMBER := 100000;  -- 每个批次的大小
     P_CurrentDate DATE := P_StartDate;  -- 将当前日期设为当前月的第一天
@@ -38,7 +38,8 @@ from t_sale_d d
   where
 --       d.SALENO in ('2401304551007053', '2401271247060521')
       cyb.销售日期 between P_CurrentDate and P_CurrentDate+1
-    and cyb.异地标志 = '非异地'),
+     and cyb.异地标志 = '异地'
+  ),
     a2 as (select RECEIPTDATE, BUSNO, CLASSNAME, SALENO, SALER, WAREID, WAREQTY, NETAMT, NETPRICE, ROWNO, WE_SCHAR01,
                   门店诊所医保支付价, 单据明细医保支付价, 医疗费用自费总额, 整单统筹支付数, 整单个人当年帐户支付数,
                   整单个人历年帐户支付数, 整单公补基金支付数, 整单大病补助, 整单现金支付总额, 整单家庭共济支付, 整单其他基金支付,
