@@ -9,12 +9,12 @@ begin
 with a1 as (
 select yh.RECEIPTDATE, d.BUSNO, tb.CLASSNAME, d.SALENO, d.SALER, d.WAREID, d.WAREQTY, d.NETAMT, d.NETPRICE, d.ROWNO,
        case when yd.EXT_CHAR08 = 0 then '医保甲' when yd.EXT_CHAR08 = 1 then '医保丙' else '医保乙' end as WE_SCHAR01,
-       decode(tb.CLASSCODE, '30510', ext.WE_NUM04, '30511', ext.WE_NUM05) as 门店诊所医保支付价,
-       case
+       nvl(decode(tb.CLASSCODE, '30510', ext.WE_NUM04, '30511', ext.WE_NUM05),0) as 门店诊所医保支付价,
+       nvl(case
            when nvl(decode(tb.CLASSCODE, '30510', ext.WE_NUM04, '30511', ext.WE_NUM05), 0) = 0 then
                d.NETPRICE * (1 - yd.EXT_CHAR08) * d.WAREQTY
            else round(LEAST(d.NETPRICE, decode(tb.CLASSCODE, '30510', ext.WE_NUM04, '30511', ext.WE_NUM05)) *
-                      (1 - yd.EXT_CHAR08) * d.WAREQTY, 4) end as 单据明细医保支付价,
+                      (1 - yd.EXT_CHAR08) * d.WAREQTY, 4) end,0) as 单据明细医保支付价,
     case when yd.EXT_CHAR08 = 1 then d.NETAMT else 0 end as 医疗费用自费总额,
        cyb.统筹支付数 as 整单统筹支付数, cyb.个人当年帐户支付数 as 整单个人当年帐户支付数,
        cyb.个人历年帐户支付数 as 整单个人历年帐户支付数,
