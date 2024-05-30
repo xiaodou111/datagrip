@@ -44,29 +44,38 @@ select WAREID, sum(WAREQTY) as sumWAREQTY ,sum(PURPRICE1),sum(NETAMT),
        from a_23 group by WAREID),
     res as (
   select nvl(avg_23.WAREID, avg_24.WAREID) as wareid,
-         avg_23.avgPURPRICE1_23,avg_24.avgPURPRICE1_24,
-         avg_24.avgPURPRICE1_24-avg_23.avgPURPRICE1_23 as 进价变化,
-         avg_23.avgNETPRICE_23,avg_24.avgNETPRICE_24,
-         avg_24.avgNETPRICE_24-avg_23.avgNETPRICE_23 as 售价变化,
+         avg_24.sumWAREQTY as sumWAREQTY_24,
+         avg_23.sumWAREQTY as sumWAREQTY_23,
+         avg_24.avgPURPRICE1_24,
+         avg_23.avgPURPRICE1_23,
+         avg_24.avgPURPRICE1_24-avg_23.avgPURPRICE1_23 as 进价差额,
+         (avg_24.avgPURPRICE1_24-avg_23.avgPURPRICE1_23)*avg_24.sumWAREQTY as 成本上涨绝对值,
+         avg_24.avgNETPRICE_24,
+         avg_23.avgNETPRICE_23,
+         avg_24.avgNETPRICE_24-avg_23.avgNETPRICE_23 as 单盒零售价差,
+         case when avgNETPRICE_24=0 then 0 else
+         (avgNETPRICE_24-avgPURPRICE1_24)/avgNETPRICE_24 end as mll_24,
          case when avgNETPRICE_23=0 then 0 else
          (avgNETPRICE_23-avgPURPRICE1_23)/avgNETPRICE_23 end as mll_23,
-        case when avgNETPRICE_24=0 then 0 else
-         (avgNETPRICE_24-avgPURPRICE1_24)/avgNETPRICE_24 end as mll_24,
+
          case when avgNETPRICE_24=0 then 0 else (avgNETPRICE_24-avgPURPRICE1_24)/avgNETPRICE_24 end-
          case when avgNETPRICE_23=0 then 0 else
          (avgNETPRICE_23-avgPURPRICE1_23)/avgNETPRICE_23 end as mll_change,
-         avg_24.sumWAREQTY,
+         avgNETPRICE_24-avgPURPRICE1_24 as permle_24,
+         avgNETPRICE_23-avgPURPRICE1_23 as permle_23,
+         (avgNETPRICE_24-avgPURPRICE1_24)-(avgNETPRICE_23-avgPURPRICE1_23) as permlce,
          ((avg_24.avgNETPRICE_24-avg_24.avgPURPRICE1_24)-(avg_23.avgNETPRICE_23-avg_23.avgPURPRICE1_23))*avg_24.sumWAREQTY as mlce
           from
   avg_23 full join avg_24 on avg_23.WAREID = avg_24.WAREID)
-select r.wareid, w.WARENAME, w.WARESPEC, f.FACTORYNAME,
+select r.wareid,w.WARENAME, w.WARESPEC, f.FACTORYNAME,
        SUBSTR(g.PARENT_CLASSCODE, INSTR(g.PARENT_CLASSCODE, ';', 1, 2) + 1,
               INSTR(g.PARENT_CLASSCODE, ';', 1, 3) - INSTR(g.PARENT_CLASSCODE, ';', 1, 2) - 1) middle,
        DECODE(f.PARENT_CLASSCODE, '未划分;', '',
               replace(substr(f.PARENT_CLASSCODE, 2, length(f.PARENT_CLASSCODE) - 2), ';', ' - ')) gljb,
        DECODE(e.PARENT_CLASSCODE, '未划分;', '',
-              replace(substr(e.PARENT_CLASSCODE, 2, length(e.PARENT_CLASSCODE) - 2), ';', ' - ')) khlb, r.avgPURPRICE1_23, r.avgPURPRICE1_24, r.进价变化, r.avgNETPRICE_23, r.avgNETPRICE_24, r.售价变化, r.mll_23,
-       r.mll_24, r.mll_change, r.sumWAREQTY, r.mlce
+              replace(substr(e.PARENT_CLASSCODE, 2, length(e.PARENT_CLASSCODE) - 2), ';', ' - ')) khlb,
+       r.sumWAREQTY_24, r.sumWAREQTY_23, r.avgPURPRICE1_24, r.avgPURPRICE1_23, r.进价差额, r.成本上涨绝对值, r.avgNETPRICE_24,
+       r.avgNETPRICE_23, r.单盒零售价差, r.mll_24, r.mll_23, r.mll_change, r.permle_24, r.permle_23, r.permlce, r.mlce
 from res r
 left join t_ware_base w on r.wareid = w.wareid
 left join t_factory f on w.FACTORYID = f.FACTORYID
@@ -108,29 +117,38 @@ select WAREID, sum(WAREQTY) as sumWAREQTY ,sum(PURPRICE1),sum(NETAMT),
        from a_23 group by WAREID),
     res as (
   select nvl(avg_23.WAREID, avg_24.WAREID) as wareid,
-         avg_23.avgPURPRICE1_23,avg_24.avgPURPRICE1_24,
-         avg_24.avgPURPRICE1_24-avg_23.avgPURPRICE1_23 as 进价变化,
-         avg_23.avgNETPRICE_23,avg_24.avgNETPRICE_24,
-         avg_24.avgNETPRICE_24-avg_23.avgNETPRICE_23 as 售价变化,
+         avg_24.sumWAREQTY as sumWAREQTY_24,
+         avg_23.sumWAREQTY as sumWAREQTY_23,
+         avg_24.avgPURPRICE1_24,
+         avg_23.avgPURPRICE1_23,
+         avg_24.avgPURPRICE1_24-avg_23.avgPURPRICE1_23 as 进价差额,
+         (avg_24.avgPURPRICE1_24-avg_23.avgPURPRICE1_23)*avg_24.sumWAREQTY as 成本上涨绝对值,
+         avg_24.avgNETPRICE_24,
+         avg_23.avgNETPRICE_23,
+         avg_24.avgNETPRICE_24-avg_23.avgNETPRICE_23 as 单盒零售价差,
+         case when avgNETPRICE_24=0 then 0 else
+         (avgNETPRICE_24-avgPURPRICE1_24)/avgNETPRICE_24 end as mll_24,
          case when avgNETPRICE_23=0 then 0 else
          (avgNETPRICE_23-avgPURPRICE1_23)/avgNETPRICE_23 end as mll_23,
-        case when avgNETPRICE_24=0 then 0 else
-         (avgNETPRICE_24-avgPURPRICE1_24)/avgNETPRICE_24 end as mll_24,
+
          case when avgNETPRICE_24=0 then 0 else (avgNETPRICE_24-avgPURPRICE1_24)/avgNETPRICE_24 end-
          case when avgNETPRICE_23=0 then 0 else
          (avgNETPRICE_23-avgPURPRICE1_23)/avgNETPRICE_23 end as mll_change,
-         avg_24.sumWAREQTY,
+         avgNETPRICE_24-avgPURPRICE1_24 as permle_24,
+         avgNETPRICE_23-avgPURPRICE1_23 as permle_23,
+         (avgNETPRICE_24-avgPURPRICE1_24)-(avgNETPRICE_23-avgPURPRICE1_23) as permlce,
          ((avg_24.avgNETPRICE_24-avg_24.avgPURPRICE1_24)-(avg_23.avgNETPRICE_23-avg_23.avgPURPRICE1_23))*avg_24.sumWAREQTY as mlce
           from
   avg_23 full join avg_24 on avg_23.WAREID = avg_24.WAREID)
-select r.wareid, w.WARENAME, w.WARESPEC, f.FACTORYNAME,
+select r.wareid,w.WARENAME, w.WARESPEC, f.FACTORYNAME,
        SUBSTR(g.PARENT_CLASSCODE, INSTR(g.PARENT_CLASSCODE, ';', 1, 2) + 1,
               INSTR(g.PARENT_CLASSCODE, ';', 1, 3) - INSTR(g.PARENT_CLASSCODE, ';', 1, 2) - 1) middle,
        DECODE(f.PARENT_CLASSCODE, '未划分;', '',
               replace(substr(f.PARENT_CLASSCODE, 2, length(f.PARENT_CLASSCODE) - 2), ';', ' - ')) gljb,
        DECODE(e.PARENT_CLASSCODE, '未划分;', '',
-              replace(substr(e.PARENT_CLASSCODE, 2, length(e.PARENT_CLASSCODE) - 2), ';', ' - ')) khlb, r.avgPURPRICE1_23, r.avgPURPRICE1_24, r.进价变化, r.avgNETPRICE_23, r.avgNETPRICE_24, r.售价变化, r.mll_23,
-       r.mll_24, r.mll_change, r.sumWAREQTY, r.mlce
+              replace(substr(e.PARENT_CLASSCODE, 2, length(e.PARENT_CLASSCODE) - 2), ';', ' - ')) khlb,
+       r.sumWAREQTY_24, r.sumWAREQTY_23, r.avgPURPRICE1_24, r.avgPURPRICE1_23, r.进价差额, r.成本上涨绝对值, r.avgNETPRICE_24,
+       r.avgNETPRICE_23, r.单盒零售价差, r.mll_24, r.mll_23, r.mll_change, r.permle_24, r.permle_23, r.permlce, r.mlce
 from res r
 left join t_ware_base w on r.wareid = w.wareid
 left join t_factory f on w.FACTORYID = f.FACTORYID
@@ -173,29 +191,38 @@ select WAREID, sum(WAREQTY) as sumWAREQTY ,sum(PURPRICE1),sum(NETAMT),
        from a_23 group by WAREID),
     res as (
   select nvl(avg_23.WAREID, avg_24.WAREID) as wareid,
-         avg_23.avgPURPRICE1_23,avg_24.avgPURPRICE1_24,
-         avg_24.avgPURPRICE1_24-avg_23.avgPURPRICE1_23 as 进价变化,
-         avg_23.avgNETPRICE_23,avg_24.avgNETPRICE_24,
-         avg_24.avgNETPRICE_24-avg_23.avgNETPRICE_23 as 售价变化,
+         avg_24.sumWAREQTY as sumWAREQTY_24,
+         avg_23.sumWAREQTY as sumWAREQTY_23,
+         avg_24.avgPURPRICE1_24,
+         avg_23.avgPURPRICE1_23,
+         avg_24.avgPURPRICE1_24-avg_23.avgPURPRICE1_23 as 进价差额,
+         (avg_24.avgPURPRICE1_24-avg_23.avgPURPRICE1_23)*avg_24.sumWAREQTY as 成本上涨绝对值,
+         avg_24.avgNETPRICE_24,
+         avg_23.avgNETPRICE_23,
+         avg_24.avgNETPRICE_24-avg_23.avgNETPRICE_23 as 单盒零售价差,
+         case when avgNETPRICE_24=0 then 0 else
+         (avgNETPRICE_24-avgPURPRICE1_24)/avgNETPRICE_24 end as mll_24,
          case when avgNETPRICE_23=0 then 0 else
          (avgNETPRICE_23-avgPURPRICE1_23)/avgNETPRICE_23 end as mll_23,
-        case when avgNETPRICE_24=0 then 0 else
-         (avgNETPRICE_24-avgPURPRICE1_24)/avgNETPRICE_24 end as mll_24,
+
          case when avgNETPRICE_24=0 then 0 else (avgNETPRICE_24-avgPURPRICE1_24)/avgNETPRICE_24 end-
          case when avgNETPRICE_23=0 then 0 else
          (avgNETPRICE_23-avgPURPRICE1_23)/avgNETPRICE_23 end as mll_change,
-         avg_24.sumWAREQTY,
+         avgNETPRICE_24-avgPURPRICE1_24 as permle_24,
+         avgNETPRICE_23-avgPURPRICE1_23 as permle_23,
+         (avgNETPRICE_24-avgPURPRICE1_24)-(avgNETPRICE_23-avgPURPRICE1_23) as permlce,
          ((avg_24.avgNETPRICE_24-avg_24.avgPURPRICE1_24)-(avg_23.avgNETPRICE_23-avg_23.avgPURPRICE1_23))*avg_24.sumWAREQTY as mlce
           from
   avg_23 full join avg_24 on avg_23.WAREID = avg_24.WAREID)
-select r.wareid, w.WARENAME, w.WARESPEC, f.FACTORYNAME,
+select r.wareid,w.WARENAME, w.WARESPEC, f.FACTORYNAME,
        SUBSTR(g.PARENT_CLASSCODE, INSTR(g.PARENT_CLASSCODE, ';', 1, 2) + 1,
               INSTR(g.PARENT_CLASSCODE, ';', 1, 3) - INSTR(g.PARENT_CLASSCODE, ';', 1, 2) - 1) middle,
        DECODE(f.PARENT_CLASSCODE, '未划分;', '',
               replace(substr(f.PARENT_CLASSCODE, 2, length(f.PARENT_CLASSCODE) - 2), ';', ' - ')) gljb,
        DECODE(e.PARENT_CLASSCODE, '未划分;', '',
-              replace(substr(e.PARENT_CLASSCODE, 2, length(e.PARENT_CLASSCODE) - 2), ';', ' - ')) khlb, r.avgPURPRICE1_23, r.avgPURPRICE1_24, r.进价变化, r.avgNETPRICE_23, r.avgNETPRICE_24, r.售价变化, r.mll_23,
-       r.mll_24, r.mll_change, r.sumWAREQTY, r.mlce
+              replace(substr(e.PARENT_CLASSCODE, 2, length(e.PARENT_CLASSCODE) - 2), ';', ' - ')) khlb,
+       r.sumWAREQTY_24, r.sumWAREQTY_23, r.avgPURPRICE1_24, r.avgPURPRICE1_23, r.进价差额, r.成本上涨绝对值, r.avgNETPRICE_24,
+       r.avgNETPRICE_23, r.单盒零售价差, r.mll_24, r.mll_23, r.mll_change, r.permle_24, r.permle_23, r.permlce, r.mlce
 from res r
 left join t_ware_base w on r.wareid = w.wareid
 left join t_factory f on w.FACTORYID = f.FACTORYID
@@ -239,29 +266,38 @@ select WAREID, sum(WAREQTY) as sumWAREQTY ,sum(PURPRICE1),sum(NETAMT),
        from a_23 group by WAREID),
     res as (
   select nvl(avg_23.WAREID, avg_24.WAREID) as wareid,
-         avg_23.avgPURPRICE1_23,avg_24.avgPURPRICE1_24,
-         avg_24.avgPURPRICE1_24-avg_23.avgPURPRICE1_23 as 进价变化,
-         avg_23.avgNETPRICE_23,avg_24.avgNETPRICE_24,
-         avg_24.avgNETPRICE_24-avg_23.avgNETPRICE_23 as 售价变化,
+         avg_24.sumWAREQTY as sumWAREQTY_24,
+         avg_23.sumWAREQTY as sumWAREQTY_23,
+         avg_24.avgPURPRICE1_24,
+         avg_23.avgPURPRICE1_23,
+         avg_24.avgPURPRICE1_24-avg_23.avgPURPRICE1_23 as 进价差额,
+         (avg_24.avgPURPRICE1_24-avg_23.avgPURPRICE1_23)*avg_24.sumWAREQTY as 成本上涨绝对值,
+         avg_24.avgNETPRICE_24,
+         avg_23.avgNETPRICE_23,
+         avg_24.avgNETPRICE_24-avg_23.avgNETPRICE_23 as 单盒零售价差,
+         case when avgNETPRICE_24=0 then 0 else
+         (avgNETPRICE_24-avgPURPRICE1_24)/avgNETPRICE_24 end as mll_24,
          case when avgNETPRICE_23=0 then 0 else
          (avgNETPRICE_23-avgPURPRICE1_23)/avgNETPRICE_23 end as mll_23,
-        case when avgNETPRICE_24=0 then 0 else
-         (avgNETPRICE_24-avgPURPRICE1_24)/avgNETPRICE_24 end as mll_24,
+
          case when avgNETPRICE_24=0 then 0 else (avgNETPRICE_24-avgPURPRICE1_24)/avgNETPRICE_24 end-
          case when avgNETPRICE_23=0 then 0 else
          (avgNETPRICE_23-avgPURPRICE1_23)/avgNETPRICE_23 end as mll_change,
-         avg_24.sumWAREQTY,
+         avgNETPRICE_24-avgPURPRICE1_24 as permle_24,
+         avgNETPRICE_23-avgPURPRICE1_23 as permle_23,
+         (avgNETPRICE_24-avgPURPRICE1_24)-(avgNETPRICE_23-avgPURPRICE1_23) as permlce,
          ((avg_24.avgNETPRICE_24-avg_24.avgPURPRICE1_24)-(avg_23.avgNETPRICE_23-avg_23.avgPURPRICE1_23))*avg_24.sumWAREQTY as mlce
           from
   avg_23 full join avg_24 on avg_23.WAREID = avg_24.WAREID)
-select r.wareid, w.WARENAME, w.WARESPEC, f.FACTORYNAME,
+select r.wareid,w.WARENAME, w.WARESPEC, f.FACTORYNAME,
        SUBSTR(g.PARENT_CLASSCODE, INSTR(g.PARENT_CLASSCODE, ';', 1, 2) + 1,
               INSTR(g.PARENT_CLASSCODE, ';', 1, 3) - INSTR(g.PARENT_CLASSCODE, ';', 1, 2) - 1) middle,
        DECODE(f.PARENT_CLASSCODE, '未划分;', '',
               replace(substr(f.PARENT_CLASSCODE, 2, length(f.PARENT_CLASSCODE) - 2), ';', ' - ')) gljb,
        DECODE(e.PARENT_CLASSCODE, '未划分;', '',
-              replace(substr(e.PARENT_CLASSCODE, 2, length(e.PARENT_CLASSCODE) - 2), ';', ' - ')) khlb, r.avgPURPRICE1_23, r.avgPURPRICE1_24, r.进价变化, r.avgNETPRICE_23, r.avgNETPRICE_24, r.售价变化, r.mll_23,
-       r.mll_24, r.mll_change, r.sumWAREQTY, r.mlce
+              replace(substr(e.PARENT_CLASSCODE, 2, length(e.PARENT_CLASSCODE) - 2), ';', ' - ')) khlb,
+       r.sumWAREQTY_24, r.sumWAREQTY_23, r.avgPURPRICE1_24, r.avgPURPRICE1_23, r.进价差额, r.成本上涨绝对值, r.avgNETPRICE_24,
+       r.avgNETPRICE_23, r.单盒零售价差, r.mll_24, r.mll_23, r.mll_change, r.permle_24, r.permle_23, r.permlce, r.mlce
 from res r
 left join t_ware_base w on r.wareid = w.wareid
 left join t_factory f on w.FACTORYID = f.FACTORYID
