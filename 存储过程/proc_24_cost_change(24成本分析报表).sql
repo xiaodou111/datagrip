@@ -62,7 +62,7 @@ select WAREID, sum(WAREQTY) as sumWAREQTY ,sum(PURPRICE1),sum(NETAMT),
  select WAREID, ACCDATE,PURPRICE,PURPRICE*case when d.WAREQTY = 0 then d.MINQTY else d.WAREQTY end as PURPRICE1, case when d.WAREQTY = 0 then d.MINQTY else d.WAREQTY end as WAREQTY,
        case when d.NETPRICE = 0 then d.MINPRICE else d.NETPRICE end as NETPRICE,
        case when d.NETPRICE = 0 then d.MINPRICE else d.NETPRICE end * case when d.WAREQTY = 0 then d.MINQTY else d.WAREQTY end as NETAMT
-from T_SALE_D d where ACCDATE between TO_DATE(''' || TO_CHAR(p_begin, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'') AND TO_DATE(''' || TO_CHAR(p_end, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')
+from T_SALE_D d where ACCDATE between add_months(TO_DATE(''' || TO_CHAR(p_begin, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD''),-12) AND add_months(TO_DATE(''' || TO_CHAR(p_end, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD''),-12)
            and exists(select 1 from t_ware_class_base where CLASSCODE IN (' || v_gljb || ') and d.wareid=t_ware_class_base.wareid)
     ),
     avg_23 as (
@@ -209,7 +209,7 @@ select WAREID, sum(WAREQTY) as sumWAREQTY ,sum(PURPRICE1),sum(NETAMT),
  select WAREID, ACCDATE,PURPRICE,PURPRICE*case when d.WAREQTY = 0 then d.MINQTY else d.WAREQTY end as PURPRICE1, case when d.WAREQTY = 0 then d.MINQTY else d.WAREQTY end as WAREQTY,
        case when d.NETPRICE = 0 then d.MINPRICE else d.NETPRICE end as NETPRICE,
        case when d.NETPRICE = 0 then d.MINPRICE else d.NETPRICE end * case when d.WAREQTY = 0 then d.MINQTY else d.WAREQTY end as NETAMT
-from T_SALE_D d where ACCDATE between TO_DATE(''' || TO_CHAR(p_begin, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'') AND TO_DATE(''' || TO_CHAR(p_end, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')
+from T_SALE_D d where ACCDATE between add_months(TO_DATE(''' || TO_CHAR(p_begin, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD''),-12) AND add_months(TO_DATE(''' || TO_CHAR(p_end, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD''),-12)
       and exists(select 1 from t_busno_class_set where CLASSCODE IN (' || v_syb || ') and d.BUSNO=t_busno_class_set.BUSNO)
     ),
     avg_23 as (
@@ -288,7 +288,7 @@ select WAREID, sum(WAREQTY) as sumWAREQTY ,sum(PURPRICE1),sum(NETAMT),
  select WAREID, ACCDATE,PURPRICE,PURPRICE*case when d.WAREQTY = 0 then d.MINQTY else d.WAREQTY end as PURPRICE1, case when d.WAREQTY = 0 then d.MINQTY else d.WAREQTY end as WAREQTY,
        case when d.NETPRICE = 0 then d.MINPRICE else d.NETPRICE end as NETPRICE,
        case when d.NETPRICE = 0 then d.MINPRICE else d.NETPRICE end * case when d.WAREQTY = 0 then d.MINQTY else d.WAREQTY end as NETAMT
-from T_SALE_D d where ACCDATE between TO_DATE(''' || TO_CHAR(p_begin, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'') AND TO_DATE(''' || TO_CHAR(p_end, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')
+from T_SALE_D d where ACCDATE between add_months(TO_DATE(''' || TO_CHAR(p_begin, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD''),-12) AND add_months(TO_DATE(''' || TO_CHAR(p_end, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD''),-12)
       and exists(select 1 from t_busno_class_set where CLASSCODE IN (' || v_syb || ') and d.BUSNO=t_busno_class_set.BUSNO)
     and exists(select 1 from t_ware_class_base where CLASSCODE IN (' || v_gljb || ') and d.wareid=t_ware_class_base.wareid)
            ),
