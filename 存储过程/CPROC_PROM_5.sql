@@ -1,4 +1,4 @@
-create PROCEDURE cproc_prom_5
+create or replace PROCEDURE cproc_prom_5
 
 IS
 
@@ -150,14 +150,18 @@ commit;
           1 as integral_times,0 as promdays,
           case when a.warename like '%汤臣倍健%'  then 75
                when a.WARENAME like '%亿格海斯%'  then 85
-               else 85 end as 折扣,
+               else case when tbc.classcode in('9011','9012','9017') and substr(twc.classcode,1,4) not in ('0110','0111') then 85
+               else case when tbc.classcode in('9013','9014') and substr(twc.classcode,1,4) not in ('0110','0111') then 95
+               else case when tbc.classcode in('9011','9012','9013','9014','9017') and substr(twc.classcode,1,4) in ('0110','0111') then 95
+                 else  100 end end end end as 折扣,
           '全部' typeno,1 salegroupid,0 profitrate,
           0 as set_price_flag,9999 as profitrate_e,
           to_date('2021-03-05 00:00:00', 'YYYY-MM-DD HH24:MI:SS') as starttime,to_date('2021-03-05 23:59:59', 'YYYY-MM-DD HH24:MI:SS') as endtime,
           1 limitedtype,0 onedaypromqty
   from t_ware a
-       join t_ware_class_base tbc on a.compid=tbc.compid and a.wareid=tbc.wareid and tbc.classgroupno='90'and tbc.classcode in('9011','9012','9017')
-       join t_ware_class_base twc on a.compid=twc.compid and a.wareid=twc.wareid and twc.classgroupno='01' and substr(twc.classcode,1,4) not in ('0110','0111','0114','0115','0116')
+       join t_ware_class_base tbc on a.compid=tbc.compid and a.wareid=tbc.wareid and tbc.classgroupno='90'and tbc.classcode in('9011','9012','9013','9014','9017')
+       join t_ware_class_base twc on a.compid=twc.compid and a.wareid=twc.wareid and twc.classgroupno='01'
+                                         --and substr(twc.classcode,1,4) not in ('0110','0111')
   where a.compid=tt.compid 
   and not exists(select 1 from t_ware_class_base c where c.classgroupno='12'and c.classcode in('12105','12116','12114') and a.compid=c.compid and a.wareid=c.wareid)
   and not exists(select 1 from t_ware_class_base c1 where c1.classgroupno='810'and c1.classcode in('81010') and a.compid=c1.compid and a.wareid=c1.wareid)
