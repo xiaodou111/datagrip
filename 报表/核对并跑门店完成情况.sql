@@ -36,6 +36,7 @@ select order_date as 销售日期, create_dtme as 销售时间, tml_num_id as 销售单号, 
        old_sub_unit_id, vip_no as 会员编号, CREATE_USER_ID as 收银员工号
 from d_rrtprod_memorder
 where sub_unit_num_id in ('4507', '4506', '3047', '3010', '1559', '3062', '3211', '3311', '3612', '4048', '5021')
+select * from d_rrtprod_memorder where order_date=trunc(sysdate-1);
 -- and sub_unit_num_id='3047' and pro_code_old='10114843,10115183,81003997'
 ;
 
@@ -44,6 +45,7 @@ where sub_unit_num_id in ('4507', '4506', '3047', '3010', '1559', '3062', '3211'
 
 
 --todo 瑞人堂前一天完成率
+--瑞人堂5.29完成率
 with new as (select order_date, MANAGER_CODE, tml_num_id
              from d_rrtprod_memorder
              where sub_unit_num_id in
@@ -85,7 +87,8 @@ with new as (select order_date, MANAGER_CODE, tml_num_id
                            case
                                when nvl(b.sumsl, 0) >= 50 then 1
                                else
-                                   round(nvl(b.sumsl, 0) / a.sumsl, 3) end end as bl
+                            case when  b.sumsl>a.sumsl then 1 else
+                                   round(nvl(b.sumsl, 0) / a.sumsl, 3) end end end as bl
             from old_hz a
                      left join new_hz b on substr(a.ZMDZ1, 2, 4) = b.MANAGER_CODE
                 and a.ACCDATE = b.order_date
@@ -139,14 +142,15 @@ group by s.ZMDZ1,h.ACCDATE,h.SALENO
 select a.ZMDZ1, ACCDATE, nvl(a.sumsl,0) as 老系统销售单数, order_date, MANAGER_CODE, nvl(b.sumsl,0) as 新系统数量,
        case  when  nvl(a.sumsl,0)=0 then 0 else
            case when nvl(b.sumsl,0)>=50 then 1 else
-       round(nvl(b.sumsl,0)/a.sumsl,3) end end as bl
+               case when b.sumsl>a.sumsl then 1 else
+       round(nvl(b.sumsl,0)/a.sumsl,3) end end end as bl
 from old_hz a
     left join new_hz b on a.ZMDZ1=b.MANAGER_CODE
 --1317  --广场南路
     --83009
 and a.ACCDATE=b.order_date
 order by a.ZMDZ1,a.ACCDATE)
-select q.ACCDATE as 日期, q.ZMDZ1 as 门店编码, s.ORGNAME as 门店名称, q.老系统销售单数,
+select q.ACCDATE as 日期, q.ZMDZ1 as 门店组编码, s.ORGNAME as 门店名称, q.老系统销售单数,
 --        q.order_date, q.sub_unit_num_id,
        q.新系统数量, q.bl as 录单比率
 from re q
