@@ -2,12 +2,33 @@ create PROCEDURE proc_24_cost_change(p_begin IN DATE,
                                           p_end IN DATE,
                                           p_syb IN pls_integer,
                                           p_gljb IN pls_integer,
+                                          p_gnzz IN pls_integer,
                                           p_sql OUT SYS_REFCURSOR )
 IS
   v_syb varchar2(1000);
   v_gljb varchar2(1000);
+  v_gnzz varchar2(1000);
         v_sql VARCHAR2(30000);
 BEGIN
+   if p_gnzz= 1 then
+      v_gnzz:='0110,0111';
+      select f_get_sjzl_rename(v_gnzz)
+          into  v_gnzz
+       FROM dual ;
+    end if;
+   if p_gnzz= 2 then
+      v_gnzz:='0112,0113,0114,0115,0116,0117,0118,0119';
+      select f_get_sjzl_rename(v_gnzz)
+          into  v_gnzz
+       FROM dual ;
+    end if;
+
+   if p_gnzz NOT IN  (1,2) then
+   select f_get_sjzl_rename(v_gnzz)
+          into  v_gnzz
+       FROM dual ;
+   end if;
+
    if p_syb=1 then
       v_syb:='303100,303101,303102';
       SELECT f_get_sjzl_rename(v_syb)
@@ -50,6 +71,7 @@ select WAREID, ACCDATE,PURPRICE,PURPRICE*case when d.WAREQTY = 0 then d.MINQTY e
        case when d.NETPRICE = 0 then d.MINPRICE else d.NETPRICE end * case when d.WAREQTY = 0 then d.MINQTY else d.WAREQTY end as NETAMT
 from T_SALE_D d where ACCDATE between TO_DATE(''' || TO_CHAR(p_begin, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'') AND TO_DATE(''' || TO_CHAR(p_end, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')
     and exists(select 1 from t_ware_class_base where CLASSCODE IN (' || v_gljb || ') and d.wareid=t_ware_class_base.wareid)
+    and exists(select 1 from t_ware_class_base BB where substr(CLASSCODE,1,4) IN (' || v_gnzz || ') and d.wareid=BB.wareid)
                 ),
     avg_24 as (
 select WAREID, sum(WAREQTY) as sumWAREQTY ,sum(PURPRICE1),sum(NETAMT),
@@ -197,6 +219,7 @@ select WAREID, ACCDATE,PURPRICE,PURPRICE*case when d.WAREQTY = 0 then d.MINQTY e
        case when d.NETPRICE = 0 then d.MINPRICE else d.NETPRICE end * case when d.WAREQTY = 0 then d.MINQTY else d.WAREQTY end as NETAMT
 from T_SALE_D d where ACCDATE between TO_DATE(''' || TO_CHAR(p_begin, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'') AND TO_DATE(''' || TO_CHAR(p_end, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')
     and exists(select 1 from t_busno_class_set where CLASSCODE IN (' || v_syb || ') and d.BUSNO=t_busno_class_set.BUSNO)
+    and exists(select 1 from t_ware_class_base BB where substr(CLASSCODE,1,4) IN (' || v_gnzz || ') and d.wareid=BB.wareid)
                 ),
     avg_24 as (
 select WAREID, sum(WAREQTY) as sumWAREQTY ,sum(PURPRICE1),sum(NETAMT),
@@ -276,6 +299,7 @@ select WAREID, ACCDATE,PURPRICE,PURPRICE*case when d.WAREQTY = 0 then d.MINQTY e
 from T_SALE_D d where ACCDATE between TO_DATE(''' || TO_CHAR(p_begin, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'') AND TO_DATE(''' || TO_CHAR(p_end, 'YYYY-MM-DD') || ''', ''YYYY-MM-DD'')
     and exists(select 1 from t_busno_class_set where CLASSCODE IN (' || v_syb || ') and d.BUSNO=t_busno_class_set.BUSNO)
     and exists(select 1 from t_ware_class_base where CLASSCODE IN (' || v_gljb || ') and d.wareid=t_ware_class_base.wareid)
+    and exists(select 1 from t_ware_class_base BB where substr(CLASSCODE,1,4) IN (' || v_gnzz || ') and d.wareid=BB.wareid)
                 ),
     avg_24 as (
 select WAREID, sum(WAREQTY) as sumWAREQTY ,sum(PURPRICE1),sum(NETAMT),
