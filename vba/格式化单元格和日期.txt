@@ -1,0 +1,35 @@
+Option Explicit
+
+Sub 格式化单元格长度和日期格式()
+
+    ' 设置列宽
+    'Columns("A:M").ColumnWidth = 15
+     With Columns("A:M")
+    .ColumnWidth = 15 ' 设置最小列宽为15
+    .AutoFit ' 自动调整列宽以适应内容，但不会小于之前设置的最小宽度
+     End With
+    ' 设置对齐方式
+    Columns("A:M").Cells.HorizontalAlignment = xlCenter
+    Columns("A:M").Cells.VerticalAlignment = xlCenter
+
+   Dim ws As Worksheet
+    Dim rngHeader As Range
+    Dim cel As Range
+    Dim col As Range
+    
+    ' 设置工作表
+    Set ws = ActiveSheet
+    ' 定义第二行的范围
+    Set rngHeader = ws.Rows(2)
+    
+    For Each cel In ws.UsedRange
+        ' 检查单元格中的值是否为日期类型
+        If IsDate(cel.value) Then
+            ' 如果是日期类型，设置其格式为"yyyy-mm-dd;@"
+            cel.NumberFormatLocal = "yyyy-mm-dd;@"
+        End If
+    Next cel
+    
+    ' 保存工作簿
+    ActiveWorkbook.Save
+End Sub
