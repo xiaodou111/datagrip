@@ -51,11 +51,7 @@ with new as (select order_date, MANAGER_CODE, tml_num_id
              where sub_unit_num_id in
                    (select NBUSNO
                     from D_RRT_QY_COMPID_BUSNO
-                    where OBUSNO in (select BUSNO
-                                     from s_busi
-                                     where
-                                         ZMDZ1 in (83009, 81317, 83047, 83010, 81559, 83062, 83211, 83311, 83612, 84048,
-                                                   85021)))
+                    where OBUSNO in (select BUSNO from D_BP_BUSNO))
                and order_date = trunc(sysdate - 1)
              group by order_date, MANAGER_CODE, tml_num_id),
 
@@ -64,7 +60,7 @@ with new as (select order_date, MANAGER_CODE, tml_num_id
                       join t_sale_d d on h.SALENO = d.SALENO
                       join t_ware_base w on d.WAREID = w.WAREID
                       left join s_busi s on h.BUSNO = s.BUSNO
-             where s.ZMDZ1 in (83009, 81317, 83047, 83010, 81559, 83062, 83211, 83311, 83612, 84048, 85021)
+             where s.busno in (select BUSNO from D_BP_BUSNO)
                and h.ACCDATE = trunc(sysdate - 1)
                and not exists(select 1
                               from t_sale_pay p
@@ -106,10 +102,7 @@ select order_date,s.ZMDZ1 as MANAGER_CODE,tml_num_id from d_rrtprod_memorder a
                                                left join s_busi s on s.busno=b.OBUSNO
 where sub_unit_num_id in (select NBUSNO
                     from D_RRT_QY_COMPID_BUSNO
-                    where OBUSNO in (select BUSNO
-                                     from s_busi
-                                     where
-                                         ZMDZ1 in (86201,86202,86203,86204,86205,86209,86211,86212,86214,86217,86218,86219,86220,86256,86260,86254)))
+                    where OBUSNO in (select busno from s_busi where COMPID=1900))
 and order_date= trunc(sysdate - 1)
  group by order_date,s.ZMDZ1,tml_num_id),
 
@@ -118,7 +111,7 @@ select s.ZMDZ1,h.ACCDATE,h.SALENO
        from t_sale_h h join t_sale_d d on h.SALENO=d.SALENO
        join t_ware_base w on d.WAREID=w.WAREID
        left join s_busi s on h.BUSNO = s.BUSNO
-where s.ZMDZ1 in (86201,86202,86203,86204,86205,86209,86211,86212,86214,86217,86218,86219,86220,86256,86260,86254)
+where s.BUSNO in (select busno from s_busi where COMPID=1900)
 and h.ACCDATE= trunc(sysdate - 1)
  and not exists(select 1
                               from t_sale_pay p
