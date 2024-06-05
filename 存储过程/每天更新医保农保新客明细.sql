@@ -68,6 +68,10 @@ WHERE GT.WAREID = A.WAREID
   AND A.ACCDATE BETWEEN GT.BEGINDATE AND GT.ENDDATE
   AND GT.PZFL IN ('国谈品种'))) aaa where aaa.SALENO=a.ERPSALENO  ))
 WHERE RN = 1 and receiptdate between trunc(sysdate)-1 and trunc(sysdate);
+
+  insert into DWB_YB_HEAD_DTL_QC(TENANT_ID, YEAR_YB, WERKS_ID, RECEIPT_DATE, ORDER_NO, IDENTITY_NO)
+select 'rrt',2024,BUSNO,trunc(RECEIPTDATE),ERPSALENO,IDENTITYNO from D_YB_NEW_CUS_2024_04 where
+    RECEIPTDATE between trunc(sysdate)-1 and trunc(sysdate);
   --杭州新增人头
   
  -- DELETE from  D_YB_NEW_CUS_2023_hz;
@@ -101,7 +105,11 @@ AND tb.classcode IN('303106')
   --去掉省本级
   AND a.参保地<>'浙江省省本级' and a.异地标志='非异地' --and a.参保地 like '%杭州市%'
   ) WHERE rn=1 and 销售日期 between trunc(sysdate)-1 and trunc(sysdate);
-  
+
+    insert into DWB_YB_HEAD_DTL_QC(TENANT_ID, YEAR_YB, WERKS_ID, RECEIPT_DATE, ORDER_NO, IDENTITY_NO)
+select 'rrt',2024,BUSNO,trunc(RECEIPTDATE),ERPSALENO,IDENTITYNO from D_YB_NEW_CUS_2023_hz where
+    RECEIPTDATE between trunc(sysdate)-1 and trunc(sysdate);
+
   
     INSERT INTO D_YB_NEW_CUS_2023_tiantai 
 (erpsaleno, receiptdate, busno, saler, username, customername, identityno, nb_flag, cbd, cbdname, netsum, status, yg_flag,jslx,orderno)
@@ -133,6 +141,15 @@ AND tb.classcode IN('303100','303101','303102')
     AND nvl(cyb.统筹支付数,0)+nvl(cyb.公补基金支付数,0)+nvl(cyb.个人当年帐户支付数,0)<>0
 and cyb.医疗费用总额 - nvl(gtjeed,0)<>0
   ) WHERE rn=1 and receiptdate between trunc(sysdate)-1 and trunc(sysdate);
+
+  insert into DWB_YB_HEAD_DTL_QC(TENANT_ID, YEAR_YB, WERKS_ID, RECEIPT_DATE, ORDER_NO, IDENTITY_NO)
+select 'rrt',2024,BUSNO,trunc(RECEIPTDATE),ERPSALENO,IDENTITYNO from D_YB_NEW_CUS_2023_tiantai where
+    RECEIPTDATE between trunc(sysdate)-1 and trunc(sysdate);
+
+  update DWB_YB_HEAD_DTL_QC T1 set T1.WERKS_ID = (
+    SELECT NBUSNO FROM D_RRT_QY_COMPID_BUSNO
+    WHERE T1.WERKS_ID = OBUSNO
+) where RECEIPT_DATE between trunc(sysdate)-1 and trunc(sysdate);
   
  begin proc_zeys_rt_qygd() ; end;
  begin proc_zeys_rt_qygd24() ; end;
