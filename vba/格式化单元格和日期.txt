@@ -27,7 +27,13 @@ Sub 格式化单元格长度和日期格式()
         If IsDate(cel.value) Then
             ' 如果是日期类型，设置其格式为"yyyy-mm-dd;@"
             cel.NumberFormatLocal = "yyyy-mm-dd;@"
+            ElseIf IsNumeric(cel.value) Then
+            ' 如果是数字类型，设置其格式为"0.00"
+            'cel.NumberFormatLocal = "0.00"
+            cel.NumberFormatLocal = "0"
         End If
+
+
     Next cel
     
     ' 保存工作簿
