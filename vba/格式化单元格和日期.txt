@@ -22,18 +22,24 @@ Sub 格式化单元格长度和日期格式()
     ' 定义第二行的范围
     Set rngHeader = ws.Rows(2)
     
-    For Each cel In ws.UsedRange
+     For Each cel In rngHeader.Cells
+        ' 获取当前单元格所在的列
+        Set col = cel.EntireColumn
+
         ' 检查单元格中的值是否为日期类型
         If IsDate(cel.value) Then
-            ' 如果是日期类型，设置其格式为"yyyy-mm-dd;@"
-            cel.NumberFormatLocal = "yyyy-mm-dd;@"
-            ElseIf IsNumeric(cel.value) Then
-            ' 如果是数字类型，设置其格式为"0.00"
-            'cel.NumberFormatLocal = "0.00"
-            cel.NumberFormatLocal = "0"
-        End If
-
-
+            ' 如果是日期类型，设置整列的格式为"yyyy-mm-dd;@"
+            col.Cells.NumberFormatLocal = "yyyy-mm-dd;@"
+        ElseIf IsNumeric(cel.value) Then
+         ' 判断数字是否为整数
+    If Int(cel.value) = cel.value Then
+        ' 如果是整数，设置整列的格式为"0"（无小数点）
+        col.Cells.NumberFormatLocal = "0"
+    Else
+        ' 如果不是整数，设置整列的格式为"0.##"（保留小数点后两位，不显示不必要的零）
+        col.Cells.NumberFormatLocal = "0.##"
+    End If
+     End If
     Next cel
     
     ' 保存工作簿
