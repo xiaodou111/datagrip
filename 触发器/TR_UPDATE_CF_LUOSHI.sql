@@ -1,4 +1,4 @@
-create trigger TR_UPDATE_CF_LUOSHI
+create or replace trigger TR_UPDATE_CF_LUOSHI
     before update of EXT_STR4
     on T_REMOTE_PRESCRIPTION_H
     for each row
@@ -20,6 +20,9 @@ BEGIN
     v_oldIDCARDNO:=:OLD.IDCARDNO;
        DBMS_OUTPUT.PUT_LINE(':old.IDCARDNO:'||v_oldIDCARDNO);
       DBMS_OUTPUT.PUT_LINE(':OLD.CREATETIME:'||v_oldcreatetime);
+    if :OLD.IDCARDNO is null then
+        return ;
+    end if;
     select count(*)
     into v_ifluoshi
     from t_remote_prescription_d
@@ -53,20 +56,20 @@ BEGIN
     EXECUTE IMMEDIATE v_sql INTO v_program USING v_oldcreatetime;
     EXCEPTION
      WHEN no_data_found THEN
-         RAISE_APPLICATION_ERROR(-20001, '查询不到该患者方案,请先维护方案');
+         RAISE_APPLICATION_ERROR(-20001, '查询不到该患者方案,请先到-患者用药方案(乳腺癌)-报表维护方案');
          when others then
             DBMS_OUTPUT.PUT_LINE('发生未知错误: ' || SQLERRM);
      end;
         DBMS_OUTPUT.PUT_LINE('v_sql:'||v_sql);
         DBMS_OUTPUT.PUT_LINE('v_program:'||v_program);
-    if v_program in (1, 2, 3) then
-        --插入到静脉表中
-        update d_luoshi_jm_hf set cfsf=v_hfjg where IDCARD = :OLD.IDCARDNO;
-    end if;
-    if v_program in (4, 5, 6) then
-        --插入到皮下表中
-        update d_luoshi_px_hf set cfsf=v_hfjg where IDCARD = :OLD.IDCARDNO;
-    end if;
+--     if v_program in (1, 2, 3) then
+--         --插入到静脉表中
+--         update d_luoshi_jm_hf set cfsf=v_hfjg where IDCARD = :OLD.IDCARDNO;
+--     end if;
+--     if v_program in (4, 5, 6) then
+--         --插入到皮下表中
+--         update d_luoshi_px_hf set cfsf=v_hfjg where IDCARD = :OLD.IDCARDNO;
+--     end if;
 
 END;
 /
