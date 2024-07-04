@@ -24,14 +24,14 @@ where s.ZMDZ = p_zmdz and trunc(a.CREATETIME) between p_begin and p_end
 group by a.BUSNO,trunc(a.CREATETIME)
         ),
      --门店银行缴款明细
-     cw_bankpay as (SELECT a.busno, a.payment_method as PAYTYPE, trunc(a.usedate) as accdate,
+     cw_bankpay as (SELECT a.USE_BUSNO as busno, a.payment_method as PAYTYPE, trunc(a.usedate) as accdate,
                            sum(a.busno_payamt) as busno_payamt
                     FROM t_busno_bank_paydetails a
                              left join s_busi sb
-                                       on a.busno = sb.busno
+                                       on a.USE_BUSNO = sb.busno
 --                     WHERE a.use_busno = 81001 and trunc(a.usedate) = date'2024-02-01'
                         where trunc(a.usedate) between p_begin and p_end and  sb.ZMDZ=p_zmdz
-                    group by a.busno, a.payment_method, trunc(a.usedate)),
+                    group by a.USE_BUSNO, a.payment_method, trunc(a.usedate)),
      --收款方式流水查询报表
      cw_payls as (SELECT h.accdate as accdate,
                          h.busno as busno,
@@ -92,14 +92,14 @@ where s.ZMDZ = p_zmdz and trunc(a.CREATETIME) between p_begin and p_end
 group by a.BUSNO,trunc(a.CREATETIME)
         ),
      --门店银行缴款明细
-     cw_bankpay as (SELECT a.busno, a.payment_method as PAYTYPE, trunc(a.usedate) as accdate,
+     cw_bankpay as (SELECT a.USE_BUSNO as busno, a.payment_method as PAYTYPE, trunc(a.usedate) as accdate,
                            sum(a.busno_payamt) as busno_payamt
                     FROM t_busno_bank_paydetails a
                              left join s_busi sb
-                                       on a.busno = sb.busno
+                                       on a.USE_BUSNO = sb.busno
 --                     WHERE a.use_busno = 81001 and trunc(a.usedate) = date'2024-02-01'
                         where trunc(a.usedate) between p_begin and p_end and  sb.ZMDZ=p_zmdz
-                    group by a.busno, a.payment_method, trunc(a.usedate)),
+                    group by a.USE_BUSNO, a.payment_method, trunc(a.usedate)),
      --收款方式流水查询报表
      cw_payls as (SELECT h.accdate as accdate,
                          h.busno as busno,
