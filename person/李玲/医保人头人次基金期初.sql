@@ -1,4 +1,5 @@
 --proc_zeys_rt_syb24
+    call proc_zeys_rt24
 --ÈË´ÎÔÚa2,ÆäËû¶¼ÔÚa1
 select * from dm_yb_md_head_sum_qc;
 -- Äê¶È 2023||2024	year_yb
@@ -23,176 +24,14 @@ select * from dm_yb_md_head_sum_qc;
 -- ´ó²¡±£ÏÕÖ§¸¶	illness_subsidy_amount
 -- ÀúÄêÕË»§Ö§¸¶	history_account_pay
 -- ÏÖ½ğÖ§¸¶	personal_cash_amount
-select sfzs, ÊÂÒµ²¿, ÏÕÖÖ, ¾ÍÕïÀàĞÍ, ²Î±£µØ, jyd,
-       sum(case when ord > 1 then 0 else ord end) as ÈË´Î,
-       round(sum(zed), 2) as ¹úÌ¸×Ü¶î¶È,
-       round(sum(zed1), 2) as ×Ü¶î¶È,
-       sum(nvl(»ù±¾Ò½ÁÆÍ³³ïÖ§¸¶, 0)) as »ù±¾Ò½ÁÆÍ³³ïÖ§¸¶,
-       sum(nvl(¹«ÎñÔ±²¹ÖúÍ³³ïÖ§¸¶, 0)) as ¹«ÎñÔ±²¹ÖúÍ³³ïÖ§¸¶,
-       sum(nvl(µ±ÄêÕË»§Ö§¸¶, 0)) as µ±ÄêÕË»§Ö§¸¶,
-       sum(nvl(´ó²¡½ğ¶î, 0)) as ´ó²¡½ğ¶î,
-       sum(nvl(Ò½ÁÆ·ÑÓÃ×Ü¶î, 0)) as Ò½ÁÆ·ÑÓÃ×Ü¶î,
-       sum(nvl(ÀúÄêÕË»§Ö§¸¶, 0)) as ÀúÄêÕË»§Ö§¸¶,
-       sum(nvl(ÏÖ½ğ½ğ¶î, 0)) as ÏÖ½ğ½ğ¶î,
-       round((sum(zed1) - sum(zed)) / case when sum(ord2) = 0 then 1 else sum(ord2) end,
-             2) as ³ı¹úÌ¸×ÜÖ¸±ê,
-       round(sum(zed1) / case when sum(ord2) = 0 then 1 else sum(ord2) end,
-             2) as ×ÜÖ¸±ê
-from (select bbb1.*,
-             ROW_NUMBER() over (partition by Éí·İÖ¤ºÅ,to_char(´´½¨Ê±¼ä, 'yyyy-mm-dd'),ÏÕÖÖ,sfzs,jyd order by ´´½¨Ê±¼ä) as ord,--ÈË´Î,
-             --todo  ÈËÍ·
-             case
-                 when ROW_NUMBER() over (partition by Éí·İÖ¤ºÅ,ÏÕÖÖ,sfzs,jyd,
-                     case
-                         when ÏÕÖÖ = 'Ö°¹¤»ù±¾Ò½ÁÆ±£ÏÕ' and ²Î±£µØ in ('ÊĞ±¾¼¶', '»ÆÑÒÇø', 'Â·ÇÅÇø') then 'ÊĞ±¾¼¶'
-                         when ÏÕÖÖ = '³ÇÏç¾ÓÃñ»ù±¾Ò½ÁÆ±£ÏÕ' and ²Î±£µØ in ('ÊĞ±¾¼¶') then 'ÊĞ±¾¼¶'
-                         else ²Î±£µØ end
-                     order by ´´½¨Ê±¼ä) > 1
-                     then 0
-                 else
-                     ROW_NUMBER() over (partition by Éí·İÖ¤ºÅ,ÏÕÖÖ,sfzs,jyd,
-                         case
-                             when ÏÕÖÖ = 'Ö°¹¤»ù±¾Ò½ÁÆ±£ÏÕ' and ²Î±£µØ in ('ÊĞ±¾¼¶', '»ÆÑÒÇø', 'Â·ÇÅÇø') then 'ÊĞ±¾¼¶'
-                             when ÏÕÖÖ = '³ÇÏç¾ÓÃñ»ù±¾Ò½ÁÆ±£ÏÕ' and ²Î±£µØ in ('ÊĞ±¾¼¶') then 'ÊĞ±¾¼¶'
-                             else ²Î±£µØ end
-                         order by ´´½¨Ê±¼ä) end as ord2 --ÈËÍ·
-      from (select erpÏúÊÛºÅ,sfzs,ÊÂÒµ²¿,Éí·İÖ¤ºÅ,´´½¨Ê±¼ä,ÏÕÖÖ,'1' as ¾ÍÕïÀàĞÍ,gtje,
-                   sum(case
-                           when (SFZS = '1' and gtml.PZFL = '¹úÌ¸Æ·ÖÖ') or
-                                (SFZS = '0' and gtml.PZFL in ('¹úÌ¸Æ·ÖÖ', 'Ë«Í¨µÀÆ·ÖÖ'))
-                               then
-                               nvl(detail.Õûµ¥Í³³ïÖ§¸¶Êı, 0) * detail.µ¥¾İÃ÷Ï¸Ò½±£±ÈÀı +
-                               nvl(detail.Õûµ¥¹«²¹»ù½ğÖ§¸¶Êı, 0) *
-                               detail.µ¥¾İÃ÷Ï¸Ò½±£±ÈÀı +
-                               nvl(detail.Õûµ¥¸öÈËµ±ÄêÕÊ»§Ö§¸¶Êı, 0) * detail.µ¥¾İÃ÷Ï¸Ò½±£±ÈÀı
-                           else 0
-                       end) as zed, --¹úÌ¸+Ò©µêË«Í¨µÀ¶î¶È
-                   nvl(»ù±¾Ò½ÁÆÍ³³ïÖ§¸¶, 0) as »ù±¾Ò½ÁÆÍ³³ïÖ§¸¶,
-                   nvl(¹«ÎñÔ±²¹ÖúÍ³³ïÖ§¸¶, 0) as ¹«ÎñÔ±²¹ÖúÍ³³ïÖ§¸¶,
-                   nvl(µ±ÄêÕË»§Ö§¸¶, 0) as µ±ÄêÕË»§Ö§¸¶,
-                   nvl(´ó²¡½ğ¶î, 0) as ´ó²¡½ğ¶î,
-                   nvl(»ù±¾Ò½ÁÆÍ³³ïÖ§¸¶, 0) + nvl(¹«ÎñÔ±²¹ÖúÍ³³ïÖ§¸¶, 0) + nvl(µ±ÄêÕË»§Ö§¸¶, 0) as zed1,
-                   nvl(ÏÖ½ğ½ğ¶î, 0) as ÏÖ½ğ½ğ¶î,
-                   nvl(ÀúÄêÕË»§Ö§¸¶, 0) as ÀúÄêÕË»§Ö§¸¶,
-                   nvl(Ò½ÁÆ·ÑÓÃ×Ü¶î, 0) as Ò½ÁÆ·ÑÓÃ×Ü¶î,
-                   ²Î±£µØ,
-                   case when ¾ÍÒ½µØ = 'ÊĞ±¾¼¶' then '½·½­Çø' else ¾ÍÒ½µØ end jyd
-            from d_zjys_wl2023xse
-                     left join s_busi
-                               on d_zjys_wl2023xse.»ú¹¹±àÂë = s_busi.BUSNO
-                     left join D_YBZD_detail detail
-                               on D_ZJYS_WL2023XSE.ERPÏúÊÛºÅ = detail.SALENO
-                     left join d_ll_gtml gtml
-                               on gtml.WAREID = detail.wareid
-                                   and
-                                  D_ZJYS_WL2023XSE.´´½¨Ê±¼ä between gtml.BEGINDATE and gtml.ENDDATE
-            where trunc(´´½¨Ê±¼ä) BETWEEN date'2024-01-01' AND date'2024-02-01'
-              and not exists (select 1
-                              from T_SALE_RETURN_H a
-                              where a.RETSALENO = D_ZJYS_WL2023XSE.ERPÏúÊÛºÅ)
-            group by erpÏúÊÛºÅ,
-                     sfzs,
-                     Éí·İÖ¤ºÅ,
-                     ´´½¨Ê±¼ä,
-                     ÏÕÖÖ, »ù±¾Ò½ÁÆÍ³³ïÖ§¸¶, ¹«ÎñÔ±²¹ÖúÍ³³ïÖ§¸¶, µ±ÄêÕË»§Ö§¸¶, ´ó²¡½ğ¶î,
-                     ÏÖ½ğ½ğ¶î, ÀúÄêÕË»§Ö§¸¶, Ò½ÁÆ·ÑÓÃ×Ü¶î, ²Î±£µØ,
-                     case when ¾ÍÒ½µØ = 'ÊĞ±¾¼¶' then '½·½­Çø' else ¾ÍÒ½µØ end, gtje, ÊÂÒµ²¿) bbb1) bbb
-group by sfzs, ÊÂÒµ²¿, ÏÕÖÖ, ¾ÍÕïÀàĞÍ, ²Î±£µØ, jyd
-
-
+delete from DM_YB_MD_HEAD_SUM_QC where RECEIPT_DATE BETWEEN '2023-01-01' AND '2023-12-31';
+insert into  DM_YB_MD_HEAD_SUM_QC
 with base as (
-    select erpÏúÊÛºÅ,sfzs,ÊÂÒµ²¿,d_zjys_wl2023xse.Éí·İÖ¤ºÅ,´´½¨Ê±¼ä,
-           ÏÕÖÖ,»ú¹¹±àÂë,
-           case when ¾ÍÒ½µØ = 'ÊĞ±¾¼¶' then '½·½­Çø' else ¾ÍÒ½µØ end  as ¾ÍÒ½µØ
-           ,
-           case when ÏÕÖÖ='Ö°¹¤»ù±¾Ò½ÁÆ±£ÏÕ' then 'Ò½±£' else 'Å©±£' end as Ò½±£ÀàĞÍ,
-                   sum(case
-                           when (SFZS = '1' and gtml.PZFL = '¹úÌ¸Æ·ÖÖ') or
-                                (SFZS = '0' and gtml.PZFL in ('¹úÌ¸Æ·ÖÖ', 'Ë«Í¨µÀÆ·ÖÖ'))
-                               then
-                               nvl(detail.Í³³ïÖ§¸¶Êı,0)+nvl(detail.¹«²¹»ù½ğÖ§¸¶Êı,0)+nvl(detail.¸öÈËµ±ÄêÕÊ»§Ö§¸¶Êı,0)
-                           else 0
-                       end) as zed, --¹úÌ¸+Ò©µêË«Í¨µÀ¶î¶È
-        case
-                 when ROW_NUMBER() over (partition by d_zjys_wl2023xse.Éí·İÖ¤ºÅ,ÏÕÖÖ,sfzs,jyd,
-                     case
-                         when ÏÕÖÖ = 'Ö°¹¤»ù±¾Ò½ÁÆ±£ÏÕ' and d_zjys_wl2023xse.²Î±£µØ in ('ÊĞ±¾¼¶', '»ÆÑÒÇø', 'Â·ÇÅÇø') then 'ÊĞ±¾¼¶'
-                         when ÏÕÖÖ = '³ÇÏç¾ÓÃñ»ù±¾Ò½ÁÆ±£ÏÕ' and d_zjys_wl2023xse.²Î±£µØ in ('ÊĞ±¾¼¶') then 'ÊĞ±¾¼¶'
-                         else d_zjys_wl2023xse.²Î±£µØ end
-                     order by ´´½¨Ê±¼ä) > 1
-                     then 0
-                 else
-                     ROW_NUMBER() over (partition by d_zjys_wl2023xse.Éí·İÖ¤ºÅ,ÏÕÖÖ,sfzs,jyd,
-                         case
-                             when ÏÕÖÖ = 'Ö°¹¤»ù±¾Ò½ÁÆ±£ÏÕ' and d_zjys_wl2023xse.²Î±£µØ in ('ÊĞ±¾¼¶', '»ÆÑÒÇø', 'Â·ÇÅÇø') then 'ÊĞ±¾¼¶'
-                             when ÏÕÖÖ = '³ÇÏç¾ÓÃñ»ù±¾Ò½ÁÆ±£ÏÕ' and d_zjys_wl2023xse.²Î±£µØ in ('ÊĞ±¾¼¶') then 'ÊĞ±¾¼¶'
-                             else d_zjys_wl2023xse.²Î±£µØ end
-                         order by ´´½¨Ê±¼ä) end as ord2,
-                   nvl(×Ô·Ñ·ÑÓÃ,0) as ×Ô·Ñ·ÑÓÃ,
-                   nvl(»ù±¾Ò½ÁÆÍ³³ïÖ§¸¶, 0) as »ù±¾Ò½ÁÆÍ³³ïÖ§¸¶,
-                   nvl(¹«ÎñÔ±²¹ÖúÍ³³ïÖ§¸¶, 0) as ¹«ÎñÔ±²¹ÖúÍ³³ïÖ§¸¶,
-                   nvl(µ±ÄêÕË»§Ö§¸¶, 0) as µ±ÄêÕË»§Ö§¸¶,
-                   nvl(´ó²¡½ğ¶î, 0) as ´ó²¡½ğ¶î,
-                   nvl(»ù±¾Ò½ÁÆÍ³³ïÖ§¸¶, 0) + nvl(¹«ÎñÔ±²¹ÖúÍ³³ïÖ§¸¶, 0) + nvl(µ±ÄêÕË»§Ö§¸¶, 0) as zed1,
-                   nvl(ÏÖ½ğ½ğ¶î, 0) as ÏÖ½ğ½ğ¶î,
-                   nvl(ÀúÄêÕË»§Ö§¸¶, 0) as ÀúÄêÕË»§Ö§¸¶,
-                   nvl(Ò½ÁÆ·ÑÓÃ×Ü¶î, 0) as Ò½ÁÆ·ÑÓÃ×Ü¶î,
-                   0 as Ò½ÁÆ·ÑÓÃ×ÔÀí×Ü¶î,
-                   d_zjys_wl2023xse.²Î±£µØ,
-                   case when ¾ÍÒ½µØ = 'ÊĞ±¾¼¶' then '½·½­Çø' else ¾ÍÒ½µØ end jyd
-            from d_zjys_wl2023xse
-                     left join s_busi
-                               on d_zjys_wl2023xse.»ú¹¹±àÂë = s_busi.BUSNO
-                     left join V_YB_SPXX_DETAIL detail
-                               on D_ZJYS_WL2023XSE.ERPÏúÊÛºÅ = detail.SALENO
-                     left join d_ll_gtml gtml
-                               on gtml.WAREID = detail.wareid
-                                   and
-                                  D_ZJYS_WL2023XSE.´´½¨Ê±¼ä between gtml.BEGINDATE and gtml.ENDDATE
-            where trunc(´´½¨Ê±¼ä) BETWEEN date'2024-01-01' AND date'2024-02-01'
-              and not exists (select 1
-                              from T_SALE_RETURN_H a
-                              where a.RETSALENO = D_ZJYS_WL2023XSE.ERPÏúÊÛºÅ)
-            group by erpÏúÊÛºÅ,
-                     sfzs,
-                     Éí·İÖ¤ºÅ,
-                     ´´½¨Ê±¼ä,
-                     ÏÕÖÖ, »ù±¾Ò½ÁÆÍ³³ïÖ§¸¶, ¹«ÎñÔ±²¹ÖúÍ³³ïÖ§¸¶, µ±ÄêÕË»§Ö§¸¶, ´ó²¡½ğ¶î,
-                     ÏÖ½ğ½ğ¶î, ÀúÄêÕË»§Ö§¸¶, Ò½ÁÆ·ÑÓÃ×Ü¶î, ²Î±£µØ,
-                     case when ¾ÍÒ½µØ = 'ÊĞ±¾¼¶' then '½·½­Çø' else ¾ÍÒ½µØ end, gtje, ÊÂÒµ²¿,»ú¹¹±àÂë,×Ô·Ñ·ÑÓÃ
-)
-select 2024 as Äê¶È,trunc(´´½¨Ê±¼ä) as »á¼ÆÈÕ, »ú¹¹±àÂë as ÆÕÍ¨ÃÅµê±àÂë,sfzs as ÃÅµêÀàĞÍ, 
-       ¾ÍÒ½µØ,²Î±£µØ,ÏÕÖÖ as ÏÕÖÖÀàĞÍ, Ò½±£ÀàĞÍ,'' as ÈË´Î,'' as ÈËÍ·,
-       '(×Ü¶î¶È-¹úÌ½¶î¶È)/ÈËÍ·' as ÈËÍ·»ù½ğ, Ò½ÁÆ·ÑÓÃ×Ü¶î as ×Ü·ÑÓÃ,
-       zed1 as ×Ü¶î¶È,
-       ×Ô·Ñ·ÑÓÃ as Ò½ÁÆ·ÑÓÃ×Ô·Ñ×Ü¶î,
-       0 AS Ò½ÁÆ·ÑÓÃ×ÔÀí×Ü¶î,
-       zed as ¹úÌ¸¶î¶È,
-        »ù±¾Ò½ÁÆÍ³³ïÖ§¸¶, µ±ÄêÕË»§Ö§¸¶, ¹«ÎñÔ±²¹ÖúÍ³³ïÖ§¸¶,´ó²¡½ğ¶î AS ´ó²¡±£ÏÕÖ§¸¶,ÀúÄêÕË»§Ö§¸¶, ÏÖ½ğ½ğ¶î
-from base;
-
-select ÏÕÖÖ from d_zjys_wl2023xse group by ÏÕÖÖ;
-select * from d_zjys_wl2023xse where ERPÏúÊÛºÅ='2301011001123976';
-select * from D_ZHYB_HZ_CYB where ÏúÊÛÈÕÆÚ>=date'2023-01-01' and ERPÏúÊÛµ¥ºÅ='2301011001123976';
-
-select * from V_YB_SPXX_DETAIL where ACCDATE=trunc(sysdate-1);
-
-
-
-
-with base as (
-  select erpÏúÊÛºÅ,sfzs,ÊÂÒµ²¿,d_zjys_wl2023xse.Éí·İÖ¤ºÅ,´´½¨Ê±¼ä,
+  select d_zjys_wl2023xse.erpÏúÊÛºÅ,sfzs,ÊÂÒµ²¿,d_zjys_wl2023xse.Éí·İÖ¤ºÅ,´´½¨Ê±¼ä,
            ÏÕÖÖ,»ú¹¹±àÂë,
            case when ¾ÍÒ½µØ = 'ÊĞ±¾¼¶' then '½·½­Çø' else ¾ÍÒ½µØ end  as ¾ÍÒ½µØ,
            case when ÏÕÖÖ='Ö°¹¤»ù±¾Ò½ÁÆ±£ÏÕ' then 'Ò½±£' else 'Å©±£' end as Ò½±£ÀàĞÍ,
-
-           case
-                when (SFZS = '1' and gtml.PZFL = '¹úÌ¸Æ·ÖÖ') or
-                                (SFZS = '0' and gtml.PZFL in ('¹úÌ¸Æ·ÖÖ', 'Ë«Í¨µÀÆ·ÖÖ'))
-                               then
-                               nvl(detail.Í³³ïÖ§¸¶Êı,0)+nvl(detail.¹«²¹»ù½ğÖ§¸¶Êı,0)+nvl(detail.¸öÈËµ±ÄêÕÊ»§Ö§¸¶Êı,0)
-                           else 0
-                       end as zed,--¹úÌ¸¶î¶È
+           v_saleno_zed.zed,--¹úÌ¸¶î¶È
 
                    nvl(×Ô·Ñ·ÑÓÃ,0) as ×Ô·Ñ·ÑÓÃ,
                    nvl(»ù±¾Ò½ÁÆÍ³³ïÖ§¸¶, 0) as »ù±¾Ò½ÁÆÍ³³ïÖ§¸¶,
@@ -209,13 +48,10 @@ with base as (
             from d_zjys_wl2023xse
                      left join s_busi
                                on d_zjys_wl2023xse.»ú¹¹±àÂë = s_busi.BUSNO
-                     left join V_YB_SPXX_DETAIL detail
-                               on D_ZJYS_WL2023XSE.ERPÏúÊÛºÅ = detail.SALENO
-                     left join d_ll_gtml gtml
-                               on gtml.WAREID = detail.wareid
-                                   and
-                                  D_ZJYS_WL2023XSE.´´½¨Ê±¼ä between gtml.BEGINDATE and gtml.ENDDATE
-            where trunc(´´½¨Ê±¼ä) BETWEEN date'2024-01-01' AND date'2024-01-02' and S_BUSI.BUSNO=81001
+                     left join v_saleno_zed on d_zjys_wl2023xse.ERPÏúÊÛºÅ = v_saleno_zed.erpÏúÊÛºÅ
+            where
+                trunc(´´½¨Ê±¼ä) BETWEEN date'2023-01-01' AND date'2023-12-31'
+--                and d_zjys_wl2023xse.»ú¹¹±àÂë in ('85027','85034','85036','85037','85039','85040','85041','85042','85064','85067','85069','85074','85083','85084','89074','89075')
               and not exists (select 1 from T_SALE_RETURN_H a where a.RETSALENO = D_ZJYS_WL2023XSE.ERPÏúÊÛºÅ)
               and not exists (select 1 from T_SALE_RETURN_H a2 where a2.SALENO = D_ZJYS_WL2023XSE.ERPÏúÊÛºÅ)
 ),
@@ -245,7 +81,7 @@ with base as (
        zed as ¹úÌ¸¶î¶È,
         »ù±¾Ò½ÁÆÍ³³ïÖ§¸¶, µ±ÄêÕË»§Ö§¸¶, ¹«ÎñÔ±²¹ÖúÍ³³ïÖ§¸¶,´ó²¡½ğ¶î AS ´ó²¡±£ÏÕÖ§¸¶,ÀúÄêÕË»§Ö§¸¶, ÏÖ½ğ½ğ¶î
 from base)
-select 2024 as Äê¶È, »á¼ÆÈÕ, ÆÕÍ¨ÃÅµê±àÂë, ÃÅµêÀàĞÍ, ¾ÍÒ½µØ, ²Î±£µØ, ÏÕÖÖÀàĞÍ, Ò½±£ÀàĞÍ,
+select 2023 as Äê¶È, »á¼ÆÈÕ, ÆÕÍ¨ÃÅµê±àÂë, ÃÅµêÀàĞÍ, ¾ÍÒ½µØ, ²Î±£µØ, ÏÕÖÖÀàĞÍ, Ò½±£ÀàĞÍ,
        --ord,
        sum(case when ord > 1 then 0 else ord end) as ÈË´Î,
        sum(ord2) as ÈËÍ·,
@@ -255,6 +91,13 @@ select 2024 as Äê¶È, »á¼ÆÈÕ, ÆÕÍ¨ÃÅµê±àÂë, ÃÅµêÀàĞÍ, ¾ÍÒ½µØ, ²Î±£µØ, ÏÕÖÖÀàĞÍ, Ò
        sum(×Ü·ÑÓÃ), sum(×Ü¶î¶È),
        sum(Ò½ÁÆ·ÑÓÃ×Ô·Ñ×Ü¶î), sum(Ò½ÁÆ·ÑÓÃ×ÔÀí×Ü¶î), sum(¹úÌ¸¶î¶È), sum(»ù±¾Ò½ÁÆÍ³³ïÖ§¸¶), sum(µ±ÄêÕË»§Ö§¸¶), sum(¹«ÎñÔ±²¹ÖúÍ³³ïÖ§¸¶), sum(´ó²¡±£ÏÕÖ§¸¶),
        sum(ÀúÄêÕË»§Ö§¸¶), sum(ÏÖ½ğ½ğ¶î)
-from base2 group by »á¼ÆÈÕ, ÆÕÍ¨ÃÅµê±àÂë, ÃÅµêÀàĞÍ, ¾ÍÒ½µØ, ²Î±£µØ, ÏÕÖÖÀàĞÍ, Ò½±£ÀàĞÍ;
+from base2
+-- where »á¼ÆÈÕ=date'2024-06-04' and ¾ÍÒ½µØ like'%º¼ÖİÊĞ%'
+group by »á¼ÆÈÕ, ÆÕÍ¨ÃÅµê±àÂë, ÃÅµêÀàĞÍ, ¾ÍÒ½µØ, ²Î±£µØ, ÏÕÖÖÀàĞÍ, Ò½±£ÀàĞÍ;
+
+update dm_yb_md_head_sum_qc set RECEIPT_DATE=TO_CHAR(
+           TO_DATE(RECEIPT_DATE, 'DD-MON-RR'),
+           'YYYY-MM-DD'
+       );
 
 
