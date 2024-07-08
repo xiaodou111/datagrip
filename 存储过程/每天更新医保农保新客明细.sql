@@ -28,12 +28,12 @@ FROM (SELECT A.ERPSALENO, A.RECEIPTDATE, A.BUSNO, A.SALER, A.USERNAME, A.CUSTOME
                  A.IDENTITYNO,A.NB_FLAG ORDER BY A.RECEIPTDATE ASC) RN
 FROM D_YB_FIRST_CUS A
          JOIN T_BUSNO_CLASS_SET TS ON A.BUSNO = TS.BUSNO AND TS.CLASSGROUPNO = '303'
-         JOIN T_BUSNO_CLASS_BASE TB ON TS.CLASSGROUPNO = TS.CLASSGROUPNO AND TS.CLASSCODE = TB.CLASSCODE
+         JOIN T_BUSNO_CLASS_BASE TB ON TS.CLASSGROUPNO = TB.CLASSGROUPNO AND TS.CLASSCODE = TB.CLASSCODE
     AND TB.CLASSCODE IN ('303100', '303101', '303102')
          JOIN T_BUSNO_CLASS_SET TS2 ON A.BUSNO = TS2.BUSNO AND TS2.CLASSGROUPNO = '324'
-         JOIN T_BUSNO_CLASS_BASE TB2 ON TS2.CLASSGROUPNO = TS2.CLASSGROUPNO AND TS2.CLASSCODE = TB2.CLASSCODE
+         JOIN T_BUSNO_CLASS_BASE TB2 ON TS2.CLASSGROUPNO = TB2.CLASSGROUPNO AND TS2.CLASSCODE = TB2.CLASSCODE
          JOIN T_BUSNO_CLASS_SET TS22 ON A.BUSNO = TS22.BUSNO AND TS22.CLASSGROUPNO = '305'
-         JOIN T_BUSNO_CLASS_BASE TB22 ON TS22.CLASSGROUPNO = TS22.CLASSGROUPNO AND TS22.CLASSCODE = TB22.CLASSCODE
+         JOIN T_BUSNO_CLASS_BASE TB22 ON TS22.CLASSGROUPNO = TB22.CLASSGROUPNO AND TS22.CLASSCODE = TB22.CLASSCODE
 --加上国谈条件
 WHERE A.RECEIPTDATE >= DATE'2024-01-01'
   AND A.CBD IN
@@ -92,14 +92,14 @@ CASE
   left join s_user_base su on d.saler=su.userid
  --事业部
  join t_busno_class_set ts on a.busno=ts.busno and ts.classgroupno ='303'
-join t_busno_class_base tb on ts.classgroupno=ts.classgroupno and ts.classcode=tb.classcode 
+join t_busno_class_base tb on ts.classgroupno=tb.classgroupno and ts.classcode=tb.classcode
 AND tb.classcode IN('303106')
 --销售片区
  join t_busno_class_set ts2 on a.busno=ts2.busno and ts2.classgroupno ='324'
-    join t_busno_class_base tb2 on ts2.classgroupno=ts2.classgroupno and ts2.classcode=tb2.classcode
+    join t_busno_class_base tb2 on ts2.classgroupno=tb2.classgroupno and ts2.classcode=tb2.classcode
 --门店类型
     join t_busno_class_set ts22 on a.busno=ts22.busno and ts22.classgroupno ='305'
-    join t_busno_class_base tb22 on ts22.classgroupno=ts22.classgroupno and ts22.classcode=tb22.classcode
+    join t_busno_class_base tb22 on ts22.classgroupno=tb22.classgroupno and ts22.classcode=tb22.classcode
   WHERE a.销售日期 >= DATE'2024-01-01'
   --AND a.CBD IN(330102,330127,330109,330122,330105,330110,330108,330106,330182)
   --去掉省本级
@@ -128,9 +128,9 @@ a.IDENTITYNO,a.nb_flag ORDER BY a.receiptdate ASC) rn
 join t_busno_class_base tb on ts.classgroupno=ts.classgroupno and ts.classcode=tb.classcode 
 AND tb.classcode IN('303100','303101','303102')
  join t_busno_class_set ts2 on a.busno=ts2.busno and ts2.classgroupno ='324'
-    join t_busno_class_base tb2 on ts2.classgroupno=ts2.classgroupno and ts2.classcode=tb2.classcode
+    join t_busno_class_base tb2 on ts2.classgroupno=tb2.classgroupno and ts2.classcode=tb2.classcode
     join t_busno_class_set ts22 on a.busno=ts22.busno and ts22.classgroupno ='305'
-    join t_busno_class_base tb22 on ts22.classgroupno=ts22.classgroupno and ts22.classcode=tb22.classcode
+    join t_busno_class_base tb22 on ts22.classgroupno=tb22.classgroupno and ts22.classcode=tb22.classcode
     --加上国谈条件
     join d_zjys_wl2023xse xse on xse.ERP销售号=a.erpsaleno 
     JOIN d_zhyb_hz_cyb cyb ON a.erpsaleno=cyb.erp销售单号 --AND d_zhyb_hz_cyb.异地标志='非异地'
