@@ -1,5 +1,6 @@
 delete from  d_bp_pjwcl;
-select * from d_bp_pjwcl;
+select count(*) from d_bp_pjwcl;
+delete from d_bp_pjwcl where 日期>=date'2024-07-01';
 insert into d_bp_pjwcl
 with new as (select order_date, MANAGER_CODE, tml_num_id
              from d_rrtprod_memorder
@@ -7,7 +8,7 @@ with new as (select order_date, MANAGER_CODE, tml_num_id
                    (select NBUSNO
                     from D_RRT_QY_COMPID_BUSNO
                     where OBUSNO in (select zmdz from d_jl_mdz))
-               and order_date between date'2024-05-26' and trunc(sysdate) - 1 and
+               and order_date>=date'2024-07-01' and
 --                and order_date=trunc(sysdate) - 1 and
                  order_date not in (date'2024-05-31', date'2024-06-08', date'2024-06-09', date'2024-06-10',date'2024-06-15', date'2024-06-16', date'2024-06-18')
                and not exists(select 1
@@ -22,7 +23,7 @@ with new as (select order_date, MANAGER_CODE, tml_num_id
                       join t_ware_base w on d.WAREID = w.WAREID
                       left join s_busi s on h.BUSNO = s.BUSNO
              where s.ZMDZ1 in (select zmdz from d_jl_mdz)
-               and h.ACCDATE between date'2024-05-26' and trunc(sysdate) - 1 and
+               and h.ACCDATE>=date'2024-07-01' and
 --                and h.ACCDATE  = trunc(sysdate) - 1 and
                  h.ACCDATE not in (date'2024-05-31', date'2024-06-08', date'2024-06-09', date'2024-06-10',date'2024-06-15', date'2024-06-16', date'2024-06-18')
                and not exists(select 1
@@ -81,53 +82,33 @@ from re q
 
 
 select 业务机构编码, 门店名称,b.rn as 门店批次,sum(录单比率),
-       case when b.rn=1 then (trunc(sysdate) - 1 - date'2024-05-26' - 4)
-                       else case when b.rn=2 then (trunc(sysdate) - 1 - date'2024-05-31' - 4)
-                           else case when b.rn=3 then (trunc(sysdate) - 1 - date'2024-06-05' - 3)
-                               else case when b.rn=4 then (trunc(sysdate) - 1 - date'2024-06-13' )  end  end end end as 天数,
-       sum(录单比率) / case when b.rn=1 then (trunc(sysdate) - 1 - date'2024-05-26' - 4)
-                       else case when b.rn=2 then (trunc(sysdate) - 1 - date'2024-05-31' - 4)
-                           else case when b.rn=3 then (trunc(sysdate) - 1 - date'2024-06-05' - 3)
-                               else case when b.rn=4 then (trunc(sysdate) - 1 )  end  end end end as 录单比率,
-       row_number() over (partition by b.rn order by sum(录单比率) / (trunc(sysdate) - 1 - date'2024-05-26' - 4) desc) as rn
+       15   as 天数,
+       sum(录单比率) / 15 as 录单比率,
+       row_number() over ( order by sum(录单比率) / 15 desc) as rn
 from d_bp_pjwcl a
 left join d_jl_mdz b on a.业务机构编码 = b.ZMDZ
-where  (b.rn = 1 AND a.日期 >= DATE '2024-05-26') OR
-  (b.rn = 2 AND a.日期 >= DATE '2024-05-31') OR
-  (b.rn = 3 AND a.日期 >= DATE '2024-06-05') OR
-  (b.rn = 4 AND a.日期 >= DATE '2024-06-13')
+where   a.日期 >= DATE '2024-07-01'
 group by 业务机构编码, 门店名称,b.rn;
 
---瑞人堂并跑排名
+--7月瑞人堂并跑排名
 with a1 as (
     select 业务机构编码, 门店名称,b.rn as 门店批次,sum(录单比率) 总录单比率,
-       case when b.rn=1 then (date'2024-06-26'  - date'2024-05-26' - 6)
-                       else case when b.rn=2 then (date'2024-06-26'  - date'2024-05-31' - 6)
-                           else case when b.rn=3 then (date'2024-06-26' - date'2024-06-05' - 5)
-                               else case when b.rn=4 then (date'2024-06-26' - date'2024-06-13'-2 )  end  end end end as 天数,
+       15 as 天数,
         sum(新系统数量) as 新系统数量
 from d_bp_pjwcl a
 left join d_jl_mdz b on a.业务机构编码 = b.ZMDZ
-where ( (b.rn = 1 AND a.日期 >= DATE '2024-05-26') OR
-  (b.rn = 2 AND a.日期 >= DATE '2024-05-31') OR
-  (b.rn = 3 AND a.日期 >= DATE '2024-06-05') OR
-  (b.rn = 4 AND a.日期 >= DATE '2024-06-13') ) and 日期<=date'2024-06-26'
-  and b.RN<>1
+where a.日期 >= DATE '2024-07-01'
    group by 业务机构编码, 门店名称,b.rn
 )
 select 业务机构编码,门店名称, 门店批次, 总录单比率, 天数,trunc(总录单比率/天数,5) as 平均录单率,新系统数量,
        row_number() over ( order by 总录单比率 / 天数 desc) as 排名
 from a1;
 ;
---瑞人堂并跑明细
+--7月瑞人堂并跑明细
 select a.*,row_number() over (partition by a.业务机构编码,a.日期 order by 业务机构编码,日期 ) rn
 from d_bp_pjwcl a
  left join d_jl_mdz b on a.业务机构编码 = b.ZMDZ
-where ( (b.rn = 1 AND a.日期 >= DATE '2024-05-26') OR
-  (b.rn = 2 AND a.日期 >= DATE '2024-05-31') OR
-  (b.rn = 3 AND a.日期 >= DATE '2024-06-05') OR
-  (b.rn = 4 AND a.日期 >= DATE '2024-06-13') ) and 日期<=date'2024-06-26'
-  and b.RN<>1;
+where a.日期 >= DATE '2024-07-01';
 
 -- 瑞人堂试点排名
 with a1 as (
