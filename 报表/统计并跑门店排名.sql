@@ -7,9 +7,9 @@ with new as (select order_date, MANAGER_CODE, tml_num_id
                    (select NBUSNO
                     from D_RRT_QY_COMPID_BUSNO
                     where OBUSNO in (select zmdz from d_jl_mdz))
---                and order_date between date'2024-05-26' and trunc(sysdate) - 1 and
-               and order_date=trunc(sysdate) - 1 and
-                 order_date not in (date'2024-05-31', date'2024-06-08', date'2024-06-09', date'2024-06-10')
+               and order_date between date'2024-05-26' and trunc(sysdate) - 1 and
+--                and order_date=trunc(sysdate) - 1 and
+                 order_date not in (date'2024-05-31', date'2024-06-08', date'2024-06-09', date'2024-06-10',date'2024-06-15', date'2024-06-16', date'2024-06-18')
                and not exists(select 1
                               from d_rrtprod_memorder ex1
                               WHERE ex1.order_date >= date'2024-06-13' and ex1.create_user_id <= 1
@@ -22,9 +22,9 @@ with new as (select order_date, MANAGER_CODE, tml_num_id
                       join t_ware_base w on d.WAREID = w.WAREID
                       left join s_busi s on h.BUSNO = s.BUSNO
              where s.ZMDZ1 in (select zmdz from d_jl_mdz)
---                and h.ACCDATE between date'2024-05-26' and trunc(sysdate) - 1 and
-               and h.ACCDATE  = trunc(sysdate) - 1 and
-                 h.ACCDATE not in (date'2024-05-31', date'2024-06-08', date'2024-06-09', date'2024-06-10')
+               and h.ACCDATE between date'2024-05-26' and trunc(sysdate) - 1 and
+--                and h.ACCDATE  = trunc(sysdate) - 1 and
+                 h.ACCDATE not in (date'2024-05-31', date'2024-06-08', date'2024-06-09', date'2024-06-10',date'2024-06-15', date'2024-06-16', date'2024-06-18')
                and not exists(select 1
                               from t_sale_pay p
                               where p.saleno = h.saleno and p.paytype in
@@ -98,13 +98,14 @@ where  (b.rn = 1 AND a.日期 >= DATE '2024-05-26') OR
   (b.rn = 4 AND a.日期 >= DATE '2024-06-13')
 group by 业务机构编码, 门店名称,b.rn;
 
---瑞人堂排名奖励
+--瑞人堂并跑排名
 with a1 as (
     select 业务机构编码, 门店名称,b.rn as 门店批次,sum(录单比率) 总录单比率,
-       case when b.rn=1 then (date'2024-06-26'  - date'2024-05-26' - 3)
-                       else case when b.rn=2 then (date'2024-06-26'  - date'2024-05-31' - 3)
-                           else case when b.rn=3 then (date'2024-06-26' - date'2024-06-05' - 2)
-                               else case when b.rn=4 then (date'2024-06-26' - date'2024-06-13'+1 )  end  end end end as 天数
+       case when b.rn=1 then (date'2024-06-26'  - date'2024-05-26' - 6)
+                       else case when b.rn=2 then (date'2024-06-26'  - date'2024-05-31' - 6)
+                           else case when b.rn=3 then (date'2024-06-26' - date'2024-06-05' - 5)
+                               else case when b.rn=4 then (date'2024-06-26' - date'2024-06-13'-2 )  end  end end end as 天数,
+        sum(新系统数量) as 新系统数量
 from d_bp_pjwcl a
 left join d_jl_mdz b on a.业务机构编码 = b.ZMDZ
 where ( (b.rn = 1 AND a.日期 >= DATE '2024-05-26') OR
@@ -114,11 +115,11 @@ where ( (b.rn = 1 AND a.日期 >= DATE '2024-05-26') OR
   and b.RN<>1
    group by 业务机构编码, 门店名称,b.rn
 )
-select 业务机构编码,门店名称, 门店批次, 总录单比率, 天数,trunc(总录单比率/天数,5) as 平均录单率,
+select 业务机构编码,门店名称, 门店批次, 总录单比率, 天数,trunc(总录单比率/天数,5) as 平均录单率,新系统数量,
        row_number() over ( order by 总录单比率 / 天数 desc) as 排名
-from a1 ;
-
---瑞人堂排名明细
+from a1;
+;
+--瑞人堂并跑明细
 select a.*,row_number() over (partition by a.业务机构编码,a.日期 order by 业务机构编码,日期 ) rn
 from d_bp_pjwcl a
  left join d_jl_mdz b on a.业务机构编码 = b.ZMDZ
@@ -128,26 +129,84 @@ where ( (b.rn = 1 AND a.日期 >= DATE '2024-05-26') OR
   (b.rn = 4 AND a.日期 >= DATE '2024-06-13') ) and 日期<=date'2024-06-26'
   and b.RN<>1;
 
---桐乡奖励
+-- 瑞人堂试点排名
+with a1 as (
+    select 业务机构编码, 门店名称,b.rn as 门店批次,sum(录单比率) 总录单比率,
+       case when b.rn=1 then (date'2024-06-26'  - date'2024-05-26' - 6)
+                       else case when b.rn=2 then (date'2024-06-26'  - date'2024-05-31' - 6)
+                           else case when b.rn=3 then (date'2024-06-26' - date'2024-06-05' - 5)
+                               else case when b.rn=4 then (date'2024-06-26' - date'2024-06-13'-2 )  end  end end end as 天数,
+        sum(新系统数量) as 新系统数量
+from d_bp_pjwcl a
+left join d_jl_mdz b on a.业务机构编码 = b.ZMDZ
+where ( (b.rn = 1 AND a.日期 >= DATE '2024-05-26') OR
+  (b.rn = 2 AND a.日期 >= DATE '2024-05-31') OR
+  (b.rn = 3 AND a.日期 >= DATE '2024-06-05') OR
+  (b.rn = 4 AND a.日期 >= DATE '2024-06-13') ) and 日期<=date'2024-06-26'
+  and b.RN=1
+   group by 业务机构编码, 门店名称,b.rn
+)
+select 业务机构编码,门店名称, 门店批次, 总录单比率, 天数,trunc(总录单比率/天数,5) as 平均录单率,新系统数量,
+       row_number() over ( order by 总录单比率 / 天数 desc) as 排名
+from a1;
+
+-- 瑞人堂试点明细
+select a.*,row_number() over (partition by a.业务机构编码,a.日期 order by 业务机构编码,日期 ) rn
+from d_bp_pjwcl a
+ left join d_jl_mdz b on a.业务机构编码 = b.ZMDZ
+where ( (b.rn = 1 AND a.日期 >= DATE '2024-05-26') OR
+  (b.rn = 2 AND a.日期 >= DATE '2024-05-31') OR
+  (b.rn = 3 AND a.日期 >= DATE '2024-06-05') OR
+  (b.rn = 4 AND a.日期 >= DATE '2024-06-13') ) and 日期<=date'2024-06-26'
+  and b.RN=1;
+
+--桐乡并跑排名
 with a1 as (
     select 业务机构编码, 门店名称,sum(录单比率) 总录单比率,
-       date'2024-06-26'  - date'2024-05-26' - 3 as 天数
+       date'2024-06-26'  - date'2024-05-26' - 6 as 天数,
+        sum(新系统数量) as 新系统数量
 from D_BP_TXPJWCL a
 where 业务机构编码 not in ('86202','86204','86212','86254','86260')
 and   日期<=date'2024-06-26'
    group by 业务机构编码, 门店名称
 )
-select 业务机构编码,门店名称,  总录单比率, 天数,trunc(总录单比率/天数,5) as 平均录单率,
+select 业务机构编码,门店名称,  总录单比率, 天数,trunc(总录单比率/天数,5) as 平均录单率,新系统数量,
        row_number() over (order by 总录单比率 / 天数 desc) as 排名
 from a1;
 
+--桐乡并跑明细
 select a.*,row_number() over (partition by a.业务机构编码,a.日期 order by 业务机构编码,日期 ) rn
 from D_BP_TXPJWCL a
 where 业务机构编码 not in ('86202','86204','86212','86254','86260') and 日期<=date'2024-06-26';
 
 
+--桐乡试点排名
+with a1 as (
+    select 业务机构编码, 门店名称,sum(录单比率) 总录单比率,
+       date'2024-06-26'  - date'2024-05-26' - 6 as 天数,
+        sum(新系统数量) as 新系统数量
+from D_BP_TXPJWCL a
+where 业务机构编码  in ('86202','86204','86212','86254','86260')
+and   日期<=date'2024-06-26'
+   group by 业务机构编码, 门店名称
+)
+select 业务机构编码,门店名称,  总录单比率, 天数,trunc(总录单比率/天数,5) as 平均录单率,新系统数量,
+       row_number() over (order by 总录单比率 / 天数 desc) as 排名
+from a1;
 
-select 业务机构编码,count(*) from D_BP_TXPJWCL  group by 业务机构编码;
+--桐乡试点明细
+select a.*,row_number() over (partition by a.业务机构编码,a.日期 order by 业务机构编码,日期 ) rn
+from D_BP_TXPJWCL a
+where 业务机构编码  in ('86202','86204','86212','86254','86260') and 日期<=date'2024-06-26';
+
+
+update     t_payee_check_list  a set status='1'
+        WHERE  a.status = 0  AND  createdate<trunc(sysdate);
+
+select * from T_SALE_PAY where SALENO='2407041097002820';
+select * from T_DISTAPPLY_H where APPLYNO='240703454361';
+
+select * from ALL_TAB_COLUMNS where TABLE_NAME='s_busi';
 delete from  D_BP_TXPJWCL;
 insert into D_BP_TXPJWCL
 with new as (select order_date, s.ZMDZ1, tml_num_id
@@ -159,7 +218,7 @@ with new as (select order_date, s.ZMDZ1, tml_num_id
                     where OBUSNO in (select busno from s_busi where COMPID=1900))
                and order_date between date'2024-05-26' and trunc(sysdate) - 1 and
 --                and order_date=trunc(sysdate) - 1 and
-                 order_date not in (date'2024-05-31', date'2024-06-08', date'2024-06-09', date'2024-06-10')
+                 order_date not in (date'2024-05-31', date'2024-06-08', date'2024-06-09', date'2024-06-10',date'2024-06-15', date'2024-06-16', date'2024-06-18')
                and not exists(select 1
                               from d_rrtprod_memorder ex1
                               WHERE ex1.order_date >= date'2024-06-13' and ex1.create_user_id <= 1
@@ -174,7 +233,7 @@ with new as (select order_date, s.ZMDZ1, tml_num_id
              where s.COMPID=1900
                and h.ACCDATE between date'2024-05-26' and trunc(sysdate) - 1 and
 --                and h.ACCDATE  = trunc(sysdate) - 10 and
-                 h.ACCDATE not in (date'2024-05-31', date'2024-06-08', date'2024-06-09', date'2024-06-10')
+                 h.ACCDATE not in (date'2024-05-31', date'2024-06-08', date'2024-06-09', date'2024-06-10',date'2024-06-15', date'2024-06-16', date'2024-06-18')
                and not exists(select 1
                               from t_sale_pay p
                               where p.saleno = h.saleno and p.paytype in
