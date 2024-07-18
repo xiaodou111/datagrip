@@ -1,18 +1,16 @@
-Option Explicit
-
-Sub 格式化单元格长度和日期格式()
+Sub 大表只格式化单元格和日期格式()
 
     ' 设置列宽
     'Columns("A:M").ColumnWidth = 15
-     With Columns("A:M")
+     With Columns("A:AC")
     .ColumnWidth = 15 ' 设置最小列宽为15
     .AutoFit ' 自动调整列宽以适应内容，但不会小于之前设置的最小宽度
      End With
     ' 设置对齐方式
-    Columns("A:M").Cells.HorizontalAlignment = xlCenter
-    Columns("A:M").Cells.VerticalAlignment = xlCenter
+    Columns("A:AC").Cells.HorizontalAlignment = xlCenter
+    Columns("A:AC").Cells.VerticalAlignment = xlCenter
 
-   Dim ws As Worksheet
+    Dim ws As Worksheet
     Dim rngHeader As Range
     Dim cel As Range
     Dim col As Range
@@ -20,26 +18,21 @@ Sub 格式化单元格长度和日期格式()
     ' 设置工作表
     Set ws = ActiveSheet
     ' 定义第二行的范围
-    Set rngHeader = ws.Rows(2)
-    
-     For Each cel In rngHeader.Cells
+    Set rngHeader = ws.Rows(2).Columns("A:AC")
+
+    ' 遍历第二行的每个单元格
+    For Each cel In rngHeader.Cells
         ' 获取当前单元格所在的列
         Set col = cel.EntireColumn
-
+        
         ' 检查单元格中的值是否为日期类型
         If IsDate(cel.value) Then
             ' 如果是日期类型，设置整列的格式为"yyyy-mm-dd;@"
             col.Cells.NumberFormatLocal = "yyyy-mm-dd;@"
-        ElseIf IsNumeric(cel.value) Then
-         ' 判断数字是否为整数
-    If Int(cel.value) = cel.value Then
-        ' 如果是整数，设置整列的格式为"0"（无小数点）
-        col.Cells.NumberFormatLocal = "0"
-    Else
-        ' 如果不是整数，设置整列的格式为"0.##"（保留小数点后两位，不显示不必要的零）
-        col.Cells.NumberFormatLocal = "0.##"
-    End If
-     End If
+        'ElseIf IsNumeric(cel.value) Then
+          ' 如果是数字类型，设置整列的格式为"0.##"，这将保留小数点后两位，但不会显示不必要的零
+        'col.Cells.NumberFormatLocal = "0.00"
+        End If
     Next cel
     
     ' 保存工作簿
