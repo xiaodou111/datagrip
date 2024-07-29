@@ -24,6 +24,8 @@ select * from dm_yb_md_head_sum_qc;
 -- 大病保险支付	illness_subsidy_amount
 -- 历年账户支付	history_account_pay
 -- 现金支付	personal_cash_amount
+
+select * from DM_YB_MD_HEAD_SUM_QC;
 delete from DM_YB_MD_HEAD_SUM_QC where RECEIPT_DATE BETWEEN '2023-01-01' AND '2023-12-31';
 insert into  DM_YB_MD_HEAD_SUM_QC
 with base as (
