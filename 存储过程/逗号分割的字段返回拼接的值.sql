@@ -9,7 +9,22 @@ IS
   v_sql VARCHAR2(2000); -- 用于存储动态SQL语句
 BEGIN
 
+-- 检查输入是否为空
+  IF input_values IS NULL OR input_values = '' THEN
+    RETURN NULL; -- 返回空值或者根据需求返回其他值
+  END IF;
 
+  -- 检查是否有逗号分隔符
+  IF INSTR(input_values, ',') = 0 THEN
+    -- 如果没有逗号，则直接执行查询
+    v_sql := 'SELECT ' || p_mbzd || '
+              FROM ' || p_tablename || '
+              WHERE ' || p_zdname || ' = '''||input_values||'''';
+    EXECUTE IMMEDIATE v_sql
+    INTO output_value;
+
+    output_values := output_value;
+  ELSE
   -- 使用循环来处理每个逗号分隔的值
   WHILE (INSTR(input_values, ',') > 0) LOOP
     -- 获取下一个逗号的位置
@@ -47,6 +62,8 @@ BEGIN
   IF (SUBSTR(output_values, -1) = ',') THEN
     output_values := SUBSTR(output_values, 1, LENGTH(output_values) - 1);
   END IF;
+  END IF;
+
 
   RETURN output_values;
 END;
