@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION f_get_sjzl_pjzd(p_kk IN VARCHAR2, p_tablename IN VARCHAR2, p_zdname IN VARCHAR2, p_mbzd IN VARCHAR2)
+create FUNCTION f_get_sjzl_pjzd(p_kk IN VARCHAR2, p_tablename IN VARCHAR2, p_zdname IN VARCHAR2, p_mbzd IN VARCHAR2)
 RETURN VARCHAR2
 IS
   input_values VARCHAR2(2000) := p_kk; -- 初始化为传入的参数
@@ -40,6 +40,7 @@ BEGIN
             WHERE ' || p_zdname || ' = '''||current_value||'''';
   EXECUTE IMMEDIATE v_sql
   into output_value;
+--     DBMS_OUTPUT.PUT_LINE(output_value);
 
     -- 将查询结果添加到输出值列表中
     output_values := output_values || output_value || ',';
@@ -47,13 +48,16 @@ BEGIN
     -- 更新输入字符串以处理下一个值
     input_values := SUBSTR(input_values, delimiter_position + 1);
   END LOOP;
+  
 
+  current_value := SUBSTR(input_values, 1, delimiter_position - 1);
   -- 处理最后一个值
   v_sql := 'SELECT ' || p_mbzd || '
             FROM ' || p_tablename || '
             WHERE ' || p_zdname || ' = '''||current_value||'''';
   EXECUTE IMMEDIATE v_sql
   into output_value; -- 注意这里使用input_values作为current_value
+--     DBMS_OUTPUT.PUT_LINE(output_value);
 
   -- 将查询结果添加到输出值列表中
   output_values := output_values || output_value;
@@ -63,8 +67,7 @@ BEGIN
     output_values := SUBSTR(output_values, 1, LENGTH(output_values) - 1);
   END IF;
   END IF;
-
-
+  
   RETURN output_values;
 END;
 /
