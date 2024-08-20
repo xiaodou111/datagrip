@@ -38,37 +38,66 @@ for  res in (SELECT VIEW_NAME,WAREID,BUSNOS FROM  d_rrt_sjzl_config  WHERE view_
        while  instr(v_busnos,',') >0 loop
          --视图统一格式命名
          v_kc_name := p_vname||'_kc_md_'||substr(v_busnos,1,instr(v_busnos,',')-1);
---          特定门店替换
+         v_accept_name := p_vname||'_accept_md_'||substr(v_busnos,1,instr(v_busnos,',')-1);
+         v_sale_name := p_vname||'_sale_md_'||substr(v_busnos,1,instr(v_busnos,',')-1);
+--       创建库存视图
          v_create_kc:='CREATE OR REPLACE  VIEW '|| v_kc_name ||' AS
 select kcrq, SUB_UNIT_NUM_ID, sub_unit_name, item_num_id, item_name, style_desc, batch_id, physic_qty, RETAIL_PRICE,
        total_amount, units_name, actual_production_date, factory, expiry_date, approval_no
 from v_kc_md
 where  SUB_UNIT_NUM_ID in ('''||substr(v_busnos,1,instr(v_busnos,',')-1)||''') and item_num_id in ('|| v_wareid ||')';
--- where  SUB_UNIT_NUM_ID in ('''||substr(v_busnos,1,instr(v_busnos,',')-1)||''') and item_num_id in ('|| v_wareid ||')';
-         v_busnos:=substr(v_busnos,instr(v_busnos,',')+1,length(v_busnos) );
-     dbms_output.put_line(v_create_kc);
+
+        --创建采购视图
+        v_create_accept:='CREATE OR REPLACE  VIEW '|| v_accept_name ||' AS
+        select * from v_accept_md
+where  SUB_UNIT_NUM_ID in ('''||substr(v_busnos,1,instr(v_busnos,',')-1)||''') and item_num_id in ('|| v_wareid ||')';
+         --创建纯销视图
+        v_create_sale:='CREATE OR REPLACE  VIEW '|| v_sale_name ||' AS
+        select * from v_sale_md
+where  SUB_UNIT_NUM_ID in ('''||substr(v_busnos,1,instr(v_busnos,',')-1)||''') and item_num_id in ('|| v_wareid ||')';
+
+
+        v_busnos:=substr(v_busnos,instr(v_busnos,',')+1,length(v_busnos) );
+ --   dbms_output.put_line(v_create_kc);
+  --  DBMS_OUTPUT.PUT_LINE('----------------------');
     execute immediate v_create_kc;
+  --  dbms_output.put_line(v_create_accept);
+  --  DBMS_OUTPUT.PUT_LINE('----------------------');
+    execute immediate v_create_accept;
+ --   dbms_output.put_line(v_create_sale);
+ --   DBMS_OUTPUT.PUT_LINE('----------------------');
+    execute immediate v_create_sale;
          end loop;
 
          --视图统一格式命名
          v_kc_name := p_vname||'_kc_md_'||v_busnos;
-
-         --转换一下编码格式
-         select f_get_sjzl_rename(res.wareid)
-         into v_wareid
-         from dual ;
-         v_create_kc:='create or replace view '||v_name||' as SELECT * FROM v_sale_md where item_num_id  in ('||v_wareid||') and sub_unit_num_id ='''||v_busnos||'''';
-         v_create_kc:='CREATE  VIEW '|| v_kc_name ||' AS
+         v_accept_name := p_vname||'_accept_md_'||v_busnos;
+         v_sale_name := p_vname||'_sale_md_'||v_busnos;
+         v_create_kc:='CREATE OR REPLACE  VIEW '|| v_kc_name ||' AS
 select kcrq, SUB_UNIT_NUM_ID, sub_unit_name, item_num_id, item_name, style_desc, batch_id, physic_qty, RETAIL_PRICE,
        total_amount, units_name, actual_production_date, factory, expiry_date, approval_no
 from v_kc_md
 where  SUB_UNIT_NUM_ID in ('''||v_busnos||''') and item_num_id in ('|| v_wareid ||')';
-      dbms_output.put_line(v_create_kc);
-      execute immediate v_create_kc;
+
+       v_create_accept:='CREATE OR REPLACE  VIEW '|| v_accept_name ||' AS
+        select * from v_accept_md
+where  SUB_UNIT_NUM_ID in ('''||v_busnos||''') and item_num_id in ('|| v_wareid ||')';
+
+       v_create_sale:='CREATE OR REPLACE  VIEW '|| v_sale_name ||' AS
+        select * from v_sale_md
+where  SUB_UNIT_NUM_ID in ('''||v_busnos||''') and item_num_id in ('|| v_wareid ||')';
+ --   dbms_output.put_line(v_create_kc);
+ --   DBMS_OUTPUT.PUT_LINE('----------------------');
+    execute immediate v_create_kc;
+ --   dbms_output.put_line(v_create_accept);
+--    DBMS_OUTPUT.PUT_LINE('----------------------');
+    execute immediate v_create_accept;
+ --   dbms_output.put_line(v_create_sale);
+--    DBMS_OUTPUT.PUT_LINE('----------------------');
+    execute immediate v_create_sale;
     end if ;
 
-
-     end loop;
+    end loop;
 
 
 --
