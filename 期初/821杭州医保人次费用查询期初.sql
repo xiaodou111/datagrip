@@ -1,4 +1,6 @@
 --23年门店
+delete from dm_yb_md_head_sum_qc where INSURE_REGION_NAME like '%杭州%' ;
+delete from dm_yb_md_head_sum_qc where WERKS_ID='4577';
 insert into dm_yb_md_head_sum_qc(YEAR_YB,RECEIPT_DATE,WERKS_ID,MD_TYPE,CITY_AREA_NAME,INSURE_REGION_NAME,INSURANCE_TYPE,
                                  PER_YB_TYPE,YB_PER_NUM,YB_PER_HEADNUM,TOTAL_AMOUNT)
 with a1 as (select ERP销售单号, 销售日期, a.BUSNO, 身份证号,
@@ -84,7 +86,7 @@ insert into dm_yb_md_head_sum_qc(YEAR_YB,RECEIPT_DATE,WERKS_ID,MD_TYPE,CITY_AREA
 with a1 as (select ERP销售单号, 销售日期, a.BUSNO, 身份证号,
                    ROW_NUMBER() OVER (PARTITION BY 身份证号 ORDER BY 销售日期 ASC) 人头,
                    ROW_NUMBER() OVER (PARTITION BY 身份证号,trunc(销售日期) ORDER BY 销售日期 ASC) 人次,
-                   医疗费用总额 - PRESELFPAYAMT - FULAMTOWNPAYAMT - OVERLMTSELFPAY as 列支费用,
+                   case when JSLX='门诊特病' then 0 else 医疗费用总额 - PRESELFPAYAMT - FULAMTOWNPAYAMT - OVERLMTSELFPAY end as 列支费用,
                    case
                        when 参保人员类别 like '%居民%' OR 参保人员类别 like '%学%' or 参保人员类别 like '%新生儿%'
                            then 1
@@ -116,12 +118,13 @@ from a1
 group by to_char(销售日期,'YYYY'), to_char(销售日期,'YYYY-MM-DD'), substr(BUSNO,2,4),case when mdlx='门店' then 0 else 1 end,参保地
        ,就医地, case when nb_flag=1 then '城乡居民基本医疗保险' else '职工基本医疗保险' end,case when nb_flag=1 then '农保' else '医保' end;
 
+--24年诊所
 insert into dm_yb_md_head_sum_qc(YEAR_YB,RECEIPT_DATE,WERKS_ID,MD_TYPE,CITY_AREA_NAME,INSURE_REGION_NAME,INSURANCE_TYPE,
                                  PER_YB_TYPE,YB_PER_NUM,YB_PER_HEADNUM,TOTAL_AMOUNT)
 with a1 as (select ERP销售单号, 销售日期, a.BUSNO, 身份证号,
                    ROW_NUMBER() OVER (PARTITION BY 身份证号 ORDER BY 销售日期 ASC) 人头,
                    ROW_NUMBER() OVER (PARTITION BY 身份证号,trunc(销售日期) ORDER BY 销售日期 ASC) 人次,
-                   医疗费用总额 - PRESELFPAYAMT - FULAMTOWNPAYAMT - OVERLMTSELFPAY as 列支费用,
+                   case when JSLX='门诊特病' then 0 else 医疗费用总额 - PRESELFPAYAMT - FULAMTOWNPAYAMT - OVERLMTSELFPAY end as 列支费用,
                    case
                        when 参保人员类别 like '%居民%' OR 参保人员类别 like '%学%' or 参保人员类别 like '%新生儿%'
                            then 1
@@ -154,15 +157,36 @@ group by to_char(销售日期,'YYYY'), to_char(销售日期,'YYYY-MM-DD'), substr(BUSNO,
        ,就医地, case when nb_flag=1 then '城乡居民基本医疗保险' else '职工基本医疗保险' end,case when nb_flag=1 then '农保' else '医保' end;
 
 
-select sum(YB_PER_NUM),sum(YB_PER_HEADNUM) from dm_yb_md_head_sum_qc where WERKS_ID=4577 and YEAR_YB=2024;
+select count(*) from D_ZHYB_WRH  a  WHERE a.销售日期 > DATE'2024-01-01' AND a.参保地 <> '浙江省省本级'
+              and a.异地标志 = '非异地'
+              and a.BUSNO=84577 and a.销售日期 < DATE'2024-08-01'
+             and JSLX like '%门诊特病%';
+select sum(YB_PER_NUM) as 人次,sum(YB_PER_HEADNUM) as 人头,sum(TOTAL_AMOUNT) as 列支费用
+from dm_yb_md_head_sum_qc where WERKS_ID=4577 and YEAR_YB=2024;
 
+select * from dm_yb_md_head_sum_qc where INSURE_REGION_NAME like '%杭州%' ;
+select case
+             when CITY_AREA_NAME in ('杭州市拱墅区',
+                                    '杭州市上城区',
+                                    '杭州市西湖区',
+                                    '杭州市钱塘区',
+                                    '杭州市滨江区') then '上城区'
+             else CITY_AREA_NAME end  as 区域,count(*) from DWB_YB_HEAD_DTL_QC a
+
+where CITY_AREA_NAME like '%杭州%' and YEAR_YB=2024 and WERKS_ID<>'4577' group by case
+             when CITY_AREA_NAME in ('杭州市拱墅区',
+                                    '杭州市上城区',
+                                    '杭州市西湖区',
+                                    '杭州市钱塘区',
+                                    '杭州市滨江区') then '上城区'
+             else CITY_AREA_NAME end;
 select case
              when INSURE_REGION_NAME in ('杭州市拱墅区',
                                     '杭州市上城区',
                                     '杭州市西湖区',
                                     '杭州市钱塘区',
-                                    '杭州市滨江区') then '上城区'
-             else INSURE_REGION_NAME end  as 区域,count(*),sum(YB_PER_NUM),sum(YB_PER_HEADNUM) from dm_yb_md_head_sum_qc a
+                                    '杭州市滨江区') then '主城区'
+             else INSURE_REGION_NAME end  as 区域,sum(YB_PER_NUM) as 人次,sum(YB_PER_HEADNUM) as 人头,sum(TOTAL_AMOUNT) as 列支费用 from dm_yb_md_head_sum_qc a
 
          where INSURE_REGION_NAME like '%杭州%' and WERKS_ID<>'4577' and YEAR_YB=2024 group by
                                                                     case
@@ -170,8 +194,10 @@ select case
                                     '杭州市上城区',
                                     '杭州市西湖区',
                                     '杭州市钱塘区',
-                                    '杭州市滨江区') then '上城区'
+                                    '杭州市滨江区') then '主城区'
              else INSURE_REGION_NAME end ;
+select sum(YB_PER_NUM),sum(YB_PER_HEADNUM),sum(TOTAL_AMOUNT) from dm_yb_md_head_sum_qc a
+where WERKS_ID='4577' and YEAR_YB=2024
 delete from dm_yb_md_head_sum_qc where INSURE_REGION_NAME like '%杭州%';;
 select * from dm_yb_md_head_sum_qc;
 
