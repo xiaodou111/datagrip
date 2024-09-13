@@ -25,8 +25,10 @@ select * from dm_yb_md_head_sum_qc;
 -- 历年账户支付	history_account_pay
 -- 现金支付	personal_cash_amount
 
-select * from DM_YB_MD_HEAD_SUM_QC;
-delete from DM_YB_MD_HEAD_SUM_QC where RECEIPT_DATE BETWEEN '2023-01-01' AND '2023-12-31';
+select CITY_AREA_NAME from DM_YB_MD_HEAD_SUM_QC group by CITY_AREA_NAME;
+delete from DM_YB_MD_HEAD_SUM_QC;
+select count(*) from DM_YB_MD_HEAD_SUM_QC  where RECEIPT_DATE BETWEEN '2023-01-01' AND '2023-12-31';
+insert into DM_YB_MD_HEAD_SUM_QC select * from DM_YB_MD_HEAD_SUM_QC AS OF TIMESTAMP SYSDATE - (1/24);
 insert into  DM_YB_MD_HEAD_SUM_QC
 with base as (
   select d_zjys_wl2023xse.erp销售号,sfzs,事业部,d_zjys_wl2023xse.身份证号,创建时间,
@@ -52,13 +54,14 @@ with base as (
                                on d_zjys_wl2023xse.机构编码 = s_busi.BUSNO
                      left join v_saleno_zed on d_zjys_wl2023xse.ERP销售号 = v_saleno_zed.erp销售号
             where
-                trunc(创建时间) BETWEEN date'2023-01-01' AND date'2023-12-31'
+                trunc(创建时间) BETWEEN date'2024-01-01' AND date'2024-07-31'
+                and s_busi.ZMDZ1=81499
 --                and d_zjys_wl2023xse.机构编码 in ('85027','85034','85036','85037','85039','85040','85041','85042','85064','85067','85069','85074','85083','85084','89074','89075')
               and not exists (select 1 from T_SALE_RETURN_H a where a.RETSALENO = D_ZJYS_WL2023XSE.ERP销售号)
               and not exists (select 1 from T_SALE_RETURN_H a2 where a2.SALENO = D_ZJYS_WL2023XSE.ERP销售号)
 ),
     base2 as (
-    select 2024 as 年度,trunc(创建时间) as 会计日, 机构编码 as 普通门店编码,sfzs as 门店类型,
+    select 2023 as 年度,trunc(创建时间) as 会计日, 机构编码 as 普通门店编码,sfzs as 门店类型,
        就医地,参保地,险种 as 险种类型, 医保类型,
        ROW_NUMBER() over (partition by 身份证号,to_char(创建时间, 'yyyy-mm-dd'),险种,sfzs,jyd order by 创建时间) as ord,--人次
        case
@@ -83,7 +86,7 @@ with base as (
        zed as 国谈额度,
         基本医疗统筹支付, 当年账户支付, 公务员补助统筹支付,大病金额 AS 大病保险支付,历年账户支付, 现金金额
 from base)
-select 2023 as 年度, 会计日, 普通门店编码, 门店类型, 就医地, 参保地, 险种类型, 医保类型,
+select 2024 as 年度, 会计日, 普通门店编码, 门店类型, 就医地, 参保地, 险种类型, 医保类型,
        --ord,
        sum(case when ord > 1 then 0 else ord end) as 人次,
        sum(ord2) as 人头,
