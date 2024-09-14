@@ -26,10 +26,15 @@ select * from dm_yb_md_head_sum_qc;
 -- 现金支付	personal_cash_amount
 
 select CITY_AREA_NAME from DM_YB_MD_HEAD_SUM_QC group by CITY_AREA_NAME;
-delete from DM_YB_MD_HEAD_SUM_QC;
 select count(*) from DM_YB_MD_HEAD_SUM_QC  where RECEIPT_DATE BETWEEN '2023-01-01' AND '2023-12-31';
+delete from DM_YB_MD_HEAD_SUM_QC where CITY_AREA_NAME not in
+('杭州市上城区','杭州市临平区','杭州市余杭区','杭州市市本级','杭州市建德市','杭州市拱墅区','杭州市桐庐县','杭州市淳安县','杭州市滨江区','杭州市萧山区','杭州市西湖区','杭州市钱塘区')
+-- and RECEIPT_DATE >= '2024-01-01'
 insert into DM_YB_MD_HEAD_SUM_QC select * from DM_YB_MD_HEAD_SUM_QC AS OF TIMESTAMP SYSDATE - (1/24);
-insert into  DM_YB_MD_HEAD_SUM_QC
+insert into  DM_YB_MD_HEAD_SUM_QC(YEAR_YB, RECEIPT_DATE, WERKS_ID, MD_TYPE, CITY_AREA_NAME, INSURE_REGION_NAME, INSURANCE_TYPE, PER_YB_TYPE,
+       YB_PER_NUM, YB_PER_HEADNUM, HEAD_FUND_AMOUNT, TOTAL_AMOUNT, TOTAL_QUOTA, PERSONAL_PAY_AMOUNT, SELF_CHARGE_AMOUNT,
+       GT_QUOTA, OVERALL_PAY, CURRENT_ACCOUNT_PAY, PUBLIC_FUND_PAY, ILLNESS_SUBSIDY_AMOUNT, HISTORY_ACCOUNT_PAY,
+       PERSONAL_CASH_AMOUNT)
 with base as (
   select d_zjys_wl2023xse.erp销售号,sfzs,事业部,d_zjys_wl2023xse.身份证号,创建时间,
            险种,机构编码,
@@ -55,7 +60,10 @@ with base as (
                      left join v_saleno_zed on d_zjys_wl2023xse.ERP销售号 = v_saleno_zed.erp销售号
             where
                 trunc(创建时间) BETWEEN date'2024-01-01' AND date'2024-07-31'
-                and s_busi.ZMDZ1=81499
+--                 trunc(创建时间) BETWEEN date'2023-01-01' AND date'2023-12-31'
+                and 就医地 not in ('杭州市上城区','杭州市临平区','杭州市余杭区','杭州市市本级','杭州市建德市','杭州市拱墅区','杭州市桐庐县','杭州市淳安县','杭州市滨江区','杭州市萧山区','杭州市西湖区','杭州市钱塘区')
+--                 and 就医地='路桥区'
+--                 and s_busi.ZMDZ1=81499
 --                and d_zjys_wl2023xse.机构编码 in ('85027','85034','85036','85037','85039','85040','85041','85042','85064','85067','85069','85074','85083','85084','89074','89075')
               and not exists (select 1 from T_SALE_RETURN_H a where a.RETSALENO = D_ZJYS_WL2023XSE.ERP销售号)
               and not exists (select 1 from T_SALE_RETURN_H a2 where a2.SALENO = D_ZJYS_WL2023XSE.ERP销售号)
@@ -63,9 +71,9 @@ with base as (
     base2 as (
     select 2023 as 年度,trunc(创建时间) as 会计日, 机构编码 as 普通门店编码,sfzs as 门店类型,
        就医地,参保地,险种 as 险种类型, 医保类型,
-       ROW_NUMBER() over (partition by 身份证号,to_char(创建时间, 'yyyy-mm-dd'),险种,sfzs,jyd order by 创建时间) as ord,--人次
+       ROW_NUMBER() over (partition by 身份证号,to_char(创建时间, 'yyyy-mm-dd'),SFZS,险种,jyd order by 创建时间) as ord,--人次
        case
-                 when ROW_NUMBER() over (partition by 身份证号,险种,sfzs,就医地,
+                 when ROW_NUMBER() over (partition by 身份证号,险种,就医地,
                      case
                          when 险种 = '职工基本医疗保险' and 参保地 in ('市本级', '黄岩区', '路桥区') then '市本级'
                          when 险种 = '城乡居民基本医疗保险' and 参保地 in ('市本级') then '市本级'
@@ -73,7 +81,7 @@ with base as (
                      order by 创建时间) > 1
                      then 0
                  else
-                     ROW_NUMBER() over (partition by 身份证号,险种,sfzs,就医地,
+                     ROW_NUMBER() over (partition by 身份证号,险种,就医地,
                          case
                              when 险种 = '职工基本医疗保险' and 参保地 in ('市本级', '黄岩区', '路桥区') then '市本级'
                              when 险种 = '城乡居民基本医疗保险' and 参保地 in ('市本级') then '市本级'
@@ -86,7 +94,7 @@ with base as (
        zed as 国谈额度,
         基本医疗统筹支付, 当年账户支付, 公务员补助统筹支付,大病金额 AS 大病保险支付,历年账户支付, 现金金额
 from base)
-select 2024 as 年度, 会计日, 普通门店编码, 门店类型, 就医地, 参保地, 险种类型, 医保类型,
+select 2024 as 年度, to_char(会计日,'YYYY-MM-DD'), 普通门店编码, 门店类型, 就医地, 参保地, 险种类型, 医保类型,
        --ord,
        sum(case when ord > 1 then 0 else ord end) as 人次,
        sum(ord2) as 人头,
