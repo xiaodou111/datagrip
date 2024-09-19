@@ -38,7 +38,7 @@ insert into  DM_YB_MD_HEAD_SUM_QC(YEAR_YB, RECEIPT_DATE, WERKS_ID, MD_TYPE, CITY
 with base as (
   select d_zjys_wl2023xse.erpÏúÊÛºÅ,sfzs,ÊÂÒµ²¿,d_zjys_wl2023xse.Éí·ÝÖ¤ºÅ,´´½¨Ê±¼ä,
            ÏÕÖÖ,»ú¹¹±àÂë,
-           case when ¾ÍÒ½µØ = 'ÊÐ±¾¼¶' then '½·½­Çø' else ¾ÍÒ½µØ end  as ¾ÍÒ½µØ,
+            decode(¾ÍÒ½µØ,'½·½­Çø','½·½­±¾¼¶','ÊÐ±¾¼¶','½·½­±¾¼¶',¾ÍÒ½µØ) as ¾ÍÒ½µØ,
            case when ÏÕÖÖ='Ö°¹¤»ù±¾Ò½ÁÆ±£ÏÕ' then 'Ò½±£' else 'Å©±£' end as Ò½±£ÀàÐÍ,
            v_saleno_zed.zed,--¹úÌ¸¶î¶È
 
@@ -52,49 +52,62 @@ with base as (
                    nvl(ÀúÄêÕË»§Ö§¸¶, 0) as ÀúÄêÕË»§Ö§¸¶,
                    nvl(Ò½ÁÆ·ÑÓÃ×Ü¶î, 0) as Ò½ÁÆ·ÑÓÃ×Ü¶î,
                    0 as Ò½ÁÆ·ÑÓÃ×ÔÀí×Ü¶î,
-                   d_zjys_wl2023xse.²Î±£µØ,
-                   case when ¾ÍÒ½µØ = 'ÊÐ±¾¼¶' then '½·½­Çø' else ¾ÍÒ½µØ end jyd
+                   decode(d_zjys_wl2023xse.²Î±£µØ,'ÊÐ±¾¼¶','½·Â·»Æ±¾¼¶',²Î±£µØ) as ²Î±£µØ
+--                    case when ¾ÍÒ½µØ = 'ÊÐ±¾¼¶' then '½·½­Çø' else ¾ÍÒ½µØ end jyd
             from d_zjys_wl2023xse
                      left join s_busi
                                on d_zjys_wl2023xse.»ú¹¹±àÂë = s_busi.BUSNO
                      left join v_saleno_zed on d_zjys_wl2023xse.ERPÏúÊÛºÅ = v_saleno_zed.erpÏúÊÛºÅ
             where
-                trunc(´´½¨Ê±¼ä) BETWEEN date'2024-01-01' AND date'2024-07-31'
---                 trunc(´´½¨Ê±¼ä) BETWEEN date'2023-01-01' AND date'2023-12-31'
-                and ¾ÍÒ½µØ not in ('º¼ÖÝÊÐÉÏ³ÇÇø','º¼ÖÝÊÐÁÙÆ½Çø','º¼ÖÝÊÐÓàº¼Çø','º¼ÖÝÊÐÊÐ±¾¼¶','º¼ÖÝÊÐ½¨µÂÊÐ','º¼ÖÝÊÐ¹°ÊûÇø','º¼ÖÝÊÐÍ©Â®ÏØ','º¼ÖÝÊÐ´¾°²ÏØ','º¼ÖÝÊÐ±õ½­Çø','º¼ÖÝÊÐÏôÉ½Çø','º¼ÖÝÊÐÎ÷ºþÇø','º¼ÖÝÊÐÇ®ÌÁÇø')
---                 and ¾ÍÒ½µØ='Â·ÇÅÇø'
+--                 trunc(´´½¨Ê±¼ä) BETWEEN date'2024-01-01' AND date'2024-07-31'
+                trunc(´´½¨Ê±¼ä) BETWEEN date'2023-01-01' AND date'2023-12-31'
+--                 and ¾ÍÒ½µØ not in ('º¼ÖÝÊÐÉÏ³ÇÇø','º¼ÖÝÊÐÁÙÆ½Çø','º¼ÖÝÊÐÓàº¼Çø','º¼ÖÝÊÐÊÐ±¾¼¶','º¼ÖÝÊÐ½¨µÂÊÐ','º¼ÖÝÊÐ¹°ÊûÇø','º¼ÖÝÊÐÍ©Â®ÏØ','º¼ÖÝÊÐ´¾°²ÏØ','º¼ÖÝÊÐ±õ½­Çø','º¼ÖÝÊÐÏôÉ½Çø','º¼ÖÝÊÐÎ÷ºþÇø','º¼ÖÝÊÐÇ®ÌÁÇø')
+                and ¾ÍÒ½µØ in ('ÈýÃÅÏØ','ÁÙº£ÊÐ','ÏÉ¾ÓÏØ','ÌìÌ¨ÏØ','½·½­Çø','ÊÐ±¾¼¶','ÎÂÁëÊÐ','Óñ»·ÊÐ','Óñ»·ÊÐ','Â·ÇÅÇø','»ÆÑÒÇø')
 --                 and s_busi.ZMDZ1=81499
 --                and d_zjys_wl2023xse.»ú¹¹±àÂë in ('85027','85034','85036','85037','85039','85040','85041','85042','85064','85067','85069','85074','85083','85084','89074','89075')
               and not exists (select 1 from T_SALE_RETURN_H a where a.RETSALENO = D_ZJYS_WL2023XSE.ERPÏúÊÛºÅ)
               and not exists (select 1 from T_SALE_RETURN_H a2 where a2.SALENO = D_ZJYS_WL2023XSE.ERPÏúÊÛºÅ)
 ),
     base2 as (
-    select 2023 as Äê¶È,trunc(´´½¨Ê±¼ä) as »á¼ÆÈÕ, »ú¹¹±àÂë as ÆÕÍ¨ÃÅµê±àÂë,sfzs as ÃÅµêÀàÐÍ,
+    select null as Äê¶È,trunc(´´½¨Ê±¼ä) as »á¼ÆÈÕ, »ú¹¹±àÂë as ÆÕÍ¨ÃÅµê±àÂë,sfzs as ÃÅµêÀàÐÍ,
        ¾ÍÒ½µØ,²Î±£µØ,ÏÕÖÖ as ÏÕÖÖÀàÐÍ, Ò½±£ÀàÐÍ,
-       ROW_NUMBER() over (partition by Éí·ÝÖ¤ºÅ,to_char(´´½¨Ê±¼ä, 'yyyy-mm-dd'),SFZS,ÏÕÖÖ,jyd order by ´´½¨Ê±¼ä) as ord,--ÈË´Î
-       case
-                 when ROW_NUMBER() over (partition by Éí·ÝÖ¤ºÅ,ÏÕÖÖ,¾ÍÒ½µØ,
-                     case
-                         when ÏÕÖÖ = 'Ö°¹¤»ù±¾Ò½ÁÆ±£ÏÕ' and ²Î±£µØ in ('ÊÐ±¾¼¶', '»ÆÑÒÇø', 'Â·ÇÅÇø') then 'ÊÐ±¾¼¶'
-                         when ÏÕÖÖ = '³ÇÏç¾ÓÃñ»ù±¾Ò½ÁÆ±£ÏÕ' and ²Î±£µØ in ('ÊÐ±¾¼¶') then 'ÊÐ±¾¼¶'
-                         else ²Î±£µØ end
-                     order by ´´½¨Ê±¼ä) > 1
+       ROW_NUMBER() over (partition by Éí·ÝÖ¤ºÅ,to_char(´´½¨Ê±¼ä, 'yyyy-mm-dd'),SFZS,ÏÕÖÖ,¾ÍÒ½µØ order by ´´½¨Ê±¼ä) as ord,--ÈË´Î
+--       case when nvl(xzrt.IDENTITY_NO,'0')='0' then 0 else
+       case when ROW_NUMBER() OVER (PARTITION BY
+                 CASE
+                     WHEN ÏÕÖÖ = 'Ö°¹¤»ù±¾Ò½ÁÆ±£ÏÕ' and  ²Î±£µØ IN ('»ÆÑÒÇø','Â·ÇÅÇø','ÊÐ±¾¼¶')
+                         THEN 'ÊÐ±¾¼¶'
+                     WHEN ÏÕÖÖ = '³ÇÏç¾ÓÃñ»ù±¾Ò½ÁÆ±£ÏÕ' and ²Î±£µØ IN ('ÊÐ±¾¼¶') THEN 'ÊÐ±¾¼¶'
+                     ELSE ²Î±£µØ
+                     END,
+                 ¾ÍÒ½µØ ,
+                 Éí·ÝÖ¤ºÅ,ÏÕÖÖ ORDER BY ´´½¨Ê±¼ä ASC) > 1
                      then 0
                  else
-                     ROW_NUMBER() over (partition by Éí·ÝÖ¤ºÅ,ÏÕÖÖ,¾ÍÒ½µØ,
-                         case
-                             when ÏÕÖÖ = 'Ö°¹¤»ù±¾Ò½ÁÆ±£ÏÕ' and ²Î±£µØ in ('ÊÐ±¾¼¶', '»ÆÑÒÇø', 'Â·ÇÅÇø') then 'ÊÐ±¾¼¶'
-                             when ÏÕÖÖ = '³ÇÏç¾ÓÃñ»ù±¾Ò½ÁÆ±£ÏÕ' and ²Î±£µØ in ('ÊÐ±¾¼¶') then 'ÊÐ±¾¼¶'
-                             else ²Î±£µØ end
-                         order by ´´½¨Ê±¼ä) end as ord2,--ÈËÍ·
+                     1 end  as ord2, --ÈËÍ·
+--                      ROW_NUMBER() OVER (PARTITION BY
+--                  CASE
+--                      WHEN ÏÕÖÖ = 'Ö°¹¤»ù±¾Ò½ÁÆ±£ÏÕ' and  ²Î±£µØ IN ('»ÆÑÒÇø','Â·ÇÅÇø','ÊÐ±¾¼¶')
+--                          THEN 'ÊÐ±¾¼¶'
+--                      WHEN ÏÕÖÖ = '³ÇÏç¾ÓÃñ»ù±¾Ò½ÁÆ±£ÏÕ' and ²Î±£µØ IN ('ÊÐ±¾¼¶') THEN 'ÊÐ±¾¼¶'
+--                      ELSE ²Î±£µØ
+--                      END,
+--                   ¾ÍÒ½µØ ,
+--                  Éí·ÝÖ¤ºÅ,ÏÕÖÖ ORDER BY ´´½¨Ê±¼ä ASC) end   as ord2,--ÈËÍ·
        '(×Ü¶î¶È-¹úÌ½¶î¶È)/ÈËÍ·' as ÈËÍ·»ù½ð, Ò½ÁÆ·ÑÓÃ×Ü¶î as ×Ü·ÑÓÃ,
        zed1 as ×Ü¶î¶È,
        ×Ô·Ñ·ÑÓÃ as Ò½ÁÆ·ÑÓÃ×Ô·Ñ×Ü¶î,
        0 AS Ò½ÁÆ·ÑÓÃ×ÔÀí×Ü¶î,
        zed as ¹úÌ¸¶î¶È,
         »ù±¾Ò½ÁÆÍ³³ïÖ§¸¶, µ±ÄêÕË»§Ö§¸¶, ¹«ÎñÔ±²¹ÖúÍ³³ïÖ§¸¶,´ó²¡½ð¶î AS ´ó²¡±£ÏÕÖ§¸¶,ÀúÄêÕË»§Ö§¸¶, ÏÖ½ð½ð¶î
-from base)
-select 2024 as Äê¶È, to_char(»á¼ÆÈÕ,'YYYY-MM-DD'), ÆÕÍ¨ÃÅµê±àÂë, ÃÅµêÀàÐÍ, ¾ÍÒ½µØ, ²Î±£µØ, ÏÕÖÖÀàÐÍ, Ò½±£ÀàÐÍ,
+from base
+-- left join  DWB_YB_HEAD_DTL_QC  xzrt
+-- on Éí·ÝÖ¤ºÅ = xzrt.IDENTITY_NO
+-- and trunc(´´½¨Ê±¼ä) = trunc(xzrt.RECEIPT_DATE)
+-- and case when ÏÕÖÖ = 'Ö°¹¤»ù±¾Ò½ÁÆ±£ÏÕ' then '0' else '1' end =case when xzrt.PER_YB_TYPE ='Ò½±£' then 0 else 1 end
+-- and to_char(»ú¹¹±àÂë) = 8||to_char(xzrt.WERKS_ID)
+)
+select 2023 as Äê¶È, to_char(»á¼ÆÈÕ,'YYYY-MM-DD'), substr(ÆÕÍ¨ÃÅµê±àÂë,2,4), ÃÅµêÀàÐÍ, ¾ÍÒ½µØ, ²Î±£µØ, ÏÕÖÖÀàÐÍ, Ò½±£ÀàÐÍ,
        --ord,
        sum(case when ord > 1 then 0 else ord end) as ÈË´Î,
        sum(ord2) as ÈËÍ·,
@@ -106,11 +119,99 @@ select 2024 as Äê¶È, to_char(»á¼ÆÈÕ,'YYYY-MM-DD'), ÆÕÍ¨ÃÅµê±àÂë, ÃÅµêÀàÐÍ, ¾ÍÒ½µ
        sum(ÀúÄêÕË»§Ö§¸¶), sum(ÏÖ½ð½ð¶î)
 from base2
 -- where »á¼ÆÈÕ=date'2024-06-04' and ¾ÍÒ½µØ like'%º¼ÖÝÊÐ%'
-group by »á¼ÆÈÕ, ÆÕÍ¨ÃÅµê±àÂë, ÃÅµêÀàÐÍ, ¾ÍÒ½µØ, ²Î±£µØ, ÏÕÖÖÀàÐÍ, Ò½±£ÀàÐÍ;
+group by »á¼ÆÈÕ, substr(ÆÕÍ¨ÃÅµê±àÂë,2,4), ÃÅµêÀàÐÍ, ¾ÍÒ½µØ, ²Î±£µØ, ÏÕÖÖÀàÐÍ, Ò½±£ÀàÐÍ;
+
+--¸üÐÂÈËÍ·µ½»ã×Ü±í
+MERGE INTO DM_YB_MD_HEAD_SUM_QC T1
+USING
+(
+select to_char(RECEIPT_DATE,'YYYY-MM-DD') as RECEIPT_DATE,WERKS_ID,PER_YB_TYPE,count(*) as sl from DWB_YB_HEAD_DTL_QC
+-- where CITY_AREA_NAME like '%Â·ÇÅ%' and YEAR_YB=2023 and PER_YB_TYPE='Ò½±£'
+                                                               group by to_char(RECEIPT_DATE,'YYYY-MM-DD'),WERKS_ID,PER_YB_TYPE
+)  T2
+ON ( T1.RECEIPT_DATE=T2.RECEIPT_DATE and t1.WERKS_ID=t2.WERKS_ID and t1.PER_YB_TYPE=t2.PER_YB_TYPE)
+WHEN MATCHED THEN
+UPDATE SET T1.YB_PER_HEADNUM= T2.sl;
+--Ã»Æ¥Åäµ½µÄÐÂÔöÈËÍ·ÊÇ0,ÕâÀï»á°Ñº¼ÖÝµÄ¸²¸Ç,ÐèÒªÖØË¢
+UPDATE DM_YB_MD_HEAD_SUM_QC T1
+SET T1.YB_PER_HEADNUM = 0
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM (
+        select to_char(RECEIPT_DATE, 'YYYY-MM-DD') as RECEIPT_DATE, WERKS_ID, PER_YB_TYPE, count(*) as sl
+        from DWB_YB_HEAD_DTL_QC
+--         where CITY_AREA_NAME like '%Â·ÇÅ%'
+--           and YEAR_YB = 2023
+--           and PER_YB_TYPE = 'Ò½±£'
+        group by to_char(RECEIPT_DATE, 'YYYY-MM-DD'), WERKS_ID, PER_YB_TYPE
+    ) T2
+    WHERE T1.RECEIPT_DATE = T2.RECEIPT_DATE AND T1.WERKS_ID = T2.WERKS_ID AND T1.PER_YB_TYPE = T2.PER_YB_TYPE
+);
+
 
 update dm_yb_md_head_sum_qc set RECEIPT_DATE=TO_CHAR(
            TO_DATE(RECEIPT_DATE, 'DD-MON-RR'),
            'YYYY-MM-DD'
        );
-
+-- ²Î±£µØÊÐ±¾¼¶Òª²»¾ÍÃüÃûÎª½·Â·»Æ±¾¼¶
+-- ¾ÍÒ½µØÌ¨ÖÝÊÐ±¾¼¶ºÍÌ¨ÖÝÊÐ½·½­ÇøÃüÃûÎª½·½­±¾¼¶
+select count(*) from DWB_YB_HEAD_DTL_QC where (CITY_AREA_NAME like '%Ì¨ÖÝ%' or CITY_AREA_NAME='½·½­±¾¼¶');
+delete from DWB_YB_HEAD_DTL_QC where CITY_AREA_NAME like '%Ì¨ÖÝ%';
+--ÆÚ³õÃ÷Ï¸
+insert into DWB_YB_HEAD_DTL_QC(TENANT_ID, YEAR_YB, WERKS_ID, RECEIPT_DATE, ORDER_NO, IDENTITY_NO, PER_YB_TYPE
+                               , MD_TYPE,
+                               CITY_AREA_NAME)
+select tenant_id, year_yb, substr(to_number(»ú¹¹±àÂë),2,4), ´´½¨Ê±¼ä, ERPÏúÊÛºÅ, Éí·ÝÖ¤ºÅ, case when ÏÕÖÖ='Ö°¹¤»ù±¾Ò½ÁÆ±£ÏÕ' then 'Ò½±£' else 'Å©±£' end, ÃÅµêÀàÐÍ, ¾ÍÒ½µØ
+from (
+select 'rrt' as tenant_id,2024 as year_yb,a.»ú¹¹±àÂë,a.´´½¨Ê±¼ä,a.ERPÏúÊÛºÅ,a.Éí·ÝÖ¤ºÅ,a.ÏÕÖÖ,tb22.CLASSNAME as ÃÅµêÀàÐÍ,
+       decode(TB2.CLASSNAME,'Ì¨ÖÝÊÐ±¾¼¶','½·½­±¾¼¶','Ì¨ÖÝÊÐ½·½­Çø','½·½­±¾¼¶',TB2.CLASSNAME) as ¾ÍÒ½µØ,ROW_NUMBER() OVER (PARTITION BY
+                 CASE
+                     WHEN a.ÏÕÖÖ = 'Ö°¹¤»ù±¾Ò½ÁÆ±£ÏÕ' and  a.²Î±£µØ IN ('»ÆÑÒÇø','Â·ÇÅÇø','ÊÐ±¾¼¶')
+                         THEN 'ÊÐ±¾¼¶'
+                     WHEN a.ÏÕÖÖ = '³ÇÏç¾ÓÃñ»ù±¾Ò½ÁÆ±£ÏÕ' and a.²Î±£µØ IN ('ÊÐ±¾¼¶') THEN 'ÊÐ±¾¼¶'
+                     ELSE a.²Î±£µØ
+                     END,
+                  decode(TB2.CLASSNAME,'Ì¨ÖÝÊÐ±¾¼¶','½·½­±¾¼¶','Ì¨ÖÝÊÐ½·½­Çø','½·½­±¾¼¶',TB2.CLASSNAME),
+                 A.Éí·ÝÖ¤ºÅ,A.ÏÕÖÖ ORDER BY A.´´½¨Ê±¼ä ASC) RN from d_zjys_wl2023xse a
+JOIN T_BUSNO_CLASS_SET TS ON to_char(A.»ú¹¹±àÂë) = TS.BUSNO AND TS.CLASSGROUPNO = '303'
+               JOIN T_BUSNO_CLASS_BASE TB ON TS.CLASSGROUPNO = TB.CLASSGROUPNO AND TS.CLASSCODE = TB.CLASSCODE
+          AND TB.CLASSCODE IN ('303100', '303101', '303102')
+               JOIN T_BUSNO_CLASS_SET TS2 ON to_char(A.»ú¹¹±àÂë) = TS2.BUSNO AND TS2.CLASSGROUPNO = '324'
+               JOIN T_BUSNO_CLASS_BASE TB2 ON TS2.CLASSGROUPNO = TB2.CLASSGROUPNO AND TS2.CLASSCODE = TB2.CLASSCODE
+               JOIN T_BUSNO_CLASS_SET TS22 ON to_char(A.»ú¹¹±àÂë) = TS22.BUSNO AND TS22.CLASSGROUPNO = '305'
+               JOIN T_BUSNO_CLASS_BASE TB22 ON TS22.CLASSGROUPNO = TB22.CLASSGROUPNO AND TS22.CLASSCODE = TB22.CLASSCODE
+ WHERE A.´´½¨Ê±¼ä > date'2024-01-01' and  A.´´½¨Ê±¼ä<date'2024-08-01'
+        AND A.²Î±£µØ IN
+           ('Óñ»·ÊÐ','ÏÉ¾ÓÏØ','ÎÂÁëÊÐ','»ÆÑÒÇø','ÊÐ±¾¼¶','ÌìÌ¨ÏØ','ÁÙº£ÊÐ','ÈýÃÅÏØ','Â·ÇÅÇø')
+AND EXISTS(SELECT 1
+                   FROM (SELECT A.SALENO
+                         FROM D_YB_SPXX_DETAIL A
+                                  JOIN T_BUSNO_CLASS_SET TS ON A.BUSNO = TS.BUSNO AND TS.CLASSGROUPNO = '305'
+                                  JOIN T_BUSNO_CLASS_BASE TB
+                                       ON TS.CLASSGROUPNO = TB.CLASSGROUPNO AND TS.CLASSCODE = TB.CLASSCODE
+                         WHERE TB.CLASSCODE = '30510'
+                           AND NVL(Í³³ïÖ§¸¶Êý, 0) + NVL(¸öÈËµ±ÄêÕÊ»§Ö§¸¶Êý, 0) + NVL(¹«²¹»ù½ðÖ§¸¶Êý, 0) <> 0
+                           AND NOT EXISTS(SELECT 1 FROM T_SALE_RETURN_H T1 WHERE T1.SALENO = A.SALENO)
+                           AND NOT EXISTS(SELECT 1 FROM T_SALE_RETURN_H T2 WHERE T2.RETSALENO = A.SALENO)
+                           AND NOT EXISTS(SELECT 1
+                                          FROM D_LL_GTML GT
+                                          WHERE GT.WAREID = A.WAREID
+                                            AND A.ACCDATE BETWEEN GT.BEGINDATE AND GT.ENDDATE
+                                            AND GT.PZFL IN ('Ë«Í¨µÀÆ·ÖÖ', '¹úÌ¸Æ·ÖÖ'))
+                         UNION ALL
+                         SELECT A.SALENO
+                         FROM D_YB_SPXX_DETAIL A
+                                  JOIN T_BUSNO_CLASS_SET TS ON A.BUSNO = TS.BUSNO AND TS.CLASSGROUPNO = '305'
+                                  JOIN T_BUSNO_CLASS_BASE TB
+                                       ON TS.CLASSGROUPNO = TB.CLASSGROUPNO AND TS.CLASSCODE = TB.CLASSCODE
+                         WHERE TB.CLASSCODE = '30511'
+                           AND NVL(Í³³ïÖ§¸¶Êý, 0) + NVL(¸öÈËµ±ÄêÕÊ»§Ö§¸¶Êý, 0) + NVL(¹«²¹»ù½ðÖ§¸¶Êý, 0) <> 0
+                           AND NOT EXISTS(SELECT 1 FROM T_SALE_RETURN_H T1 WHERE T1.SALENO = A.SALENO)
+                           AND NOT EXISTS(SELECT 1 FROM T_SALE_RETURN_H T2 WHERE T2.RETSALENO = A.SALENO)
+                           AND NOT EXISTS(SELECT 1
+                                          FROM D_LL_GTML GT
+                                          WHERE GT.WAREID = A.WAREID
+                                            AND A.ACCDATE BETWEEN GT.BEGINDATE AND GT.ENDDATE
+                                            AND GT.PZFL IN ('¹úÌ¸Æ·ÖÖ'))) aaa
+                   where aaa.SALENO = a.ERPÏúÊÛºÅ)) where rn=1;
 
