@@ -30,11 +30,11 @@ FROM (select *
         and ORDER_DATE < trunc(sysdate)
       union all
       select PAY_CORT, CUSTOMER_NAME, REC_DATE, CORT_NUM_ID, CORT_NAME, TO_CHAR(ITEM_NUM_ID), ITEM_NAME,
-             case when PAY_CORT = 'RH03' then QTY else -QTY end, STYLE_DESC, UNITS_NAME, FACTORY, APPROVAL_NO, BATCH_ID,
+             QTY, STYLE_DESC, UNITS_NAME, FACTORY, APPROVAL_NO, BATCH_ID,
              null, null, 13,
-             TRADE_PRICE, TRADE_PRICE, case when PAY_CORT = 'RH03' then TOTAL_AMOUNT else -TOTAL_AMOUNT end,
-             case when PAY_CORT = 'RH03' then TOTAL_AMOUNT else -TOTAL_AMOUNT end,
-             1, '40101', case when PAY_CORT = 'RH03' then '采购入库单' else '采购退货单' end
+             TRADE_PRICE, TRADE_PRICE, case when QTY>0 then TOTAL_AMOUNT else -TOTAL_AMOUNT end,
+             case when QTY>0 then TOTAL_AMOUNT else -TOTAL_AMOUNT end,
+             1, '40101', case when QTY>0 then '采购入库单' else '采购退货单' end
       from v_pf_rt03
       WHERE item_num_id in
             ('1009700', '1115743', '1017938', '1022664', '1009748', '1085998', '1007517', '1129778', '1007704',
