@@ -18,10 +18,9 @@ from (SELECT *
       where IN_STORAGE like '2%' and (REC_DATE > (select max(REC_DATE) from d_sale_def where view_name = 'v_aslk_py') or
                                       0 = 0) and DIST_NUM_ID in ('RT03', 'RH03', 'RT01')
 union all
-
    select  PAY_CORT,CUSTOMER_NAME,to_char(RESERVED_NO),CORT_NUM_ID,CORT_NAME,PAY_CORT,CUSTOMER_NAME,REC_DATE,TO_CHAR(ITEM_NUM_ID),ITEM_NAME,STYLE_DESC,FACTORY,APPROVAL_NO,BATCH_ID,
    EXPIRY_DATE, QTY ,13,TRADE_PRICE,
-    case when QTY>0 then TOTAL_AMOUNT else -TOTAL_AMOUNT end as TOTAL_AMOUNT  ,case when QTY>0 then TOTAL_AMOUNT else -TOTAL_AMOUNT end as TOTAL_AMOUNT_NO_TAX,
+   TOTAL_AMOUNT  ,TOTAL_AMOUNT as TOTAL_AMOUNT_NO_TAX,
     UNITS_NAME,CORT_NUM_ID,CORT_NAME,BILL_TYPE
        from v_pf_rt03
        WHERE  CORT_NUM_ID IN ('RT03','RH03' )  AND PAY_CORT IN ('RT03','RH03' )
