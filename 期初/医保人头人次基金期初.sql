@@ -29,6 +29,9 @@ select CITY_AREA_NAME from DM_YB_MD_HEAD_SUM_QC group by CITY_AREA_NAME;
 select count(*) from DM_YB_MD_HEAD_SUM_QC  where RECEIPT_DATE BETWEEN '2023-01-01' AND '2023-12-31';
 delete from DM_YB_MD_HEAD_SUM_QC where CITY_AREA_NAME not in
 ('杭州市上城区','杭州市临平区','杭州市余杭区','杭州市市本级','杭州市建德市','杭州市拱墅区','杭州市桐庐县','杭州市淳安县','杭州市滨江区','杭州市萧山区','杭州市西湖区','杭州市钱塘区')
+and YEAR_YB=2024;
+-- 322,158   119,099+198,786
+    select 119256+198786 from dual;
 -- and RECEIPT_DATE >= '2024-01-01'
 insert into DM_YB_MD_HEAD_SUM_QC select * from DM_YB_MD_HEAD_SUM_QC AS OF TIMESTAMP SYSDATE - (1/24);
 insert into  DM_YB_MD_HEAD_SUM_QC(YEAR_YB, RECEIPT_DATE, WERKS_ID, MD_TYPE, CITY_AREA_NAME, INSURE_REGION_NAME, INSURANCE_TYPE, PER_YB_TYPE,
@@ -38,7 +41,7 @@ insert into  DM_YB_MD_HEAD_SUM_QC(YEAR_YB, RECEIPT_DATE, WERKS_ID, MD_TYPE, CITY
 with base as (
   select d_zjys_wl2023xse.erp销售号,sfzs,事业部,d_zjys_wl2023xse.身份证号,创建时间,
            险种,机构编码,
-            decode(就医地,'椒江区','椒江本级','市本级','椒江本级',就医地) as 就医地,
+            decode(就医地,'市本级','椒江区',就医地) as 就医地,
            case when 险种='职工基本医疗保险' then '医保' else '农保' end as 医保类型,
            v_saleno_zed.zed,--国谈额度
 
@@ -52,7 +55,8 @@ with base as (
                    nvl(历年账户支付, 0) as 历年账户支付,
                    nvl(医疗费用总额, 0) as 医疗费用总额,
                    0 as 医疗费用自理总额,
-                   decode(d_zjys_wl2023xse.参保地,'市本级','椒路黄本级',参保地) as 参保地
+                   参保地
+--                    decode(d_zjys_wl2023xse.参保地,'市本级','椒路黄本级',参保地) as 参保地
 --                    case when 就医地 = '市本级' then '椒江区' else 就医地 end jyd
             from d_zjys_wl2023xse
                      left join s_busi
@@ -80,20 +84,11 @@ with base as (
                      WHEN 险种 = '城乡居民基本医疗保险' and 参保地 IN ('市本级') THEN '市本级'
                      ELSE 参保地
                      END,
-                 就医地 ,
+                 就医地,
                  身份证号,险种 ORDER BY 创建时间 ASC) > 1
                      then 0
                  else
                      1 end  as ord2, --人头
---                      ROW_NUMBER() OVER (PARTITION BY
---                  CASE
---                      WHEN 险种 = '职工基本医疗保险' and  参保地 IN ('黄岩区','路桥区','市本级')
---                          THEN '市本级'
---                      WHEN 险种 = '城乡居民基本医疗保险' and 参保地 IN ('市本级') THEN '市本级'
---                      ELSE 参保地
---                      END,
---                   就医地 ,
---                  身份证号,险种 ORDER BY 创建时间 ASC) end   as ord2,--人头
        '(总额度-国探额度)/人头' as 人头基金, 医疗费用总额 as 总费用,
        zed1 as 总额度,
        自费费用 as 医疗费用自费总额,
@@ -107,7 +102,7 @@ from base
 -- and case when 险种 = '职工基本医疗保险' then '0' else '1' end =case when xzrt.PER_YB_TYPE ='医保' then 0 else 1 end
 -- and to_char(机构编码) = 8||to_char(xzrt.WERKS_ID)
 )
-select 2023 as 年度, to_char(会计日,'YYYY-MM-DD'), substr(普通门店编码,2,4), 门店类型, 就医地, 参保地, 险种类型, 医保类型,
+select to_char(会计日,'YYYY') as 年度, to_char(会计日,'YYYY-MM-DD'), substr(普通门店编码,2,4), 门店类型, 就医地, 参保地, 险种类型, 医保类型,
        --ord,
        sum(case when ord > 1 then 0 else ord end) as 人次,
        sum(ord2) as 人头,
@@ -156,15 +151,16 @@ update dm_yb_md_head_sum_qc set RECEIPT_DATE=TO_CHAR(
 -- 参保地市本级要不就命名为椒路黄本级
 -- 就医地台州市本级和台州市椒江区命名为椒江本级
 select count(*) from DWB_YB_HEAD_DTL_QC where (CITY_AREA_NAME like '%台州%' or CITY_AREA_NAME='椒江本级');
-delete from DWB_YB_HEAD_DTL_QC where CITY_AREA_NAME like '%台州%';
+delete from DWB_YB_HEAD_DTL_QC where CITY_AREA_NAME in ('玉环市','临海市','椒江区','黄岩区','路桥区','三门县','台州市本级','仙居县','温岭市','天台县','市本级') ;and YEAR_YB=2024;
 --期初明细
 insert into DWB_YB_HEAD_DTL_QC(TENANT_ID, YEAR_YB, WERKS_ID, RECEIPT_DATE, ORDER_NO, IDENTITY_NO, PER_YB_TYPE
                                , MD_TYPE,
                                CITY_AREA_NAME)
-select tenant_id, year_yb, substr(to_number(机构编码),2,4), 创建时间, ERP销售号, 身份证号, case when 险种='职工基本医疗保险' then '医保' else '农保' end, 门店类型, 就医地
+select tenant_id, year_yb, substr(to_number(机构编码),2,4), 创建时间, ERP销售号, 身份证号, case when 险种='职工基本医疗保险' then '医保' else '农保' end,
+       case when 门店类型='诊所' then '门诊' else '线下店' end as 门店类型,case when 就医地='市本级' then '台州市本级' else 就医地 end as 就医地
 from (
-select 'rrt' as tenant_id,2024 as year_yb,a.机构编码,a.创建时间,a.ERP销售号,a.身份证号,a.险种,tb22.CLASSNAME as 门店类型,
-       decode(TB2.CLASSNAME,'台州市本级','椒江本级','台州市椒江区','椒江本级',TB2.CLASSNAME) as 就医地,ROW_NUMBER() OVER (PARTITION BY
+select 'rrt' as tenant_id,2023 as year_yb,a.机构编码,a.创建时间,a.ERP销售号,a.身份证号,a.险种,tb22.CLASSNAME as 门店类型,
+        就医地,ROW_NUMBER() OVER (PARTITION BY
                  CASE
                      WHEN a.险种 = '职工基本医疗保险' and  a.参保地 IN ('黄岩区','路桥区','市本级')
                          THEN '市本级'
@@ -180,7 +176,7 @@ JOIN T_BUSNO_CLASS_SET TS ON to_char(A.机构编码) = TS.BUSNO AND TS.CLASSGROUPNO 
                JOIN T_BUSNO_CLASS_BASE TB2 ON TS2.CLASSGROUPNO = TB2.CLASSGROUPNO AND TS2.CLASSCODE = TB2.CLASSCODE
                JOIN T_BUSNO_CLASS_SET TS22 ON to_char(A.机构编码) = TS22.BUSNO AND TS22.CLASSGROUPNO = '305'
                JOIN T_BUSNO_CLASS_BASE TB22 ON TS22.CLASSGROUPNO = TB22.CLASSGROUPNO AND TS22.CLASSCODE = TB22.CLASSCODE
- WHERE A.创建时间 > date'2024-01-01' and  A.创建时间<date'2024-08-01'
+ WHERE A.创建时间 > date'2023-01-01' and  A.创建时间<date'2024-01-01'
         AND A.参保地 IN
            ('玉环市','仙居县','温岭市','黄岩区','市本级','天台县','临海市','三门县','路桥区')
 AND EXISTS(SELECT 1
@@ -214,4 +210,106 @@ AND EXISTS(SELECT 1
                                             AND A.ACCDATE BETWEEN GT.BEGINDATE AND GT.ENDDATE
                                             AND GT.PZFL IN ('国谈品种'))) aaa
                    where aaa.SALENO = a.ERP销售号)) where rn=1;
+update DWB_YB_HEAD_DTL_QC set CITY_AREA_NAME='台州市本级' where CITY_AREA_NAME='市本级';
+update DWB_YB_HEAD_DTL_QC set CITY_AREA_NAME=substr(CITY_AREA_NAME,4,3) where CITY_AREA_NAME like '%杭州%';
+select 1344166
+select 741200+602966 from dual;
+--补上之后741200+603,209
+--
+select CITY_AREA_NAME from DWB_YB_HEAD_DTL_QC group by CITY_AREA_NAME;
 
+--医保期初人头汇总表导出
+select YEAR_YB as 年度, RECEIPT_DATE as 会计日, WERKS_ID as 门店编码, MD_TYPE as 门店类型, CITY_AREA_NAME as 就医地,
+       INSURE_REGION_NAME as 参保地, INSURANCE_TYPE as 险种类型, PER_YB_TYPE as 医保类型,
+       YB_PER_NUM as 人次, YB_PER_HEADNUM as 人头, HEAD_FUND_AMOUNT as 人头基金,
+       TOTAL_AMOUNT as 总费用, TOTAL_QUOTA as 总额度, PERSONAL_PAY_AMOUNT as 医疗费用自费总额,
+       SELF_CHARGE_AMOUNT as 医疗费用自理总额,
+       GT_QUOTA as 国谈额度, OVERALL_PAY as 基本医疗统筹支付,
+       CURRENT_ACCOUNT_PAY as 当年账户支付, PUBLIC_FUND_PAY as 公务员补助统筹支付,
+       ILLNESS_SUBSIDY_AMOUNT as 大病保险支付, HISTORY_ACCOUNT_PAY as 历年账户支付,
+       PERSONAL_CASH_AMOUNT as 现金支付
+from DM_YB_MD_HEAD_SUM_QC where CITY_AREA_NAME in ('椒江区','温岭市','玉环市','路桥区','黄岩区','三门县','临海市','仙居县','天台县');
+
+--     医保期初人头明细表导出
+select TENANT_ID as 数据标识, YEAR_YB as 年度, WERKS_ID as 机构编码, RECEIPT_DATE as 会计日,
+       ORDER_NO as 销售订单号, IDENTITY_NO as 身份证号,PER_YB_TYPE as 医保类型,MD_TYPE as 门店类型,CITY_AREA_NAME as 门店所在地
+from dwb_yb_head_dtl_qc where CITY_AREA_NAME in ('玉环市','临海市','椒江区','黄岩区','路桥区','三门县','台州市本级','仙居县','温岭市','天台县','市本级');
+
+--医保期初人头汇总的明细查询导出
+with base as (
+  select d_zjys_wl2023xse.erp销售号,sfzs,事业部,d_zjys_wl2023xse.身份证号,创建时间,
+           险种,机构编码,
+            decode(就医地,'市本级','椒江区',就医地) as 就医地,
+           case when 险种='职工基本医疗保险' then '医保' else '农保' end as 医保类型,
+           v_saleno_zed.zed,--国谈额度
+
+                   nvl(自费费用,0) as 自费费用,
+                   nvl(基本医疗统筹支付, 0) as 基本医疗统筹支付,
+                   nvl(公务员补助统筹支付, 0) as 公务员补助统筹支付,
+                   nvl(当年账户支付, 0) as 当年账户支付,
+                   nvl(大病金额, 0) as 大病金额,
+                   nvl(基本医疗统筹支付, 0) + nvl(公务员补助统筹支付, 0) + nvl(当年账户支付, 0) as zed1,
+                   nvl(现金金额, 0) as 现金金额,
+                   nvl(历年账户支付, 0) as 历年账户支付,
+                   nvl(医疗费用总额, 0) as 医疗费用总额,
+                   0 as 医疗费用自理总额,
+                   参保地
+--                    decode(d_zjys_wl2023xse.参保地,'市本级','椒路黄本级',参保地) as 参保地
+--                    case when 就医地 = '市本级' then '椒江区' else 就医地 end jyd
+            from d_zjys_wl2023xse
+                     left join s_busi
+                               on d_zjys_wl2023xse.机构编码 = s_busi.BUSNO
+                     left join v_saleno_zed on d_zjys_wl2023xse.ERP销售号 = v_saleno_zed.erp销售号
+            where
+                trunc(创建时间) BETWEEN date'2024-01-01' AND date'2024-07-31'
+--                 trunc(创建时间) BETWEEN date'2023-01-01' AND date'2023-12-31'
+--                 and 就医地 not in ('杭州市上城区','杭州市临平区','杭州市余杭区','杭州市市本级','杭州市建德市','杭州市拱墅区','杭州市桐庐县','杭州市淳安县','杭州市滨江区','杭州市萧山区','杭州市西湖区','杭州市钱塘区')
+                and 就医地 in ('三门县','临海市','仙居县','天台县','椒江区','市本级','温岭市','玉环市','玉环市','路桥区','黄岩区')
+--                 and s_busi.ZMDZ1=81499
+--                and d_zjys_wl2023xse.机构编码 in ('85027','85034','85036','85037','85039','85040','85041','85042','85064','85067','85069','85074','85083','85084','89074','89075')
+              and not exists (select 1 from T_SALE_RETURN_H a where a.RETSALENO = D_ZJYS_WL2023XSE.ERP销售号)
+              and not exists (select 1 from T_SALE_RETURN_H a2 where a2.SALENO = D_ZJYS_WL2023XSE.ERP销售号)
+               and BUSNO=81182
+),
+    base2 as (
+    select null as 年度,trunc(创建时间) as 会计日, 机构编码 as 普通门店编码,sfzs as 门店类型,ERP销售号,身份证号,
+       就医地,参保地,险种 as 险种类型, 医保类型,
+       ROW_NUMBER() over (partition by 身份证号,to_char(创建时间, 'yyyy-mm-dd'),SFZS,险种,就医地 order by 创建时间) as ord,--人次
+--       case when nvl(xzrt.IDENTITY_NO,'0')='0' then 0 else
+       case when ROW_NUMBER() OVER (PARTITION BY
+                 CASE
+                     WHEN 险种 = '职工基本医疗保险' and  参保地 IN ('黄岩区','路桥区','市本级')
+                         THEN '市本级'
+                     WHEN 险种 = '城乡居民基本医疗保险' and 参保地 IN ('市本级') THEN '市本级'
+                     ELSE 参保地
+                     END,
+                 就医地,
+                 身份证号,险种 ORDER BY 创建时间 ASC) > 1
+                     then 0
+                 else
+                     1 end  as ord2, --人头
+       '(总额度-国探额度)/人头' as 人头基金, 医疗费用总额 as 总费用,
+       zed1 as 总额度,
+       自费费用 as 医疗费用自费总额,
+       0 AS 医疗费用自理总额,
+       zed as 国谈额度,
+        基本医疗统筹支付, 当年账户支付, 公务员补助统筹支付,大病金额 AS 大病保险支付,历年账户支付, 现金金额
+from base
+)
+select 2024 as 年度, to_char(会计日,'YYYY-MM-DD'), substr(普通门店编码,2,4), 门店类型, 就医地, 参保地, 险种类型, 医保类型,ERP销售号,身份证号,
+       总费用, 总额度,
+       医疗费用自费总额, 医疗费用自理总额, 国谈额度, 基本医疗统筹支付, 当年账户支付, 公务员补助统筹支付, 大病保险支付,
+       历年账户支付, 现金金额
+from base2;
+
+select TOTAL_QUOTA-GT_QUOTA,a.* from DM_YB_MD_HEAD_SUM_QC a where TOTAL_QUOTA-GT_QUOTA<0;
+select sum(YB_PER_HEADNUM) from DM_YB_MD_HEAD_SUM_QC where length(CITY_AREA_NAME)=3 and CITY_AREA_NAME not in('富阳区','临安区') ;
+select count(*) from dwb_yb_head_dtl_qc;
+select CITY_AREA_NAME from DWB_YB_HEAD_DTL_QC group by CITY_AREA_NAME
+
+select CITY_AREA_NAME,INSURANCE_TYPE,sum(TOTAL_QUOTA),sum(GT_QUOTA),sum(TOTAL_QUOTA)-sum(GT_QUOTA) from DM_YB_MD_HEAD_SUM_QC
+where RECEIPT_DATE>'2024-01-01' and CITY_AREA_NAME in ('三门县','临海市','仙居县','天台县','椒江区','市本级','温岭市','玉环市','玉环市','路桥区','黄岩区')
+group by CITY_AREA_NAME,INSURANCE_TYPE having sum(TOTAL_QUOTA)-sum(GT_QUOTA)<0;
+
+select TOTAL_QUOTA-GT_QUOTA,a.*  from DM_YB_MD_HEAD_SUM_QC a where TOTAL_QUOTA<GT_QUOTA
+and CITY_AREA_NAME in ('三门县','临海市','仙居县','天台县','椒江区','市本级','温岭市','玉环市','玉环市','路桥区','黄岩区');
