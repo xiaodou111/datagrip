@@ -37,9 +37,31 @@ BEGIN
    END LOOP;
 END;
 
+-- 视图导入网站 导出来后需要替换表头
+select row_number() over (order by ZLCJ) 行号,ZLCJ||'-仓库'||VIEWTYPE as 栏目名称,'是' as 是否启用,
+       '金鑫辉/./莫晓慧/./颜江仪/./潘雷/./杨仁' as 允许查看, '全亿中间库' as 数据库名称 , VIEW_NAME as 数据库视图名
+from v_sjzl_ck_view ;
 
+select row_number() over (order by ZLCJ) 行号,ZLCJ||'-门店'||VIEWTYPE as 栏目名称,'是' as 是否启用,
+       '金鑫辉/./莫晓慧/./颜江仪/./杨仁' as 允许查看, '全亿中间库' as 数据库名称 , VIEW_NAME as 数据库视图名
+from v_sjzl_md_view ;
+
+
+select * from v_sjzl_ck_view;
+select * from v_sjzl_md_view where VIEWTYPE='库存';
+
+select * from V_ASLK_TY_KC_MD_5045;
 --查找所有厂家的门店视图
-SELECT config.ZLCJ as 厂家名,a.view_name as 视图名称,substr(a.view_name,-4) as 门店编码,unit.SUB_UNIT_NAME as 门店名称
+select 厂家名, 视图名称, 门店编码, 类型, 门店名称
+from (
+SELECT config.ZLCJ as 厂家名,a.view_name as 视图名称,substr(a.view_name,-4) as 门店编码,
+       case
+           when a.view_name like '%ACCEPT%' THEN '采购'
+           when a.view_name like '%KC%' THEN '库存'
+           when a.view_name like '%SALE%' THEN '配送'
+           else '纯销'
+           end as 类型,
+       unit.SUB_UNIT_NAME as 门店名称
 --      ,lower(SUBSTR(a.view_name, 1, INSTR(a.view_name, 'TY') + 1))
 FROM all_views a
  left join qyzt_dev.mdms_o_sub_unit unit
@@ -47,35 +69,35 @@ FROM all_views a
    on  substr(view_name,-4)=unit.sub_unit_num_id
 left join d_rrt_sjzl_config config on config.VIEW_NAME=lower(SUBSTR(a.view_name, 1, INSTR(a.view_name, 'TY') + 1))
 WHERE REGEXP_LIKE(a.view_name, '^v_.+?_ty.*$', 'i')   and SUB_UNIT_NAME not like '%医保%'
-order by config.ZLCJ;
-
---查找所有厂家的总部视图
-SELECT config.ZLCJ as 厂家名, a.view_name as 视图名称, WERKS as 公司名,
-       case REVERSE(SUBSTR(REVERSE(a.view_name), 1, INSTR(REVERSE(a.view_name), '_') - 1))
-           when 'ACCEPT' THEN '采购'
-           when 'KC' THEN '库存'
-           when 'SALE' THEN '配送'
-           end as 视图类型,
-
-      f_get_sjzl_pjzd(WERKS, 'MDMS_O_CORT', 'CORT_NUM_ID', 'CORT_NAME') as 商业名称,
-      f_get_sjzl_pjzd(WAREID, 'mdms_p_product_basic', 'ITEM_NUM_ID', 'ITEM_NAME') as 商品名称
+union all
+--查询桐乡门店视图
+SELECT config.ZLCJ as 厂家名, a.view_name as 视图名称, substr(a.view_name, -4) as 门店编码,
+       case
+           when a.view_name like '%ACCEPT%' THEN '采购'
+           when a.view_name like '%KC%' THEN '库存'
+           when a.view_name like '%SALE%' THEN '配送'
+           else '纯销'
+           end as 类型,unit.SUB_UNIT_NAME as 门店名称
 FROM all_views a
          left join qyzt_dev.mdms_o_sub_unit unit
+    -- DDM内部同步工具，字段长度不能超过30位，这个用qyzt_dev
                    on substr(view_name, -4) = unit.sub_unit_num_id
          left join d_rrt_sjzl_config config
-                   on config.VIEW_NAME = lower(SUBSTR(a.view_name, 1, INSTR(a.view_name, 'TY') + 1))
-WHERE REGEXP_LIKE(a.view_name, '^v_.+?_ty.*$', 'i') and unit.SUB_UNIT_NAME is null
-  and REVERSE(SUBSTR(REVERSE(a.view_name), 1, INSTR(REVERSE(a.view_name), '_') - 1)) <> '5051'
---   and config.ZLCJ like '%阿斯利康%'
-order by config.ZLCJ;
+                   on config.VIEW_NAME = lower(SUBSTR(a.view_name, 1, INSTR(a.view_name, 'TX') + 1))
+WHERE REGEXP_LIKE(a.view_name, '^v_.+?_tx.*$', 'i') and SUB_UNIT_NAME not like '%医保%'
+  and config.ZLCJ like '%桐乡%');
 
 
---查询总部普药视图
-SELECT config.ZLCJ as 厂家名, a.view_name as 视图名称, WERKS as 公司名,
-       case REVERSE(SUBSTR(REVERSE(a.view_name), 1, INSTR(REVERSE(a.view_name), '_') - 1))
+
+
+--查询总部普药特药合并视图
+select * from (
+SELECT config.ZLCJ as 厂家名, a.view_name as 视图名称, WERKS as 商业编码,
+       case SUBSTR(a.view_name, INSTR(a.view_name, '_', -1) + 1)
            when 'ACCEPT' THEN '采购'
            when 'KC' THEN '库存'
            when 'SALE' THEN '配送'
+           else '纯销'
            end as 视图类型,
        f_get_sjzl_pjzd(WERKS, 'MDMS_O_CORT', 'CORT_NUM_ID', 'CORT_NAME') as 商业名称
 --        f_get_sjzl_pjzd(WAREID, 'mdms_p_product_basic', 'ITEM_NUM_ID', 'ITEM_NAME') as 商品名称
@@ -85,15 +107,15 @@ FROM all_views a
          left join d_rrt_sjzl_config config
                    on config.VIEW_NAME = lower(SUBSTR(a.view_name, 1, INSTR(a.view_name, 'PY') + 1))
 WHERE REGEXP_LIKE(a.view_name, '^v_.+?_py.*$', 'i') and unit.SUB_UNIT_NAME is null
-  and REVERSE(SUBSTR(REVERSE(a.view_name), 1, INSTR(REVERSE(a.view_name), '_') - 1)) <> '5051'
-  and config.ZLCJ like '%雅培%'
-order by config.ZLCJ;
---查询总部特药视图
+  and SUBSTR(a.view_name, INSTR(a.view_name, '_', -1) + 1) <> '5051'
+--   and config.ZLCJ like '%雅培%'
+union all
 SELECT config.ZLCJ as 厂家名, a.view_name as 视图名称, WERKS as 公司名,
-       case REVERSE(SUBSTR(REVERSE(a.view_name), 1, INSTR(REVERSE(a.view_name), '_') - 1))
+       case SUBSTR(a.view_name, INSTR(a.view_name, '_', -1) + 1)
            when 'ACCEPT' THEN '采购'
            when 'KC' THEN '库存'
            when 'SALE' THEN '配送'
+           else '纯销'
            end as 视图类型,
        f_get_sjzl_pjzd(WERKS, 'MDMS_O_CORT', 'CORT_NUM_ID', 'CORT_NAME') as 商业名称
 --        f_get_sjzl_pjzd(WAREID, 'mdms_p_product_basic', 'ITEM_NUM_ID', 'ITEM_NAME') as 商品名称
@@ -103,35 +125,21 @@ FROM all_views a
          left join d_rrt_sjzl_config config
                    on config.VIEW_NAME = lower(SUBSTR(a.view_name, 1, INSTR(a.view_name, 'TY') + 1))
 WHERE REGEXP_LIKE(a.view_name, '^v_.+?_ty.*$', 'i') and unit.SUB_UNIT_NAME is null
-  and REVERSE(SUBSTR(REVERSE(a.view_name), 1, INSTR(REVERSE(a.view_name), '_') - 1)) <> '5051'
+  and SUBSTR(a.view_name, INSTR(a.view_name, '_', -1) + 1) <> '5051'
 --   and config.ZLCJ like '%阿斯利康%'
-order by config.ZLCJ;
+)
+--          order by 厂家名
+where 厂家名 like '%博%';
 
 
---查询桐乡门店视图
-SELECT config.ZLCJ as 厂家名, a.view_name as 视图名称, substr(a.view_name, -4) as 门店编码,
-       unit.SUB_UNIT_NAME as 门店名称,
-       case
-           when a.view_name like '%ACCEPT%' THEN '采购'
-           when a.view_name like '%KC%' THEN '库存'
-           when a.view_name like '%SALE%' THEN '配送'
-           end as 类型
-FROM all_views a
-         left join qyzt_dev.mdms_o_sub_unit unit
-    -- DDM内部同步工具，字段长度不能超过30位，这个用qyzt_dev
-                   on substr(view_name, -4) = unit.sub_unit_num_id
-         left join d_rrt_sjzl_config config
-                   on config.VIEW_NAME = lower(SUBSTR(a.view_name, 1, INSTR(a.view_name, 'TX') + 1))
-WHERE REGEXP_LIKE(a.view_name, '^v_.+?_tx.*$', 'i') and SUB_UNIT_NAME not like '%医保%'
-  and config.ZLCJ like '%桐乡%'
-order by config.ZLCJ, a.view_name;
 
 --查询桐乡总部视图
-SELECT config.ZLCJ as 厂家名, a.view_name as 视图名称, WERKS as 公司名,
-       case REVERSE(SUBSTR(REVERSE(a.view_name), 1, INSTR(REVERSE(a.view_name), '_') - 1))
+SELECT config.ZLCJ as 厂家名, a.view_name as 视图名称, WERKS as 公司编码,
+       case SUBSTR(a.view_name, INSTR(a.view_name, '_', -1) + 1)
            when 'ACCEPT' THEN '采购'
            when 'KC' THEN '库存'
            when 'SALE' THEN '配送'
+           else '纯销'
            end as 视图类型,
        f_get_sjzl_pjzd(WERKS, 'MDMS_O_CORT', 'CORT_NUM_ID', 'CORT_NAME') as 商业名称
 --        f_get_sjzl_pjzd(WAREID, 'mdms_p_product_basic', 'ITEM_NUM_ID', 'ITEM_NAME') as 商品名称
@@ -141,6 +149,6 @@ FROM all_views a
          left join d_rrt_sjzl_config config
                    on config.VIEW_NAME = lower(SUBSTR(a.view_name, 1, INSTR(a.view_name, 'TX') + 1))
 WHERE REGEXP_LIKE(a.view_name, '^v_.+?_tx.*$', 'i') and unit.SUB_UNIT_NAME is null
-  and REVERSE(SUBSTR(REVERSE(a.view_name), 1, INSTR(REVERSE(a.view_name), '_') - 1)) <> '5051'
+  and SUBSTR(a.view_name, INSTR(a.view_name, '_', -1) + 1) <> '5051'
   and config.ZLCJ like '%桐乡%'
 order by config.ZLCJ;
