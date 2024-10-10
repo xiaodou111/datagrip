@@ -1,3 +1,8 @@
+--1.先把d_hz_mdsp删掉再导入
+select * from d_hz_mdsp;
+delete from  d_hz_result;
+--2.导出销售记录
+
 insert into d_hz_result(sub_unit_id, item_num_id, sales_empe_num_id, sub_total_qty, empe_total_qty, blee, je, jj)
 WITH a1 AS (SELECT hdr.sub_unit_num_id,
                    hdr.tml_num_id,
@@ -41,6 +46,19 @@ SELECT sub_unit_num_id, item_num_id, sales_empe_num_id, sub_total_qty, empe_tota
 FROM a2
 GROUP BY sub_unit_num_id, item_num_id, sales_empe_num_id, sub_total_qty, empe_total_qty, 比例,金额, 奖金;
 
+--
+select SUB_UNIT_ID as 门店编码, ITEM_NUM_ID as 商品编码, SALES_EMPE_NUM_ID as 工号, SUB_TOTAL_QTY as 门店总数, EMPE_TOTAL_QTY as 员工总数, BLEE as 分配比例, JE as 含税金额,
+       nvl(FTHJJ,JJ) as 补偿金额
+--        JJ as 补偿金额,
+--        FTHJJ as 销售员为空分配金额
+from d_hz_result ;
+
+select SUB_UNIT_ID,SALES_EMPE_NUM_ID,sum(SUB_TOTAL_QTY) from d_hz_result group by SUB_UNIT_ID, SALES_EMPE_NUM_ID;
+
+
+
+select * from d_hz_result where SUB_UNIT_ID=5027 and ITEM_NUM_ID in (1180840,1060572);
+--3.工号为空的销售记录分配金额
 --直接删掉v_null>0 并且v_cnt=0的
 declare
     v_null number;
@@ -88,4 +106,60 @@ declare
 --     DBMS_OUTPUT.PUT_LINE('sum_je:'||sum_je);
     end;
 
-select * from d_hz_result where ITEM_NUM_ID=1007353 and SUB_UNIT_ID='5035';
+--4.导出分配金额
+select SUB_UNIT_ID as 门店编码, ITEM_NUM_ID as 商品编码, SALES_EMPE_NUM_ID as 工号, SUB_TOTAL_QTY as 门店总数, EMPE_TOTAL_QTY as 员工总数, BLEE as 分配比例, JE as 含税金额,
+       nvl(FTHJJ,JJ) as 补偿金额
+--        JJ as 补偿金额,
+--        FTHJJ as 销售员为空分配金额
+from d_hz_result ;
+
+select * from d_hz_mdsp where SUB_UNIT_ID=5020;
+select count(*) from d_hz_result;
+----未销售的导出
+select  a.SUB_UNIT_ID as 门店编码, a.ITEM_NUM_ID as  商品编码,JE as 金额 from d_hz_mdsp a where not exists(select 1 from (
+
+                                                      select SUB_UNIT_ID,ITEM_NUM_ID from d_hz_result a  group by SUB_UNIT_ID, ITEM_NUM_ID) b
+                                                       where a.ITEM_NUM_ID=b.ITEM_NUM_ID and a.SUB_UNIT_ID=b.SUB_UNIT_ID);
+
+
+-- create table d_hz_wfp as
+--5.导出未售出商品员工分配的金额
+with a1 as (
+select SUB_UNIT_ID,SALES_EMPE_NUM_ID,sum(SUB_TOTAL_QTY) as pertotal from d_hz_result
+--                                                                     where SALES_EMPE_NUM_ID is not null
+                                                                    group by SUB_UNIT_ID, SALES_EMPE_NUM_ID),
+a2 as (
+select SUB_UNIT_ID,SALES_EMPE_NUM_ID,pertotal,sum(pertotal) over (partition by SUB_UNIT_ID order by SUB_UNIT_ID) as mdtotal
+from a1),
+to_fp as (
+  select 门店编码,sum(金额) je from (
+select  a.SUB_UNIT_ID as 门店编码, a.ITEM_NUM_ID as  商品编码,JE as 金额 from d_hz_mdsp a where not exists(select 1 from (
+
+                                                      select SUB_UNIT_ID,ITEM_NUM_ID from d_hz_result a  group by SUB_UNIT_ID, ITEM_NUM_ID) b
+                                                       where a.ITEM_NUM_ID=b.ITEM_NUM_ID and a.SUB_UNIT_ID=b.SUB_UNIT_ID) ) group by 门店编码
+)
+-- select *
+-- from to_fp where 门店编码 not in (select SUB_UNIT_ID from a2)  ;
+select nvl(SUB_UNIT_ID,门店编码) as 门店编码, SALES_EMPE_NUM_ID as  工号 , pertotal 员工总销量, mdtotal 门店总销量,pertotal/mdtotal as 占比,to_fp.je 该店待分配金额,round(pertotal/mdtotal* to_fp.je,2) as 员工分配金额
+from to_fp
+left join a2 on a2.SUB_UNIT_ID=to_fp.门店编码;
+
+select 门店编码, 工号, 员工总销量, 门店总销量, 占比, 该店待分配金额, 员工分配金额,员工分配金额+1/5*
+from d_hz_wfp where 门店编码=5027  ;
+--未销售的进行分配还没好
+declare
+    v_null number;
+    v_cnt number;
+    i number:=0;
+    v_je number;
+    sum_je number:=0;
+    sumnulljj number;
+
+    begin
+    for res in (select 门店编码,工号 from  d_hz_wfp where 工号 is null and 门店总销量 is not null group by 门店编码,工号)
+    loop
+      select count(distinct 工号)
+      into v_cnt
+      from d_hz_wfp q
+      where q.门店编码=res.门店编码  and 工号 is not null;
+
