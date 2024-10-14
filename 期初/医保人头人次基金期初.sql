@@ -143,6 +143,13 @@ WHERE NOT EXISTS (
     WHERE T1.RECEIPT_DATE = T2.RECEIPT_DATE AND T1.WERKS_ID = T2.WERKS_ID AND T1.PER_YB_TYPE = T2.PER_YB_TYPE
 );
 
+select WERKS_ID,YB_PER_HEADNUM,TOTAL_QUOTA,GT_QUOTA,HEAD_FUND_AMOUNT,
+       case when YB_PER_HEADNUM=0 then 0 else round((TOTAL_QUOTA-GT_QUOTA)/YB_PER_HEADNUM,4) end as HEAD_FUND_AMOUNT2
+       from  DM_YB_MD_HEAD_SUM_QC where CITY_AREA_NAME not like '%杭州%';
+--用人头覆盖后的结果更新人头基金
+update DM_YB_MD_HEAD_SUM_QC set HEAD_FUND_AMOUNT= case when YB_PER_HEADNUM=0 then 0 else round((TOTAL_QUOTA-GT_QUOTA)/YB_PER_HEADNUM,4) end
+ where CITY_AREA_NAME not like '%杭州%';
+-- (sum(总额度)-sum(国谈额度))/sum(ord2) end as 人头基金,
 
 update dm_yb_md_head_sum_qc set RECEIPT_DATE=TO_CHAR(
            TO_DATE(RECEIPT_DATE, 'DD-MON-RR'),
