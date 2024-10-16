@@ -166,7 +166,7 @@ insert into DWB_YB_HEAD_DTL_QC(TENANT_ID, YEAR_YB, WERKS_ID, RECEIPT_DATE, ORDER
 select tenant_id, year_yb, substr(to_number(机构编码),2,4), 创建时间, ERP销售号, 身份证号, case when 险种='职工基本医疗保险' then '医保' else '农保' end,
        case when 门店类型='诊所' then '门诊' else '线下店' end as 门店类型,case when 就医地='市本级' then '台州市本级' else 就医地 end as 就医地
 from (
-select 'rrt' as tenant_id,2023 as year_yb,a.机构编码,a.创建时间,a.ERP销售号,a.身份证号,a.险种,tb22.CLASSNAME as 门店类型,
+select 'rrt' as tenant_id,case when 创建时间<date'2024-01-01' then 2023 else  2024 end as year_yb,a.机构编码,a.创建时间,a.ERP销售号,a.身份证号,a.险种,tb22.CLASSNAME as 门店类型,
         就医地,ROW_NUMBER() OVER (PARTITION BY
                  CASE
                      WHEN a.险种 = '职工基本医疗保险' and  a.参保地 IN ('黄岩区','路桥区','市本级')
@@ -183,7 +183,7 @@ JOIN T_BUSNO_CLASS_SET TS ON to_char(A.机构编码) = TS.BUSNO AND TS.CLASSGROUPNO 
                JOIN T_BUSNO_CLASS_BASE TB2 ON TS2.CLASSGROUPNO = TB2.CLASSGROUPNO AND TS2.CLASSCODE = TB2.CLASSCODE
                JOIN T_BUSNO_CLASS_SET TS22 ON to_char(A.机构编码) = TS22.BUSNO AND TS22.CLASSGROUPNO = '305'
                JOIN T_BUSNO_CLASS_BASE TB22 ON TS22.CLASSGROUPNO = TB22.CLASSGROUPNO AND TS22.CLASSCODE = TB22.CLASSCODE
- WHERE A.创建时间 > date'2023-01-01' and  A.创建时间<date'2024-01-01'
+ WHERE A.创建时间 >= date'2024-01-01' and  A.创建时间<date'2024-09-01'
         AND A.参保地 IN
            ('玉环市','仙居县','温岭市','黄岩区','市本级','天台县','临海市','三门县','路桥区')
 AND EXISTS(SELECT 1
