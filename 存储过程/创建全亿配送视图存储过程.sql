@@ -9,6 +9,7 @@ is
   v_qd varchar2(4000);
   v_werks varchar2(40);
   v_busnos varchar2(400);
+  v_accept_view_name d_rrt_sjzl_config.view_name%type;
 begin
    --判断
 SELECT COUNT(*)
@@ -22,14 +23,14 @@ into v_cnt
 
 
 ---有的话 根据配置的信息 去生成 视图
-for  res in (SELECT * FROM  d_rrt_sjzl_config  WHERE view_name=p_vname   and view_name not in ('v_sy_ty','v_ojl_py')   ) loop   --不想写变量 用循环
+for  res in (SELECT * FROM  d_rrt_sjzl_config  WHERE view_name=p_vname   and view_name not in (select viewname from d_manual_update_view)   ) loop   --不想写变量 用循环
     --********仓库端********--
     --********仓库端********--
 --           dbms_output.put_line(res.werks);
     if res.werks is not null   then
       --视图统一格式命名
       v_name := p_vname||'_sale';
-
+      v_accept_view_name:=p_vname||'_accept';
      --转换一下编码格式
      select f_get_sjzl_rename(res.wareid)
      into v_wareid
@@ -103,7 +104,7 @@ for  res in (SELECT * FROM  d_rrt_sjzl_config  WHERE view_name=p_vname   and vie
     --RT03 到RH03 显不显示
     if  res.hd = 1 then
        v_sql :=v_sql|| ' union all ' ;
-      v_sql:=v_sql||' SELECT '''||'RT01'||''','''||'瑞人堂医药集团股份有限公司'||''',to_char(RESERVED_NO),CORT_NUM_ID,CORT_NAME,PAY_CORT ,CUSTOMER_NAME ,rec_date,to_char(item_num_id),item_name,style_desc,factory,APPROVAL_NO,batch_id,expiry_date,qty,13,trade_price,total_amount,total_amount,UNITS_NAME,supply_unit_num_id,supply_name,BILL_TYPE FROM v_pf_rt03 where PAY_CORT='''||'RH03'||'''' ;
+      v_sql:=v_sql||' SELECT '''||'RT03'||''','''||'台州瑞人堂药业有限公司'||''',to_char(RESERVED_NO),CORT_NUM_ID,CORT_NAME,PAY_CORT ,CUSTOMER_NAME ,rec_date,to_char(item_num_id),item_name,style_desc,factory,APPROVAL_NO,batch_id,expiry_date,qty,13,trade_price,total_amount,total_amount,UNITS_NAME,supply_unit_num_id,supply_name,BILL_TYPE FROM v_pf_rt03 where PAY_CORT in ('||v_werks||')' ;
     end if  ;
 
 
@@ -111,8 +112,8 @@ for  res in (SELECT * FROM  d_rrt_sjzl_config  WHERE view_name=p_vname   and vie
      v_sql:='create or replace view '|| v_name || ' as select * from ( ' || v_sql || ') a where not exists(select 1 from d_sjzl_pbsj  b where b.view_name='''||p_vname||''' and a.REC_DATE between begindate and enddate and (a.item_num_id=b.wareid or trim(b.wareid)='''||'全部'||''')';
      v_sql:=v_sql ||'and (a.BATCH_ID=b.MAKENO or decode(b.makeno,'''||'全部'||''',0,1 )=0 ) )  and trunc(REC_DATE) <=trunc(sysdate)-1 and item_num_id in ('|| v_wareid ||') ';
 
-    if  v_qd  <>''  then
-     v_sql:=v_sql ||' and DIST_NUM_ID in ('||v_werks||') '   ;
+    if  v_qd is not null then
+     v_sql:=v_sql ||' and DIST_NUM_ID in ('||v_werks||')  and  exists(select 1 from  ( SELECT ITEM_NUM_ID,batch_id,SUPPLY_UNIT_NUM_ID FROM '||v_accept_view_name ||'  union all  SELECT to_char(wareid),ph,to_char(gysno ) FROM  d_july_kc ) b  where  a.ITEM_NUM_ID=b.ITEM_NUM_ID  and a.BATCH_ID=b.BATCH_ID  and b.SUPPLY_UNIT_NUM_ID in ('||v_qd||' )) '  ;
     end if ;
 
      --拼接导入数据
@@ -134,7 +135,7 @@ for  res in (SELECT * FROM  d_rrt_sjzl_config  WHERE view_name=p_vname   and vie
      end if ;
 
     --********门店端********--
-    --********门店端********--
+    --********门店端********-- SELECT * FROM v_accept_xdl_rt03
     /*if res.busnos is not null  then
       --分割门店
 
