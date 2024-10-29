@@ -100,21 +100,21 @@ left join  t_ware_dtp b  on a.wareid=b.wareid where b.wareid is not null
  a3 as(
    SELECT sum(wareqty)qty,sum(a.netsum)net,b.busno FROM t_rpt_sale_af8  a
  inner join  t_bus_wares_dtp  b
- on a.busno=b.busno and a.wareid=b.wareid
+ on a.busno=to_char(b.busno) and a.wareid=b.wareid
  WHERE   accdate between p_begin and p_end
  group by b.busno
   ),
   a4 as(
   select sum(wareqty) lyqty,sum(a.netsum) lynet,b.busno  FROM t_rpt_sale_af8  a
  inner join  t_bus_wares_dtp  b
- on a.busno=b.busno and a.wareid=b.wareid
+ on a.busno=to_char(b.busno) and a.wareid=b.wareid
  WHERE   accdate between  add_months(trunc(p_begin),-12) and add_months(trunc(p_end),-12)
  group by b.busno
   ),
   a5 as(
   select sum(wareqty) lmqty,sum(a.netsum) lmnet,b.busno  FROM t_rpt_sale_af8  a
  inner join  t_bus_wares_dtp  b
- on a.busno=b.busno and a.wareid=b.wareid
+ on a.busno=to_char(b.busno) and a.wareid=b.wareid
  WHERE   accdate between p_end-1-v_time and p_end-1
  group by b.busno
   )
@@ -154,7 +154,7 @@ left join  t_ware_dtp b  on a.wareid=b.wareid where b.wareid is not null
  a3 as(
  select sum(wareqty)qty,sum(a.netsum)net,b.busno  FROM t_rpt_sale_af8  a
  inner join  t_bus_wares_dtp  b
- on a.busno=b.busno and a.wareid=b.wareid
+ on a.busno=to_char(b.busno) and a.wareid=b.wareid
  WHERE   accdate between p_begin and p_end
  group by b.busno
  ),
@@ -168,14 +168,14 @@ left join  t_ware_dtp b  on a.wareid=b.wareid where b.wareid is not null
   a4 as(
   select sum(wareqty) lyqty,sum(a.netsum) lynet,b.busno  FROM t_rpt_sale_af8  a
  inner join  t_bus_wares_dtp  b
- on a.busno=b.busno and a.wareid=b.wareid
+ on a.busno=to_char(b.busno) and a.wareid=b.wareid
  WHERE   accdate between  add_months(trunc(p_begin),-12) and add_months(trunc(p_end),-12)
  group by b.busno
   ),
   a5 as(
   select sum(wareqty) lmqty,sum(a.netsum) lmnet,b.busno  FROM t_rpt_sale_af8  a
  inner join  t_bus_wares_dtp  b
- on a.busno=b.busno and a.wareid=b.wareid
+ on a.busno=to_char(b.busno) and a.wareid=b.wareid
  WHERE   accdate between p_end-1-v_time and p_end-1
  group by b.busno
   )
@@ -224,7 +224,7 @@ left join t_ware_dtp a on a.wareid=b.wareid
  inner join t_ware_dtp c on a.wareid=c.wareid
  where exists (
  select 1 from t_bus_wares_dtp b
- where a.busno=b.busno
+ where a.busno=to_char(b.busno)
  )
   and a.accdate between p_begin and p_end
  group by a.wareid
@@ -244,7 +244,7 @@ left join t_ware_dtp a on a.wareid=b.wareid
  inner join t_ware_dtp c on a.wareid=c.wareid
  where exists (
  select 1 from t_bus_wares_dtp b
- where a.busno=b.busno
+ where a.busno=to_char(b.busno)
  )
   and accdate between p_end-1-v_time and p_end-1
  group by a.wareid
@@ -338,10 +338,10 @@ END IF;
    tr.wareqtytb,tr.netsumtb,tr1.wareqtyhb,tr1.netsumhb
 FROM t_rpt_sale_af8  a
 inner join t_ware_dtp b on a.wareid=b.wareid
-left join  t_bus_wares_dtp c   on a.busno=c.busno and a.wareid=c.wareid
-left join  s_busi d   on  a.busno=d.busno
+left join  t_bus_wares_dtp c   on a.busno=to_char(c.busno) and a.wareid=c.wareid
+left join  s_busi d   on  a.busno=to_char(d.busno)
 left join t_ware_base e    on a.wareid=e.wareid
-left join  (SELECT busno,count(*) as gs FROM  t_bus_wares_dtp   group by busno ) f  on  a.busno=f.busno ---门店经营的商品数
+left join  (SELECT busno,count(*) as gs FROM  t_bus_wares_dtp   group by busno ) f  on  a.busno=to_char(f.busno) ---门店经营的商品数
 left join  (SELECT busno,count(*) as gs  FROM   (     -----门店合作的厂家数
             SELECT a.busno,b.facturer
             FROM  t_bus_wares_dtp a
@@ -349,7 +349,7 @@ left join  (SELECT busno,count(*) as gs  FROM   (     -----门店合作的厂家
             group by busno,facturer
             ) a
             group by busno
-            ) g   on  a.busno=g.busno
+            ) g   on  a.busno=to_char(g.busno)
 left join  (
 SELECT busno,wareid,sum(wareqty) as  wareqtytb,sum(NETSUM) as netsumtb FROM t_rpt_sale_af8 a
 WHERE exists (select 1 from t_ware_dtp b WHERE a.wareid=b.wareid)
@@ -364,7 +364,7 @@ and  accdate between add_months(p_begin,-1)  and add_months(p_end,-1)
 group by busno,wareid
 )  tr1  on  a.busno=tr1.busno and a.wareid=tr1.wareid
 
-WHERE   a.accdate between p_begin  and p_end   and a.busno not like '89%'  and  a.busno not like '862%'
+WHERE   a.accdate between p_begin  and p_end   and a.busno not like '89%'  and  a.busno not like '862%' and a.busno not like 'X%'
 
 group by  b.facturer,a.busno,d.orgname,a.wareid,e.warename,g.gs,tr.wareqtytb,tr.netsumtb,tr1.wareqtyhb,tr1.netsumhb,f.gs
 )
@@ -383,10 +383,10 @@ with a0 as (
    tr.wareqtytb,tr.netsumtb,tr1.wareqtyhb,tr1.netsumhb
 FROM t_rpt_sale_af8  a
 inner join t_ware_dtp b on a.wareid=b.wareid
-left join  t_bus_wares_dtp c   on a.busno=c.busno and a.wareid=c.wareid
-left join  s_busi d   on  a.busno=d.busno
+left join  t_bus_wares_dtp c   on a.busno=to_char(c.busno) and a.wareid=c.wareid
+left join  s_busi d   on  a.busno=to_char(d.busno)
 left join t_ware_base e    on a.wareid=e.wareid
-left join  (SELECT busno,count(*) as gs FROM  t_bus_wares_dtp   group by busno ) f  on  a.busno=f.busno ---门店经营的商品数
+left join  (SELECT busno,count(*) as gs FROM  t_bus_wares_dtp   group by busno ) f  on  a.busno=to_char(f.busno) ---门店经营的商品数
 left join  (SELECT busno,count(*) as gs  FROM   (     -----门店合作的厂家数
             SELECT a.busno,b.facturer
             FROM  t_bus_wares_dtp a
@@ -394,7 +394,7 @@ left join  (SELECT busno,count(*) as gs  FROM   (     -----门店合作的厂家
             group by busno,facturer
             ) a
             group by busno
-            ) g   on  a.busno=g.busno
+            ) g   on  a.busno=to_char(g.busno)
 left join  (
 SELECT busno,wareid,sum(wareqty) as  wareqtytb,sum(NETSUM) as netsumtb FROM t_rpt_sale_af8 a
 WHERE exists (select 1 from t_ware_dtp b WHERE a.wareid=b.wareid)
@@ -409,7 +409,7 @@ and  accdate between add_months(p_begin,-1)  and add_months(p_end,-1)
 group by busno,wareid
 )  tr1  on  a.busno=tr1.busno and a.wareid=tr1.wareid
 
-WHERE   a.accdate between p_begin  and p_end   and a.busno not like '89%'  and  a.busno not like '862%'   and a.wareid=p_wareid
+WHERE   a.accdate between p_begin  and p_end   and a.busno not like '89%'  and  a.busno not like '862%' and a.busno not like 'X%'   and a.wareid=p_wareid
 
 group by  b.facturer,a.busno,d.orgname,a.wareid,e.warename,g.gs,tr.wareqtytb,tr.netsumtb,tr1.wareqtyhb,tr1.netsumhb,f.gs
 )
