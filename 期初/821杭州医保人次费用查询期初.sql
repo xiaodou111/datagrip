@@ -1,5 +1,6 @@
---23年门店
-delete from dm_yb_md_head_sum_qc where INSURE_REGION_NAME like '%杭州%' ;
+select sum(YB_PER_HEADNUM) from dm_yb_md_head_sum_qc
+                      where CITY_AREA_NAME like '%杭州%';
+delete from dm_yb_md_head_sum_qc where CITY_AREA_NAME like '%杭州%' ;
 delete from dm_yb_md_head_sum_qc where WERKS_ID='4577';
 insert into dm_yb_md_head_sum_qc(YEAR_YB,RECEIPT_DATE,WERKS_ID,MD_TYPE,CITY_AREA_NAME,INSURE_REGION_NAME,INSURANCE_TYPE,
                                  PER_YB_TYPE,YB_PER_NUM,YB_PER_HEADNUM,TOTAL_AMOUNT)
@@ -20,7 +21,7 @@ with a1 as (select ERP销售单号, 销售日期, a.BUSNO, 身份证号,
                      join t_busno_class_set ts2 on a.busno = ts2.busno and ts2.classgroupno = '324'
                      join t_busno_class_base tb2 on ts2.classgroupno = tb2.classgroupno and ts2.classcode = tb2.classcode
                 AND tb.classcode IN ('303106')
-            WHERE a.销售日期 > DATE'2023-01-01' and a.销售日期 < DATE'2024-01-01'
+            WHERE a.销售日期 >= DATE'2023-01-01' and a.销售日期 < DATE'2024-01-01'
               --AND a.CBD IN(330102,330127,330109,330122,330105,330110,330108,330106,330182)
               --去掉省本级
               AND a.参保地 <> '浙江省省本级'
@@ -29,9 +30,12 @@ with a1 as (select ERP销售单号, 销售日期, a.BUSNO, 身份证号,
                   ('84577', '81517', '84590', '85062', '85063', '85066', '85070', '86402', '87001', '89059', '89063')
 --     and a.BUSNO=84557
 --   and a.结算类型<>'门诊特病'--and a.参保地 like '%杭州市%'
-              and a.JSLX <> '门诊特病')
+              and a.JSLX <> '门诊特病'
+            AND NOT EXISTS(SELECT 1 FROM T_SALE_RETURN_H T1 WHERE T1.SALENO = A.ERP销售单号)
+                           AND NOT EXISTS(SELECT 1 FROM T_SALE_RETURN_H T2 WHERE T2.RETSALENO = A.ERP销售单号)
+            )
 select to_char(销售日期,'YYYY'),to_char(销售日期,'YYYY-MM-DD'),substr(BUSNO,2,4),
-       case when mdlx='门店' then 0 else 1 end as 门店类型, 参保地,就医地,
+       case when mdlx='门店' then 0 else 1 end as 门店类型, 就医地,参保地,
        case when nb_flag=1 then '城乡居民基本医疗保险' else '职工基本医疗保险' end as 险种类型,
        case when nb_flag=1 then '农保' else '医保' end as 医保类型,
        sum(case when 人次 = 1 then 1 else 0 end) as 人次和,
@@ -60,7 +64,7 @@ with a1 as (select ERP销售单号, 销售日期, a.BUSNO, 身份证号,
                      join t_busno_class_set ts2 on a.busno = ts2.busno and ts2.classgroupno = '324'
                      join t_busno_class_base tb2 on ts2.classgroupno = tb2.classgroupno and ts2.classcode = tb2.classcode
                 AND tb.classcode IN ('303106')
-            WHERE a.销售日期 > DATE'2024-01-01' and a.销售日期 < DATE'2024-08-01'
+            WHERE a.销售日期 >= DATE'2024-01-01' and a.销售日期 < DATE'2024-08-01'
               --AND a.CBD IN(330102,330127,330109,330122,330105,330110,330108,330106,330182)
               --去掉省本级
               AND a.参保地 <> '浙江省省本级'
@@ -69,9 +73,12 @@ with a1 as (select ERP销售单号, 销售日期, a.BUSNO, 身份证号,
                   ('84577', '81517', '84590', '85062', '85063', '85066', '85070', '86402', '87001', '89059', '89063')
 --     and a.BUSNO=84557
 --   and a.结算类型<>'门诊特病'--and a.参保地 like '%杭州市%'
-              and a.JSLX <> '门诊特病')
+              and a.JSLX <> '门诊特病'
+            AND NOT EXISTS(SELECT 1 FROM T_SALE_RETURN_H T1 WHERE T1.SALENO = A.ERP销售单号)
+                           AND NOT EXISTS(SELECT 1 FROM T_SALE_RETURN_H T2 WHERE T2.RETSALENO = A.ERP销售单号)
+            )
 select to_char(销售日期,'YYYY'),to_char(销售日期,'YYYY-MM-DD'),substr(BUSNO,2,4),
-       case when mdlx='门店' then 0 else 1 end as 门店类型, 参保地,就医地,
+       case when mdlx='门店' then 0 else 1 end as 门店类型, 就医地,参保地,
        case when nb_flag=1 then '城乡居民基本医疗保险' else '职工基本医疗保险' end as 险种类型,
        case when nb_flag=1 then '农保' else '医保' end as 医保类型,
        sum(case when 人次 = 1 then 1 else 0 end) as 人次和,
@@ -100,15 +107,17 @@ with a1 as (select ERP销售单号, 销售日期, a.BUSNO, 身份证号,
                      join t_busno_class_set ts2 on a.busno = ts2.busno and ts2.classgroupno = '324'
                      join t_busno_class_base tb2 on ts2.classgroupno = tb2.classgroupno and ts2.classcode = tb2.classcode
                 AND tb.classcode IN ('303106')
-            WHERE a.销售日期 > DATE'2023-01-01' and a.销售日期 < DATE'2024-01-01'
+            WHERE a.销售日期 >= DATE'2023-01-01' and a.销售日期 < DATE'2024-01-01'
               --AND a.CBD IN(330102,330127,330109,330122,330105,330110,330108,330106,330182)
               --去掉省本级
               AND a.参保地 <> '浙江省省本级'
               and a.异地标志 = '非异地'
               and a.BUSNO=84577
+            AND NOT EXISTS(SELECT 1 FROM T_SALE_RETURN_H T1 WHERE T1.SALENO = A.ERP销售单号)
+                           AND NOT EXISTS(SELECT 1 FROM T_SALE_RETURN_H T2 WHERE T2.RETSALENO = A.ERP销售单号)
               )
 select to_char(销售日期,'YYYY'),to_char(销售日期,'YYYY-MM-DD'),substr(BUSNO,2,4),
-       case when mdlx='门店' then 0 else 1 end as 门店类型, 参保地,就医地,
+       case when mdlx='门店' then 0 else 1 end as 门店类型, 就医地,参保地,
        case when nb_flag=1 then '城乡居民基本医疗保险' else '职工基本医疗保险' end as 险种类型,
        case when nb_flag=1 then '农保' else '医保' end as 医保类型,
        sum(case when 人次 = 1 then 1 else 0 end) as 人次和,
@@ -138,15 +147,17 @@ with a1 as (select ERP销售单号, 销售日期, a.BUSNO, 身份证号,
                      join t_busno_class_set ts2 on a.busno = ts2.busno and ts2.classgroupno = '324'
                      join t_busno_class_base tb2 on ts2.classgroupno = tb2.classgroupno and ts2.classcode = tb2.classcode
                 AND tb.classcode IN ('303106')
-            WHERE a.销售日期 > DATE'2024-01-01' and a.销售日期 < DATE'2024-08-01'
+            WHERE a.销售日期 >= DATE'2024-01-01' and a.销售日期 < DATE'2024-08-01'
               --AND a.CBD IN(330102,330127,330109,330122,330105,330110,330108,330106,330182)
               --去掉省本级
               AND a.参保地 <> '浙江省省本级'
               and a.异地标志 = '非异地'
               and a.BUSNO=84577
+            AND NOT EXISTS(SELECT 1 FROM T_SALE_RETURN_H T1 WHERE T1.SALENO = A.ERP销售单号)
+                           AND NOT EXISTS(SELECT 1 FROM T_SALE_RETURN_H T2 WHERE T2.RETSALENO = A.ERP销售单号)
               )
 select to_char(销售日期,'YYYY'),to_char(销售日期,'YYYY-MM-DD'),substr(BUSNO,2,4),
-       case when mdlx='门店' then 0 else 1 end as 门店类型, 参保地,就医地,
+       case when mdlx='门店' then 0 else 1 end as 门店类型, 就医地,参保地,
        case when nb_flag=1 then '城乡居民基本医疗保险' else '职工基本医疗保险' end as 险种类型,
        case when nb_flag=1 then '农保' else '医保' end as 医保类型,
        sum(case when 人次 = 1 then 1 else 0 end) as 人次和,
@@ -235,5 +246,3 @@ select max(销售日期)
 from D_ZHYB_WRH where BUSNO=84577;
 select *
 from D_ZHYB_WRH;
-
-
