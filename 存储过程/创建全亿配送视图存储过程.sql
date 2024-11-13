@@ -104,7 +104,7 @@ for  res in (SELECT * FROM  d_rrt_sjzl_config  WHERE view_name=p_vname   and vie
     --RT03 到RH03 显不显示
     if  res.hd = 1 then
        v_sql :=v_sql|| ' union all ' ;
-      v_sql:=v_sql||' SELECT '''||'RT03'||''','''||'台州瑞人堂药业有限公司'||''',to_char(RESERVED_NO),CORT_NUM_ID,CORT_NAME,PAY_CORT ,CUSTOMER_NAME ,rec_date,to_char(item_num_id),item_name,style_desc,factory,APPROVAL_NO,batch_id,expiry_date,qty,13,trade_price,total_amount,total_amount,UNITS_NAME,supply_unit_num_id,supply_name,BILL_TYPE FROM v_pf_rt03 where PAY_CORT in (''RT03'',''RH03'')' ;
+      v_sql:=v_sql||' SELECT '''||'RH03'||''','''||'浙江瑞人堂药业有限公司'||''',to_char(RESERVED_NO),CORT_NUM_ID,CORT_NAME,PAY_CORT ,CUSTOMER_NAME ,rec_date,to_char(item_num_id),item_name,style_desc,factory,APPROVAL_NO,batch_id,expiry_date,qty,13,trade_price,total_amount,total_amount,UNITS_NAME,supply_unit_num_id,supply_name,BILL_TYPE FROM v_pf_rt03 where PAY_CORT in (''RT03'',''RH03'')' ;
     end if  ;
 
 
