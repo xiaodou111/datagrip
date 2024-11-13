@@ -59,7 +59,8 @@ end if ;
  --台州杭州互调 体现的话
 if  res.hd =1 and res.qd is not null then
   v_sql := v_sql|| ' union all SELECT  PAY_CORT,CUSTOMER_NAME ,REC_DATE ,  SUPPLY_UNIT_NUM_ID ,SUPPLY_NAME ,to_char(ITEM_NUM_ID),ITEM_NAME, QTY,STYLE_DESC ,UNITS_NAME ,FACTORY,APPROVAL_NO,BATCH_ID,null,EXPIRY_DATE,13,  TRADE_PRICE,TRADE_PRICE,TOTAL_AMOUNT,TOTAL_AMOUNT,';
- v_sql := v_sql||'CASE WHEN QTY>0 THEN  55 ELSE 56 end ,case when  QTY>0 THEN to_char(41801) else to_char(40101) END,BILL_TYPE       FROM v_pf_rt03 where item_num_id in ('|| v_wareid ||') AND REC_DATE >= date'''||res.zdate||''' and ( REC_DATE > (select max(REC_DATE)  from d_accept_def where REGEXP_LIKE(VIEW_NAME,'''||p_vname||''',''i'')) or 0='||v_cnt||' ) and SUPPLY_UNIT_NUM_ID in ( '|| v_qd ||' ) and PAY_CORT in ('||v_werks||')' ;
+ v_sql := v_sql||'CASE WHEN QTY>0 THEN  55 ELSE 56 end ,case when  QTY>0 THEN to_char(41801) else to_char(40101) END,case when QTY > 0 then ''采购入库单'' else ''采购退货单'' end       FROM v_pf_rt03 where item_num_id in ('|| v_wareid ||') AND REC_DATE >= date'''||res.zdate||''' and ( REC_DATE > (select max(REC_DATE)  from d_accept_def where REGEXP_LIKE(VIEW_NAME,'''||p_vname||''',''i'')) or 0='||v_cnt||' ) and SUPPLY_UNIT_NUM_ID in ( '|| v_qd ||' ) ' ||
+          'AND CORT_NUM_ID IN (''RT03'',''RH03'') and PAY_CORT in (''RT03'',''RH03'')' ;
 end if ;
 
 if  res.hd =1 and res.qd is null then
