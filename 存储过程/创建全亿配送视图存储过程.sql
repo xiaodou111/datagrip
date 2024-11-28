@@ -82,7 +82,7 @@ for  res in (SELECT * FROM  d_rrt_sjzl_config  WHERE view_name=p_vname   and vie
      --判断电商 改不改门店
      if  res.ds is not null  then
      v_sql:=v_sql||'SELECT CORT_NUM_ID, CORT_NAME,SUPPLY_UNIT_NUM_ID||ITEM_NUM_ID,CORT_NUM_ID, CORT_NAME,'''||res.ds||''',(select orgname from s_busi@h2 where 80000+'||res.ds||'=busno),ORDER_DATE,ITEM_NUM_ID,ITEM_NAME,STYLE_DESC,FACTORY,APPROVAL_NO,BATCH_ID,EXPIRY_DATE,QTY,';
-     v_sql:=v_sql||'TAX_RATE,SUP_PRICE,total_amount,TOTAL_AMOUNT_NO_TAX,UNITS_NAME,SUPPLY_UNIT_NUM_ID,SUPPLY_NAME,case when qty>0 then ''批发出库单'' else ''批发退货单'' end as BILL_TYPE FROM  v_accept_xdl_rt03  a WHERE IN_STORAGE<>'''||40101||''' and ( ORDER_DATE > (select max(REC_DATE)  from d_sale_def where view_name='''||p_vname||''') or 0='||v_cnt|| ' ) and CORT_NUM_ID in ('||v_werks||')' ;
+     v_sql:=v_sql||'TAX_RATE,SUP_PRICE,total_amount,TOTAL_AMOUNT_NO_TAX,UNITS_NAME,SUPPLY_UNIT_NUM_ID,SUPPLY_NAME,case when qty>0 then ''批发出库单'' else ''批发退货单'' end as BILL_TYPE FROM  v_accept_xdl_rt03  a WHERE IN_STORAGE   NOT IN (''40101'',''41801'') and ( ORDER_DATE > (select max(REC_DATE)  from d_sale_def where view_name='''||p_vname||''') or 0='||v_cnt|| ' ) and CORT_NUM_ID in ('||v_werks||')' ;
 
     --移仓到电商
      v_sql :=v_sql|| ' union all ' ;
@@ -101,11 +101,11 @@ for  res in (SELECT * FROM  d_rrt_sjzl_config  WHERE view_name=p_vname   and vie
       v_sql:=v_sql||' SELECT '''||'RT01'||''','''||'瑞人堂医药集团股份有限公司'||''',to_char(RESERVED_NO),CORT_NUM_ID,CORT_NAME,PAY_CORT ,CUSTOMER_NAME ,rec_date,to_char(item_num_id),item_name,style_desc,factory,APPROVAL_NO,batch_id,expiry_date,qty,13,trade_price,total_amount,total_amount,UNITS_NAME,supply_unit_num_id,supply_name FROM v_pf_rt03 where PAY_CORT<>'''||'RH03'||'''' ;
     end if ;*/
 
-    --RT03 到RH03 显不显示
-    if  res.hd = 1 then
+    --RT03 到RH03 显不显示    修改成发出方公司所有的B2B都显示才能进销存平衡
+--     if  res.hd = 1 then
        v_sql :=v_sql|| ' union all ' ;
       v_sql:=v_sql||' SELECT PAY_CORT,CUSTOMER_NAME,to_char(RESERVED_NO),CORT_NUM_ID,CORT_NAME,PAY_CORT ,CUSTOMER_NAME ,rec_date,to_char(item_num_id),item_name,style_desc,factory,APPROVAL_NO,batch_id,expiry_date,qty,13,trade_price,total_amount,total_amount,UNITS_NAME,supply_unit_num_id,supply_name,BILL_TYPE FROM v_pf_rt03 where CORT_NUM_ID IN ('||v_werks||')' ;
-    end if  ;
+--     end if  ;
 
 
      ---外面套一层视图   有屏蔽的加屏蔽  T+1数据
