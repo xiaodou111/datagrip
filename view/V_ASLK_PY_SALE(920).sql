@@ -31,7 +31,7 @@ union all
              UNITS_NAME, SUPPLY_UNIT_NUM_ID, SUPPLY_NAME,
              case when qty > 0 then '批发出库单' else '批发退货单' end as BILL_TYPE
       FROM v_accept_xdl_rt03 a
-      WHERE IN_STORAGE <> '40101' and (
+      WHERE IN_STORAGE NOT IN ('40101', '41801') and (
           ORDER_DATE > (select max(REC_DATE) from d_sale_def where view_name = 'v_aslk_py') or 0 = 0)
         and CORT_NUM_ID in ('RT03', 'RH03', 'RT01')
       union all
@@ -48,7 +48,8 @@ where not exists(select 1
                  where b.view_name = 'v_aslk_py' and a.REC_DATE between begindate and enddate
                    and (a.item_num_id = b.wareid or trim(b.wareid) = '全部')
                    and (a.BATCH_ID = b.MAKENO or decode(b.makeno, '全部', 0, 1) = 0))
-  and trunc(REC_DATE) <= trunc(sysdate) - 1 and item_num_id in
+  --and trunc(REC_DATE) <= trunc(sysdate) - 1
+  and item_num_id in
                                                 ('1009700', '1115743', '1017938', '1022664', '1009748', '1085998',
                                                  '1007517', '1129778', '1007704', '1007703', '1065307', '1010310',
                                                  '1096660', '1019229', '1109803', '1007759', '1007760', '1108423',
@@ -57,7 +58,7 @@ where not exists(select 1
                                                  '1002693', '1097486', '1175460', '1175459', '1166338', '1166337',
                                                  '1007519', '1007520', '1015339', '1115182', '1144810', '1007497',
                                                  '1000994', '1009757', '1125040', '1144719', '1015943', '1119931',
-                                                 '1180960','1129780')
+                                                 '1180960','1129780','1129390')
   and DIST_NUM_ID in ('RT03', 'RH03', 'RT01') /*and exists(select 1
                                                          from (SELECT ITEM_NUM_ID, batch_id, SUPPLY_UNIT_NUM_ID
                                                                FROM v_aslk_py_accept

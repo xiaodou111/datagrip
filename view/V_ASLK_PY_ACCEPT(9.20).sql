@@ -11,7 +11,7 @@ FROM (select *
              '1118990', '1118991', '1015028', '1009726', '1112487', '1001852', '1007837', '1115892', '1115893',
              '1149935', '1007838', '1135283', '1002693', '1097486', '1175460', '1175459', '1166338', '1166337',
              '1007519', '1007520', '1015339', '1115182', '1144810', '1007497', '1000994', '1009757', '1125040',
-             '1144719', '1015943', '1119931', '1180960', '1129780')
+             '1144719', '1015943', '1119931', '1180960', '1129780','1129390')
         and CORT_NUM_ID in ('RT03', 'RH03', 'RT01')
           /* and SUPPLY_UNIT_NUM_ID in ('8002221',
                                       '8003297',
@@ -27,23 +27,23 @@ FROM (select *
              (select max(ORDER_DATE)
               from d_accept_def
               where REGEXP_LIKE(VIEW_NAME, 'v_aslk_py', 'i')) or 0 = 0)
-        and ORDER_DATE < trunc(sysdate)
-      union all
-      select PAY_CORT, CUSTOMER_NAME, REC_DATE, CORT_NUM_ID, CORT_NAME, TO_CHAR(ITEM_NUM_ID), ITEM_NAME,
-             QTY, STYLE_DESC, UNITS_NAME, FACTORY, APPROVAL_NO, BATCH_ID,
-             null, null, 13,
-             TRADE_PRICE, TRADE_PRICE, TOTAL_AMOUNT,
-             TOTAL_AMOUNT,
-             1, '40101', case when QTY > 0 then '采购入库单' else '采购退货单' end
-      from v_pf_rt03
-      WHERE item_num_id in
-            ('1009700', '1115743', '1017938', '1022664', '1009748', '1085998', '1007517', '1129778', '1007704',
-             '1007703', '1065307', '1010310', '1096660', '1019229', '1109803', '1007759', '1007760', '1108423',
-             '1118990', '1118991', '1015028', '1009726', '1112487', '1001852', '1007837', '1115892', '1115893',
-             '1149935', '1007838', '1135283', '1002693', '1097486', '1175460', '1175459', '1166338', '1166337',
-             '1007519', '1007520', '1015339', '1115182', '1144810', '1007497', '1000994', '1009757', '1125040',
-             '1144719', '1015943', '1119931', '1180960', '1129780')
-        and CORT_NUM_ID IN ('RT03', 'RH03') AND PAY_CORT IN ('RT03', 'RH03')
+       -- and ORDER_DATE < trunc(sysdate)
+--       union all
+--       select PAY_CORT, CUSTOMER_NAME, REC_DATE, CORT_NUM_ID, CORT_NAME, TO_CHAR(ITEM_NUM_ID), ITEM_NAME,
+--              QTY, STYLE_DESC, UNITS_NAME, FACTORY, APPROVAL_NO, BATCH_ID,
+--              null, null, 13,
+--              TRADE_PRICE, TRADE_PRICE, TOTAL_AMOUNT,
+--              TOTAL_AMOUNT,
+--              1, '40101', case when QTY > 0 then '采购入库单' else '采购退货单' end
+--       from v_pf_rt03
+--       WHERE item_num_id in
+--             ('1009700', '1115743', '1017938', '1022664', '1009748', '1085998', '1007517', '1129778', '1007704',
+--              '1007703', '1065307', '1010310', '1096660', '1019229', '1109803', '1007759', '1007760', '1108423',
+--              '1118990', '1118991', '1015028', '1009726', '1112487', '1001852', '1007837', '1115892', '1115893',
+--              '1149935', '1007838', '1135283', '1002693', '1097486', '1175460', '1175459', '1166338', '1166337',
+--              '1007519', '1007520', '1015339', '1115182', '1144810', '1007497', '1000994', '1009757', '1125040',
+--              '1144719', '1015943', '1119931', '1180960', '1129780','1129390')
+--         and CORT_NUM_ID IN ('RT03', 'RH03') AND PAY_CORT IN ('RT03', 'RH03')
 
       union all
       SELECT a.cort_num_id, a.cort_name, a.order_date, a.supply_unit_num_id, a.supply_name, a.item_num_id, a.item_name,
