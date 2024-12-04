@@ -1,4 +1,5 @@
 --1.先把d_hz_mdsp删掉再导入
+delete from  d_hz_mdsp;
 select * from d_hz_mdsp;
 delete from  d_hz_result;
 --2.导出销售记录
@@ -22,7 +23,7 @@ WITH a1 AS (SELECT hdr.sub_unit_num_id,
                                    hdr.sub_unit_num_id = dtl.sub_unit_num_id AND hdr.tml_num_id = dtl.tml_num_id
                      INNER JOIN d_hz_mdsp aa
                                 ON aa.sub_unit_id = hdr.sub_unit_num_id AND aa.item_num_id = dtl.item_num_id
-            WHERE hdr.order_date BETWEEN date'2024-08-01' AND date'2024-08-31'
+            WHERE hdr.order_date BETWEEN date'2024-11-01' AND date'2024-11-30'
 --               AND hdr.sub_unit_num_id = '5002'
 --                AND hdr.sales_empe_num_id IS  NULL
 --              and dtl.item_num_id in (1015097,1126720)
@@ -107,11 +108,12 @@ declare
     end;
 
 --4.导出分配金额
-select SUB_UNIT_ID as 门店编码, ITEM_NUM_ID as 商品编码, SALES_EMPE_NUM_ID as 工号, SUB_TOTAL_QTY as 门店总数, EMPE_TOTAL_QTY as 员工总数, BLEE as 分配比例, JE as 含税金额,
+select a.SUB_UNIT_ID as 门店编码, a.ITEM_NUM_ID as 商品编码, emp.WORK_NUMS as 工号, SUB_TOTAL_QTY as 门店总数, EMPE_TOTAL_QTY as 员工总数, BLEE as 分配比例, JE as 含税金额,
        nvl(FTHJJ,JJ) as 补偿金额
 --        JJ as 补偿金额,
 --        FTHJJ as 销售员为空分配金额
-from d_hz_result ;
+from d_hz_result  a
+left join ex_arc_empe emp on a.SALES_EMPE_NUM_ID=emp.EMPE_NUM_ID
 
 select * from d_hz_mdsp where SUB_UNIT_ID=5020;
 select count(*) from d_hz_result;
@@ -140,9 +142,10 @@ select  a.SUB_UNIT_ID as 门店编码, a.ITEM_NUM_ID as  商品编码,JE as 金额 from d_
 )
 -- select *
 -- from to_fp where 门店编码 not in (select SUB_UNIT_ID from a2)  ;
-select nvl(SUB_UNIT_ID,门店编码) as 门店编码, SALES_EMPE_NUM_ID as  工号 , pertotal 员工总销量, mdtotal 门店总销量,pertotal/mdtotal as 占比,to_fp.je 该店待分配金额,round(pertotal/mdtotal* to_fp.je,2) as 员工分配金额
+select nvl(SUB_UNIT_ID,门店编码) as 门店编码, emp.WORK_NUMS as  工号 , pertotal 员工总销量, mdtotal 门店总销量,pertotal/mdtotal as 占比,to_fp.je 该店待分配金额,round(pertotal/mdtotal* to_fp.je,2) as 员工分配金额
 from to_fp
-left join a2 on a2.SUB_UNIT_ID=to_fp.门店编码;
+left join a2 on a2.SUB_UNIT_ID=to_fp.门店编码
+left join ex_arc_empe emp on a2.SALES_EMPE_NUM_ID=emp.EMPE_NUM_ID;
 
 select 门店编码, 工号, 员工总销量, 门店总销量, 占比, 该店待分配金额, 员工分配金额,员工分配金额+1/5*
 from d_hz_wfp where 门店编码=5027  ;
