@@ -102,10 +102,16 @@ for  res in (SELECT * FROM  d_rrt_sjzl_config  WHERE view_name=p_vname   and vie
     end if ;*/
 
     --RT03 到RH03 显不显示    修改成发出方公司所有的B2B都显示才能进销存平衡
---     if  res.hd = 1 then
+    if  res.pf is not null then
        v_sql :=v_sql|| ' union all ' ;
-      v_sql:=v_sql||' SELECT PAY_CORT,CUSTOMER_NAME,to_char(RESERVED_NO),CORT_NUM_ID,CORT_NAME,PAY_CORT ,CUSTOMER_NAME ,rec_date,to_char(item_num_id),item_name,style_desc,factory,APPROVAL_NO,batch_id,expiry_date,qty,13,trade_price,total_amount,total_amount,UNITS_NAME,supply_unit_num_id,supply_name,BILL_TYPE FROM v_pf_rt03 where CORT_NUM_ID IN ('||v_werks||')' ;
---     end if  ;
+      v_sql:=v_sql||' SELECT decode(PAY_CORT,''RH03'',PAY_CORT,''RT01''),decode(PAY_CORT,''RH03'',CUSTOMER_NAME,''瑞人堂医药集团股份有限公司''),' ||
+             'to_char(RESERVED_NO),CORT_NUM_ID,CORT_NAME,decode(PAY_CORT,''RH03'',PAY_CORT,'''||res.pf||''') ,' ||
+             'decode(PAY_CORT,''RH03'',CUSTOMER_NAME,(select orgname from s_busi@h2 where 80000 + '||res.PF||' = busno)) ,rec_date,to_char(item_num_id),item_name,style_desc,factory,APPROVAL_NO,batch_id,expiry_date,qty,13,trade_price,total_amount,total_amount,UNITS_NAME,supply_unit_num_id,supply_name,BILL_TYPE ' ||
+             'FROM v_pf_rt03 where CORT_NUM_ID IN ('||v_werks||')' ;
+       else
+      v_sql:=v_sql||' SELECT PAY_CORT,CUSTOMER_NAME,to_char(RESERVED_NO),CORT_NUM_ID,CORT_NAME,PAY_CORT ,CUSTOMER_NAME ,rec_date,to_char(item_num_id),item_name,style_desc,factory,APPROVAL_NO,batch_id,expiry_date,qty,13,trade_price,total_amount,total_amount,UNITS_NAME,supply_unit_num_id,supply_name,BILL_TYPE ' ||
+             'FROM v_pf_rt03 where CORT_NUM_ID IN ('||v_werks||')' ;
+     end if  ;
 
 
      ---外面套一层视图   有屏蔽的加屏蔽  T+1数据
