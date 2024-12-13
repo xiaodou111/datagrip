@@ -149,7 +149,7 @@ where d.WAREID in (10601875,10502445,10600308)
 --患者用药周期表
 with first as (
 select th.cfno as 首次处方号, trim(th.USERNAME) as 患者姓名,th.IDCARDNO,
-       trim(th.PHONE) as 患者手机号,qy.NBUSNO as 中台门店编码,td.WAREID, h.ACCDATE as 首次购药时间, th.DOCTORNAME as 首次处方医院,
+       trim(th.PHONE) as 患者手机号,qy.NBUSNO as 中台门店编码,td.WAREID, nvl(h.ACCDATE,th.DOCTORTIME) as 首次购药时间, th.DOCTORNAME as 首次处方医院,
        null as 首次处方科室, th.DOCTOR as 首次医生, th.CREATETIME as 创建时间
 from t_remote_prescription_h th
 -- left join t_remote_prescription_d td on th.CFNO = td.CFNO
@@ -178,11 +178,12 @@ from t_remote_prescription_d td
                                         decode(instr(h.notes, ' '), 0, length(h.notes) + 1,
                                                instr(h.notes, ' ')) - 1) = th.cfno
          left join d_sjzl_db_cfxx f on h.saleno=f.saleno
-where exists(select 1 from V_DTP_WARE dtp where dtp.WAREID = td.WAREID)
-  and not exists(select 1 from T_SALE_RETURN_H rh where rh.RETSALENO = h.SALENO)
+where  not exists(select 1 from T_SALE_RETURN_H rh where rh.RETSALENO = h.SALENO)
   and not exists(select 1 from T_SALE_RETURN_H rh2 where rh2.SALENO = h.SALENO)
   and th.COMPID <> 1900 and th.USERNAME is not null and th.USERNAME <> '作废'
-  and th.BUSNO < 89000 group by trim(th.USERNAME),trim(th.PHONE),td.WAREID )
+  and th.BUSNO < 89000
+  and td.WAREID  in (10601875,10502445,10600308)
+group by trim(th.USERNAME),trim(th.PHONE),td.WAREID )
 select 首次处方号, first.患者姓名 as 患者姓名, sum.IDCARDNO as 身份证, first.患者手机号 as 患者手机号, 中台门店编码 ,qy.NWAREID as 中台药品编码,首次购药时间,
        累计购药数量,累计购药金额,null as 患者用药状态,NVL(NVL(px.CFSF, jm.CFSF), 未按计划原因) as 未按计划原因,
        首次处方医院, 首次处方科室, 首次医生, 创建时间
