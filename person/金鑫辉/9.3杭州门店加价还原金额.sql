@@ -23,7 +23,7 @@ WITH a1 AS (SELECT hdr.sub_unit_num_id,
                                    hdr.sub_unit_num_id = dtl.sub_unit_num_id AND hdr.tml_num_id = dtl.tml_num_id
                      INNER JOIN d_hz_mdsp aa
                                 ON aa.sub_unit_id = hdr.sub_unit_num_id AND aa.item_num_id = dtl.item_num_id
-            WHERE hdr.order_date BETWEEN date'2024-11-01' AND date'2024-11-30'
+            WHERE hdr.order_date BETWEEN date'2025-01-01' AND date'2025-01-31'
 --               AND hdr.sub_unit_num_id = '5002'
 --                AND hdr.sales_empe_num_id IS  NULL
 --              and dtl.item_num_id in (1015097,1126720)
@@ -165,4 +165,48 @@ declare
       into v_cnt
       from d_hz_wfp q
       where q.门店编码=res.门店编码  and 工号 is not null;
+      
+      select * from d_rrt_sjzl_config where ZLCJ like '%诺和诺德%' and WAREID like '%1211478%';
+      select * from d_rrt_sjzl_config where ZLCJ like '%诺和诺德%' and WAREID like '%1211477%';
+      select * from d_rrt_sjzl_config where ZLCJ like '%诺和诺德%' and WAREID like '%1210395%';
+      select * from d_rrt_sjzl_config where ZLCJ like '%诺和诺德%' and WAREID like '%1210394%';
+      select * from d_rrt_sjzl_config where ZLCJ like '%诺和诺德%' and WAREID like '%1210140%';
+      select * from d_rrt_sjzl_config where ZLCJ like '%诺和诺德%' and WAREID like '%1210141%';
+      select * from d_rrt_sjzl_config where ZLCJ like '%诺和诺德%' and WAREID like '%1210142%';
+
+      1211478,1211477,1210395,1210394,1210140,1210141,1210142
+1210394
+      select * from d_rrt_sjzl_config where ZLCJ like '%诺和诺德%';
+
+
+
+      with a1 as (
+select SUB_UNIT_ID,SALES_EMPE_NUM_ID,sum(SUB_TOTAL_QTY) as pertotal from d_hz_result
+--                                                                     where SALES_EMPE_NUM_ID is not null
+                                                                    group by SUB_UNIT_ID, SALES_EMPE_NUM_ID),
+a2 as (
+select SUB_UNIT_ID,SALES_EMPE_NUM_ID,pertotal,sum(pertotal) over (partition by SUB_UNIT_ID order by SUB_UNIT_ID) as mdtotal
+from a1),
+to_fp as (
+  select 门店编码,sum(金额) je from (
+select  a.SUB_UNIT_ID as 门店编码, a.ITEM_NUM_ID as  商品编码,JE as 金额 from d_hz_mdsp a where not exists(select 1 from (
+
+                                                      select SUB_UNIT_ID,ITEM_NUM_ID from d_hz_result a  group by SUB_UNIT_ID, ITEM_NUM_ID) b
+                                                       where a.ITEM_NUM_ID=b.ITEM_NUM_ID and a.SUB_UNIT_ID=b.SUB_UNIT_ID) ) group by 门店编码
+)
+-- select *
+-- from to_fp where 门店编码 not in (select SUB_UNIT_ID from a2)  ;
+select * from to_fp;
+      
+      with a1 as (
+select SUB_UNIT_ID,SALES_EMPE_NUM_ID,sum(SUB_TOTAL_QTY) as pertotal from d_hz_result
+--                                                                     where SALES_EMPE_NUM_ID is not null
+                                                                    group by SUB_UNIT_ID, SALES_EMPE_NUM_ID),
+a2 as (
+select SUB_UNIT_ID,SALES_EMPE_NUM_ID,pertotal,sum(pertotal) over (partition by SUB_UNIT_ID order by SUB_UNIT_ID) as mdtotal
+from a1) 
+    select * from a1;
+      
+      
+      select * from d_hz_result;
 
